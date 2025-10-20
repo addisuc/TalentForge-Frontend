@@ -1,0 +1,58 @@
+<div class="applications-manage">
+  <div class="page-header">
+    <div>
+      <h1>Application Pipeline</h1>
+      <p class="subtitle">{{ totalApplications }} total applications</p>
+    </div>
+    <button class="btn-secondary">Export</button>
+  </div>
+
+  <div class="filters-section">
+    <button class="view-toggle" (click)="toggleView()">
+      {{ compactView ? '📋 Cards' : '☰ List' }}
+    </button>
+    <select class="filter-select" [(ngModel)]="selectedClient">
+      <option value="all">All Clients</option>
+      <option value="TechCorp">TechCorp Solutions</option>
+      <option value="FinanceInc">Global Finance Inc</option>
+      <option value="HealthPlus">HealthPlus Medical</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="selectedJob">
+      <option value="all">All Jobs</option>
+      <option value="Developer">Senior Full Stack Developer</option>
+      <option value="Manager">Product Manager</option>
+      <option value="Designer">UX Designer</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="selectedPosition">
+      <option value="all">All Positions</option>
+      <option value="Developer">Developer</option>
+      <option value="Manager">Manager</option>
+      <option value="Designer">Designer</option>
+    </select>
+  </div>
+
+  <div class="pipeline-board" [class.compact-view]="compactView">
+    <div class="pipeline-column" *ngFor="let stage of stages">
+      <div class="column-header">
+        <h3>{{ stage.name }}</h3>
+        <span class="count">{{ getVisibleCount(stage) }}/{{ stage.applications.length }}</span>
+      </div>
+      <div class="applications-list">
+        <div class="application-row" 
+             *ngFor="let app of getVisibleApplications(stage)" 
+             (click)="viewApplication(app.id)"
+             [class.compact]="compactView">
+          <span class="avatar-mini">{{ app.initials }}</span>
+          <div class="app-info">
+            <strong class="name">{{ app.name }}</strong>
+            <span class="job" *ngIf="!compactView">{{ app.jobTitle }}</span>
+          </div>
+          <span class="time">{{ app.daysAgo }}d</span>
+        </div>
+        <button class="load-more" *ngIf="hasMore(stage)" (click)="loadMore(stage)">
+          Load {{ getRemainingCount(stage) }} more
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

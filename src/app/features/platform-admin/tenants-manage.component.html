@@ -1,0 +1,88 @@
+<div class="tenants-page">
+  <div class="page-header">
+    <div>
+      <h1>Tenant Management</h1>
+      <p>Manage all platform tenants and subscriptions</p>
+    </div>
+    <button class="btn-primary">+ Add Tenant</button>
+  </div>
+
+  <div class="filters-section">
+    <div class="search-bar">
+      <span class="icon">🔍</span>
+      <input type="text" placeholder="Search tenants..." [(ngModel)]="searchQuery">
+    </div>
+    <div class="filters">
+      <select class="filter-select" [(ngModel)]="selectedPlan">
+        <option value="all">All Plans</option>
+        <option value="Enterprise">Enterprise</option>
+        <option value="Professional">Professional</option>
+        <option value="Starter">Starter</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedStatus">
+        <option value="all">All Status</option>
+        <option value="Active">Active</option>
+        <option value="Trial">Trial</option>
+        <option value="Suspended">Suspended</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tenant Name</th>
+          <th>Subdomain</th>
+          <th>Plan</th>
+          <th>Users</th>
+          <th>Jobs</th>
+          <th>MRR</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tenant of paginatedTenants">
+          <td><strong>{{ tenant.name }}</strong></td>
+          <td>{{ tenant.subdomain }}.talentforge.com</td>
+          <td>{{ tenant.plan }}</td>
+          <td>{{ tenant.users }}</td>
+          <td>{{ tenant.jobs }}</td>
+          <td>${{ tenant.mrr }}</td>
+          <td><span class="badge" [class]="tenant.status.toLowerCase()">{{ tenant.status }}</span></td>
+          <td>{{ tenant.created | date:'MMM d, yyyy' }}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-action">View</button>
+              <button class="btn-action secondary">Message</button>
+              <button class="btn-action secondary">Suspend</button>
+              <button class="btn-action secondary">Invoice</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <div class="pagination-info">
+      Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalTenants }} tenants
+    </div>
+    <div class="pagination-controls">
+      <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+        <option [value]="25">25 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
+      <button [disabled]="currentPage === 1" (click)="previousPage()">Previous</button>
+      <span class="page-numbers">
+        <button *ngFor="let page of pageNumbers" 
+                [class.active]="page === currentPage" 
+                (click)="goToPage(page)">{{ page }}</button>
+      </span>
+      <button [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+    </div>
+  </div>
+</div>

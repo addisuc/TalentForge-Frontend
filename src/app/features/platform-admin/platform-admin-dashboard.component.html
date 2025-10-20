@@ -1,0 +1,64 @@
+<div class="platform-admin-dashboard">
+  <div class="page-header">
+    <div>
+      <h1>Platform Administration</h1>
+      <p>Manage tenants, monitor system health, and oversee platform operations</p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of stats">
+      <span class="icon">{{ stat.icon }}</span>
+      <div class="stat-content">
+        <div class="value">{{ stat.value }}</div>
+        <div class="label">{{ stat.label }}</div>
+        <div class="trend positive">{{ stat.trend }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="section">
+      <div class="section-header">
+        <h2>Recent Tenants</h2>
+        <a routerLink="/platform-admin/tenants" class="btn-link">View All →</a>
+      </div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tenant Name</th>
+              <th>Plan</th>
+              <th>Users</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tenant of recentTenants" [routerLink]="['/platform-admin/tenants', tenant.id]">
+              <td><strong>{{ tenant.name }}</strong></td>
+              <td>{{ tenant.plan }}</td>
+              <td>{{ tenant.users }}</td>
+              <td><span class="badge" [class]="tenant.status.toLowerCase()">{{ tenant.status }}</span></td>
+              <td>{{ tenant.created | date:'MMM d, yyyy' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2>System Alerts</h2>
+      </div>
+      <div class="alerts-list">
+        <div class="alert-item" *ngFor="let alert of systemAlerts" [class]="alert.type">
+          <div class="alert-content">
+            <div class="alert-message">{{ alert.message }}</div>
+            <div class="alert-time">{{ alert.time }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

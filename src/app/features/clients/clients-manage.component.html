@@ -1,0 +1,130 @@
+<div class="clients-page">
+  <div class="header">
+    <div>
+      <h1>Clients</h1>
+      <p>Manage your client companies and relationships</p>
+    </div>
+    <button class="btn-primary" routerLink="/clients/create">
+      <span>➕</span> Add Client
+    </button>
+  </div>
+
+  <div class="filters">
+    <div class="search-bar">
+      <span class="icon">🔍</span>
+      <input type="text" placeholder="Search clients..." [(ngModel)]="searchQuery">
+    </div>
+    <select [(ngModel)]="selectedIndustry">
+      <option value="all">All Industries</option>
+      <option value="Technology">Technology</option>
+      <option value="Finance">Finance</option>
+      <option value="Healthcare">Healthcare</option>
+      <option value="Retail">Retail</option>
+      <option value="Education">Education</option>
+    </select>
+    <select [(ngModel)]="selectedStatus">
+      <option value="all">All Status</option>
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+    </select>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Client Name</th>
+          <th>Industry</th>
+          <th>Contact</th>
+          <th>Active Jobs</th>
+          <th>Total Hires</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let client of paginatedClients" (click)="viewClient(client.id)">
+          <td>
+            <div class="name-cell">
+              <span class="logo">{{ client.logo }}</span>
+              <strong>{{ client.name }}</strong>
+            </div>
+          </td>
+          <td>{{ client.industry }}</td>
+          <td>
+            <div>{{ client.contact }}</div>
+            <div class="email-small">{{ client.email }}</div>
+          </td>
+          <td>{{ client.activeJobs }}</td>
+          <td>{{ client.totalHires }}</td>
+          <td><span class="badge" [class.active]="client.status === 'Active'" [class.inactive]="client.status === 'Inactive'">{{ client.status }}</span></td>
+          <td>
+            <button class="btn-action" [routerLink]="['/clients', client.id]" (click)="$event.stopPropagation()">View</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <div class="pagination-info">
+      Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalClients }} clients
+    </div>
+    <div class="pagination-controls">
+      <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+        <option [value]="25">25 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
+      <button [disabled]="currentPage === 1" (click)="previousPage()">Previous</button>
+      <span class="page-numbers">
+        <button *ngFor="let page of pageNumbers" 
+                [class.active]="page === currentPage" 
+                (click)="goToPage(page)">{{ page }}</button>
+      </span>
+      <button [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+    </div>
+  </div>
+
+  <div class="clients-grid" style="display: none;">
+    <div class="client-card" *ngFor="let client of filteredClients" [routerLink]="['/clients', client.id]">
+      <div class="card-header">
+        <div class="logo">{{ client.logo }}</div>
+        <div class="info">
+          <h3>{{ client.name }}</h3>
+          <span class="industry">{{ client.industry }}</span>
+        </div>
+        <span class="status" [class.active]="client.status === 'Active'" [class.inactive]="client.status === 'Inactive'">
+          {{ client.status }}
+        </span>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="value">{{ client.activeJobs }}</span>
+          <span class="label">Active Jobs</span>
+        </div>
+        <div class="stat">
+          <span class="value">{{ client.totalHires }}</span>
+          <span class="label">Total Hires</span>
+        </div>
+      </div>
+
+      <div class="contact">
+        <div class="contact-info">
+          <span class="icon">👤</span>
+          <div>
+            <div class="name">{{ client.contact }}</div>
+            <div class="email">{{ client.email }}</div>
+          </div>
+        </div>
+        <div class="phone">📞 {{ client.phone }}</div>
+      </div>
+
+      <div class="footer">
+        <span class="since">Client since {{ client.since | date:'MMM yyyy' }}</span>
+        <button class="btn-link">View Details →</button>
+      </div>
+    </div>
+  </div>
+</div>

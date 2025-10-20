@@ -1,0 +1,105 @@
+<div class="jobs-browse">
+  <div class="page-header">
+    <div>
+      <h1>Browse Jobs</h1>
+      <p class="subtitle">{{ totalJobs }} active positions available</p>
+    </div>
+    <button class="btn-primary" routerLink="/jobs/create">+ Post New Job</button>
+  </div>
+
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input type="text" placeholder="Search by title, skills, or company..." [(ngModel)]="searchQuery">
+    </div>
+    <div class="filters">
+      <select class="filter-select" [(ngModel)]="selectedClient">
+        <option value="all">All Clients</option>
+        <option value="TechCorp">TechCorp Solutions</option>
+        <option value="FinanceInc">Global Finance Inc</option>
+        <option value="HealthPlus">HealthPlus Medical</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedType">
+        <option value="all">All Types</option>
+        <option value="full-time">Full Time</option>
+        <option value="contract">Contract</option>
+        <option value="remote">Remote</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedPosition">
+        <option value="all">All Positions</option>
+        <option value="Developer">Developer</option>
+        <option value="Manager">Manager</option>
+        <option value="Designer">Designer</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedLocation">
+        <option value="all">All Locations</option>
+        <option value="Remote">Remote</option>
+        <option value="San Francisco">San Francisco</option>
+        <option value="New York">New York</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedStatus">
+        <option value="all">All Status</option>
+        <option value="Active">Active</option>
+        <option value="Closed">Closed</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th (click)="sortBy('title')">Job Title</th>
+          <th (click)="sortBy('company')">Client</th>
+          <th (click)="sortBy('location')">Location</th>
+          <th (click)="sortBy('type')">Type</th>
+          <th (click)="sortBy('salary')">Salary</th>
+          <th (click)="sortBy('applicants')">Applicants</th>
+          <th (click)="sortBy('postedDays')">Posted</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let job of paginatedJobs" (click)="viewJob(job.id)">
+          <td>
+            <div class="job-title-cell">
+              <strong>{{ job.title }}</strong>
+              <div class="skills-inline">
+                <span class="skill-tag" *ngFor="let skill of job.skills.slice(0, 2)">{{ skill }}</span>
+              </div>
+            </div>
+          </td>
+          <td>{{ job.company }}</td>
+          <td>{{ job.location }}</td>
+          <td><span class="badge" [class]="job.type">{{ job.type }}</span></td>
+          <td>{{ job.salary }}</td>
+          <td>{{ job.applicants }}</td>
+          <td>{{ job.postedDays }}d ago</td>
+          <td>
+            <button class="btn-action" (click)="viewJob(job.id); $event.stopPropagation()">View</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <div class="pagination-info">
+      Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalJobs }} jobs
+    </div>
+    <div class="pagination-controls">
+      <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+        <option [value]="25">25 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
+      <button [disabled]="currentPage === 1" (click)="previousPage()">Previous</button>
+      <span class="page-numbers">
+        <button *ngFor="let page of pageNumbers" 
+                [class.active]="page === currentPage" 
+                (click)="goToPage(page)">{{ page }}</button>
+      </span>
+      <button [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,27 @@
+<div class="analytics-page">
+  <div class="page-header">
+    <h1>Analytics & Reports</h1>
+    <p>Track your recruiting performance and metrics</p>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card" *ngFor="let metric of metrics">
+      <h3>{{ metric.label }}</h3>
+      <div class="value">{{ metric.value }}</div>
+      <div class="change" [class.positive]="metric.positive">
+        {{ metric.change }}
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-section">
+    <div class="chart-placeholder">
+      <h3>📊 Hiring Funnel</h3>
+      <p>Chart visualization coming soon</p>
+    </div>
+    <div class="chart-placeholder">
+      <h3>📈 Source Effectiveness</h3>
+      <p>Chart visualization coming soon</p>
+    </div>
+  </div>
+</div>

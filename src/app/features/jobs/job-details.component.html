@@ -1,0 +1,83 @@
+<div class="job-details">
+  <div class="back-nav">
+    <button routerLink="/jobs">← Back to Jobs</button>
+  </div>
+
+  <div class="content-grid">
+    <div class="main-content">
+      <div class="job-header">
+        <div class="company-logo">TC</div>
+        <div class="job-info">
+          <h1>{{ job.title }}</h1>
+          <p class="company">{{ job.company }}</p>
+          <div class="job-meta">
+            <span>📍 {{ job.location }}</span>
+            <span>💰 {{ job.salary }}</span>
+            <span>⏰ {{ job.type }}</span>
+            <span>📅 Posted {{ job.postedDays }} days ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="job-section">
+        <h2>Job Description</h2>
+        <p>{{ job.description }}</p>
+      </div>
+
+      <div class="job-section">
+        <h2>Required Skills</h2>
+        <div class="skills-grid">
+          <span class="skill-badge" *ngFor="let skill of job.skills">{{ skill }}</span>
+        </div>
+      </div>
+
+      <div class="job-section">
+        <h2>Requirements</h2>
+        <ul>
+          <li *ngFor="let req of job.requirements">{{ req }}</li>
+        </ul>
+      </div>
+
+      <div class="job-section">
+        <h2>Benefits</h2>
+        <ul>
+          <li *ngFor="let benefit of job.benefits">{{ benefit }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>Application Status</h3>
+        <div class="stat-item">
+          <span class="stat-label">Total Applicants</span>
+          <span class="stat-value">{{ job.applicants }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">In Review</span>
+          <span class="stat-value">{{ job.inReview }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Interviews</span>
+          <span class="stat-value">{{ job.interviews }}</span>
+        </div>
+        <button class="btn-primary full-width" routerLink="/applications">View Applicants</button>
+      </div>
+
+      <div class="card">
+        <h3>Job Actions</h3>
+        <button class="btn-secondary full-width">Edit Job</button>
+        <button class="btn-secondary full-width">Share Job</button>
+        <button class="btn-secondary full-width">Close Job</button>
+      </div>
+
+      <div class="card">
+        <h3>Client Information</h3>
+        <p class="client-name">{{ job.company }}</p>
+        <p class="client-contact">Contact: John Smith</p>
+        <p class="client-email">john&#64;techcorp.com</p>
+        <button class="btn-secondary full-width" routerLink="/clients/1">View Client</button>
+      </div>
+    </div>
+  </div>
+</div>

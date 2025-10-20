@@ -1,0 +1,113 @@
+<div class="billing-page">
+  <div class="page-header">
+    <div>
+      <h1>Billing & Revenue</h1>
+      <p>Monitor platform revenue and subscription metrics</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary">Export Report</button>
+      <button class="btn-primary">Send Invoices</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of stats">
+      <span class="icon">{{ stat.icon }}</span>
+      <div class="stat-content">
+        <div class="value">{{ stat.value }}</div>
+        <div class="label">{{ stat.label }}</div>
+        <div class="trend positive">{{ stat.trend }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="summary-label">Total Invoiced</div>
+      <div class="summary-value">${{ totalInvoiced }}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Total Paid</div>
+      <div class="summary-value paid">${{ totalPaid }}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Total Pending</div>
+      <div class="summary-value pending">${{ totalPending }}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Total Failed</div>
+      <div class="summary-value failed">${{ totalFailed }}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Invoices</h2>
+      <div class="filters">
+        <select class="filter-select" [(ngModel)]="selectedPeriod">
+          <option value="30">Last 30 Days</option>
+          <option value="90">Last 3 Months</option>
+          <option value="180">Last 6 Months</option>
+          <option value="365">One Year</option>
+          <option value="all">All Time</option>
+        </select>
+        <select class="filter-select" [(ngModel)]="selectedStatus">
+          <option value="all">All Status</option>
+          <option value="Paid">Paid</option>
+          <option value="Pending">Pending</option>
+          <option value="Failed">Failed</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Tenant</th>
+            <th>Plan</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let transaction of paginatedTransactions">
+            <td><strong>{{ transaction.tenant }}</strong></td>
+            <td>{{ transaction.plan }}</td>
+            <td>${{ transaction.amount }}</td>
+            <td>{{ transaction.date | date:'MMM d, yyyy' }}</td>
+            <td><span class="badge" [class]="transaction.status.toLowerCase()">{{ transaction.status }}</span></td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-action" *ngIf="transaction.status === 'Paid'">View Invoice</button>
+                <button class="btn-action" *ngIf="transaction.status === 'Pending'">Send Reminder</button>
+                <button class="btn-action secondary">Download</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="pagination">
+    <div class="pagination-info">
+      Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalTransactions }} invoices
+    </div>
+    <div class="pagination-controls">
+      <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+        <option [value]="25">25 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
+      <button [disabled]="currentPage === 1" (click)="previousPage()">Previous</button>
+      <span class="page-numbers">
+        <button *ngFor="let page of pageNumbers" 
+                [class.active]="page === currentPage" 
+                (click)="goToPage(page)">{{ page }}</button>
+      </span>
+      <button [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+    </div>
+  </div>
+</div>

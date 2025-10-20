@@ -1,0 +1,121 @@
+.system-page {
+  padding: 2rem;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: #64748b;
+  }
+}
+
+.section {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+
+  .section-header {
+    margin-bottom: 1.5rem;
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0;
+    }
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #475569;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #f1f5f9;
+
+      td {
+        padding: 12px 16px;
+        font-size: 0.875rem;
+        color: #0f172a;
+      }
+    }
+  }
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.healthy {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  &.warning {
+    background: #fef3c7;
+    color: #92400e;
+  }
+}
+
+.logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.log-item {
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+
+  &.info {
+    background: #dbeafe;
+    border-color: #3b82f6;
+  }
+
+  &.warning {
+    background: #fef3c7;
+    border-color: #f59e0b;
+  }
+
+  .log-message {
+    font-size: 0.875rem;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+  }
+
+  .log-time {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+}

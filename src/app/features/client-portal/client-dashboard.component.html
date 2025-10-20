@@ -1,0 +1,64 @@
+<div class="client-dashboard">
+  <div class="page-header">
+    <h1>My Hiring Dashboard</h1>
+    <p>Track your job orders and candidate submissions</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of stats">
+      <span class="icon">{{ stat.icon }}</span>
+      <div>
+        <div class="value">{{ stat.value }}</div>
+        <div class="label">{{ stat.label }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="section">
+      <div class="section-header">
+        <h2>My Active Jobs</h2>
+        <a routerLink="/client/jobs" class="btn-link">View All →</a>
+      </div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Job Title</th>
+              <th>Candidates</th>
+              <th>Status</th>
+              <th>Posted</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let job of myJobs" [routerLink]="['/client/jobs', job.id]">
+              <td><strong>{{ job.title }}</strong></td>
+              <td>{{ job.candidates }}</td>
+              <td><span class="badge active">{{ job.status }}</span></td>
+              <td>{{ job.posted | date:'MMM d, yyyy' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2>Recent Candidates</h2>
+        <a routerLink="/client/candidates" class="btn-link">View All →</a>
+      </div>
+      <div class="candidates-list">
+        <div class="candidate-item" *ngFor="let candidate of recentCandidates">
+          <div class="candidate-info">
+            <strong>{{ candidate.name }}</strong>
+            <span class="position">{{ candidate.position }}</span>
+          </div>
+          <div class="candidate-meta">
+            <span class="badge" [class]="candidate.status.toLowerCase()">{{ candidate.status }}</span>
+            <span class="time">{{ candidate.submittedDays }}d ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

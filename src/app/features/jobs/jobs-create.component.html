@@ -1,0 +1,148 @@
+<div class="jobs-create">
+  <div class="page-header">
+    <h1>Post New Job</h1>
+    <div class="header-actions">
+      <button class="btn-secondary" routerLink="/jobs">Cancel</button>
+      <button class="btn-primary" (click)="saveJob()">Publish Job</button>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <div class="progress-steps">
+      <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+        <div class="step-number">1</div>
+        <span>Basic Info</span>
+      </div>
+      <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+        <div class="step-number">2</div>
+        <span>Details</span>
+      </div>
+      <div class="step" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">
+        <div class="step-number">3</div>
+        <span>Requirements</span>
+      </div>
+      <div class="step" [class.active]="currentStep >= 4">
+        <div class="step-number">4</div>
+        <span>Review</span>
+      </div>
+    </div>
+
+    <div class="form-content">
+      <div class="step-content" *ngIf="currentStep === 1">
+        <h2>Basic Information</h2>
+        <div class="form-group">
+          <label>Job Title *</label>
+          <input type="text" [(ngModel)]="job.title" placeholder="e.g. Senior Full Stack Developer">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Client Company *</label>
+            <select [(ngModel)]="job.clientId">
+              <option value="">Select client</option>
+              <option value="1">Tech Corp</option>
+              <option value="2">Innovation Labs</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" [(ngModel)]="job.department" placeholder="e.g. Engineering">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Location *</label>
+            <input type="text" [(ngModel)]="job.location" placeholder="e.g. San Francisco, CA">
+          </div>
+          <div class="form-group">
+            <label>Job Type *</label>
+            <select [(ngModel)]="job.type">
+              <option value="full-time">Full Time</option>
+              <option value="contract">Contract</option>
+              <option value="remote">Remote</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-content" *ngIf="currentStep === 2">
+        <h2>Job Details</h2>
+        <div class="form-group">
+          <label>Job Description *</label>
+          <textarea [(ngModel)]="job.description" rows="8" placeholder="Describe the role, responsibilities, and what makes this opportunity great..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Salary Range</label>
+            <input type="text" [(ngModel)]="job.salaryMin" placeholder="Min (e.g. 120000)">
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <input type="text" [(ngModel)]="job.salaryMax" placeholder="Max (e.g. 180000)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Benefits</label>
+          <textarea [(ngModel)]="job.benefits" rows="4" placeholder="Health insurance, 401k, flexible hours, etc."></textarea>
+        </div>
+      </div>
+
+      <div class="step-content" *ngIf="currentStep === 3">
+        <h2>Requirements</h2>
+        <div class="form-group">
+          <label>Required Skills *</label>
+          <input type="text" [(ngModel)]="skillInput" (keyup.enter)="addSkill()" placeholder="Type skill and press Enter">
+          <div class="skills-list">
+            <span class="skill-tag" *ngFor="let skill of job.skills">
+              {{ skill }}
+              <button (click)="removeSkill(skill)">×</button>
+            </span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Experience Level *</label>
+          <select [(ngModel)]="job.experienceLevel">
+            <option value="entry">Entry Level (0-2 years)</option>
+            <option value="mid">Mid Level (3-5 years)</option>
+            <option value="senior">Senior Level (6+ years)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Education</label>
+          <select [(ngModel)]="job.education">
+            <option value="">Not specified</option>
+            <option value="bachelors">Bachelor's Degree</option>
+            <option value="masters">Master's Degree</option>
+            <option value="phd">PhD</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="step-content" *ngIf="currentStep === 4">
+        <h2>Review & Publish</h2>
+        <div class="review-section">
+          <h3>{{ job.title }}</h3>
+          <p class="review-meta">{{ job.location }} • {{ job.type }}</p>
+          <div class="review-item">
+            <strong>Description:</strong>
+            <p>{{ job.description }}</p>
+          </div>
+          <div class="review-item">
+            <strong>Salary:</strong>
+            <p>${{ job.salaryMin }} - ${{ job.salaryMax }}</p>
+          </div>
+          <div class="review-item">
+            <strong>Skills:</strong>
+            <div class="skills-list">
+              <span class="skill-tag" *ngFor="let skill of job.skills">{{ skill }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-secondary" *ngIf="currentStep > 1" (click)="previousStep()">← Previous</button>
+        <button class="btn-primary" *ngIf="currentStep < 4" (click)="nextStep()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,139 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo-section">
+      <div class="logo">⚡ TalentForge</div>
+      <div *ngIf="!isCandidate" class="tenant-name">{{ currentUser.tenantName }}</div>
+    </div>
+    <nav class="nav-menu">
+      <!-- Platform Admin Navigation -->
+      <ng-container *ngIf="isPlatformAdmin">
+        <a class="nav-item" routerLink="/platform-admin" routerLinkActive="active">
+          <span class="icon">🏛️</span>
+          <span>Platform Overview</span>
+        </a>
+        <a class="nav-item" routerLink="/platform-admin/tenants" routerLinkActive="active">
+          <span class="icon">🏢</span>
+          <span>Tenants</span>
+        </a>
+        <a class="nav-item" routerLink="/platform-admin/billing" routerLinkActive="active">
+          <span class="icon">💳</span>
+          <span>Billing</span>
+        </a>
+        <a class="nav-item" routerLink="/platform-admin/system" routerLinkActive="active">
+          <span class="icon">⚙️</span>
+          <span>System</span>
+        </a>
+      </ng-container>
+
+      <!-- Recruiter Navigation -->
+      <ng-container *ngIf="isRecruiter">
+        <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" routerLink="/jobs" routerLinkActive="active">
+          <span class="icon">💼</span>
+          <span>Jobs</span>
+        </a>
+        <a class="nav-item" routerLink="/applications" routerLinkActive="active">
+          <span class="icon">📝</span>
+          <span>Applications</span>
+        </a>
+        <a class="nav-item" routerLink="/candidates" routerLinkActive="active">
+          <span class="icon">👥</span>
+          <span>Candidates</span>
+        </a>
+        <a class="nav-item" routerLink="/clients" routerLinkActive="active">
+          <span class="icon">🏢</span>
+          <span>Clients</span>
+        </a>
+        <a class="nav-item" routerLink="/users" routerLinkActive="active">
+          <span class="icon">👤</span>
+          <span>Team</span>
+        </a>
+        <a class="nav-item" routerLink="/analytics" routerLinkActive="active">
+          <span class="icon">📈</span>
+          <span>Analytics</span>
+        </a>
+      </ng-container>
+
+      <!-- Client Navigation -->
+      <ng-container *ngIf="isClient">
+        <a class="nav-item" routerLink="/client" routerLinkActive="active">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" routerLink="/client/jobs" routerLinkActive="active">
+          <span class="icon">💼</span>
+          <span>My Jobs</span>
+        </a>
+        <a class="nav-item" routerLink="/client/candidates" routerLinkActive="active">
+          <span class="icon">👥</span>
+          <span>Candidates</span>
+        </a>
+        <a class="nav-item" routerLink="/client/interviews" routerLinkActive="active">
+          <span class="icon">📅</span>
+          <span>Interviews</span>
+        </a>
+      </ng-container>
+
+      <!-- Candidate Navigation -->
+      <ng-container *ngIf="isCandidate">
+        <a class="nav-item" routerLink="/candidate" routerLinkActive="active">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" routerLink="/candidate/jobs" routerLinkActive="active">
+          <span class="icon">🔍</span>
+          <span>Job Search</span>
+        </a>
+        <a class="nav-item" routerLink="/candidate/applications" routerLinkActive="active">
+          <span class="icon">📝</span>
+          <span>My Applications</span>
+        </a>
+        <a class="nav-item" routerLink="/candidate/interviews" routerLinkActive="active">
+          <span class="icon">📅</span>
+          <span>Interviews</span>
+        </a>
+        <a class="nav-item" routerLink="/candidate/profile" routerLinkActive="active">
+          <span class="icon">👤</span>
+          <span>Profile</span>
+        </a>
+        <a class="nav-item" routerLink="/candidate/messages" routerLinkActive="active">
+          <span class="icon">💬</span>
+          <span>Messages</span>
+        </a>
+      </ng-container>
+    </nav>
+    <div class="sidebar-footer">
+      <a class="nav-item" routerLink="/settings" routerLinkActive="active">
+        <span class="icon">⚙️</span>
+        <span>Settings</span>
+      </a>
+      <a class="nav-item" (click)="logout()">
+        <span class="icon">🚪</span>
+        <span>Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-bar">
+      <div class="search-bar">
+        <span class="icon">🔍</span>
+        <input type="text" [placeholder]="searchPlaceholder">
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn">🔔</button>
+        <div class="user-profile">
+          <div class="avatar">{{ currentUser.initials }}</div>
+          <span>{{ currentUser.name }}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

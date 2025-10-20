@@ -1,0 +1,57 @@
+<div class="candidate-dashboard">
+  <div class="page-header">
+    <h1>My Job Search</h1>
+    <p>Track applications and discover new opportunities</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of stats">
+      <span class="icon">{{ stat.icon }}</span>
+      <div>
+        <div class="value">{{ stat.value }}</div>
+        <div class="label">{{ stat.label }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="section">
+      <div class="section-header">
+        <h2>My Applications</h2>
+        <a routerLink="/candidate/applications" class="btn-link">View All →</a>
+      </div>
+      <div class="applications-list">
+        <div class="application-item" *ngFor="let app of myApplications">
+          <div class="app-info">
+            <strong>{{ app.position }}</strong>
+            <span class="company">{{ app.company }}</span>
+          </div>
+          <div class="app-meta">
+            <span class="badge" [class]="app.status.toLowerCase()">{{ app.status }}</span>
+            <span class="time">{{ app.appliedDays }}d ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2>Recommended Jobs</h2>
+        <a routerLink="/candidate/jobs" class="btn-link">Browse All →</a>
+      </div>
+      <div class="jobs-list">
+        <div class="job-item" *ngFor="let job of recommendedJobs">
+          <div class="job-info">
+            <strong>{{ job.title }}</strong>
+            <span class="company">{{ job.company }}</span>
+            <div class="job-details">
+              <span>📍 {{ job.location }}</span>
+              <span>💰 {{ job.salary }}</span>
+            </div>
+          </div>
+          <button class="btn-apply">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

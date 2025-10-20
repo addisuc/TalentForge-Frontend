@@ -1,0 +1,65 @@
+<div class="users-page">
+  <div class="header">
+    <div>
+      <h1>Team Members</h1>
+      <p>Manage your recruiting team and permissions</p>
+    </div>
+    <button class="btn-primary">
+      <span>➕</span> Invite User
+    </button>
+  </div>
+
+  <div class="filters">
+    <div class="search-bar">
+      <span class="icon">🔍</span>
+      <input type="text" placeholder="Search team members..." [(ngModel)]="searchQuery">
+    </div>
+    <select [(ngModel)]="selectedRole">
+      <option value="all">All Roles</option>
+      <option value="TENANT_ADMIN">Admin</option>
+      <option value="RECRUITING_MANAGER">Manager</option>
+      <option value="RECRUITER">Recruiter</option>
+    </select>
+    <select [(ngModel)]="selectedStatus">
+      <option value="all">All Status</option>
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+    </select>
+  </div>
+
+  <div class="users-grid">
+    <div class="user-card" *ngFor="let user of filteredUsers">
+      <div class="card-header">
+        <div class="avatar">{{ user.avatar }}</div>
+        <div class="info">
+          <h3>{{ user.name }}</h3>
+          <p class="email">{{ user.email }}</p>
+        </div>
+        <span class="status" [class.active]="user.status === 'Active'" [class.inactive]="user.status === 'Inactive'">
+          {{ user.status }}
+        </span>
+      </div>
+
+      <div class="role-badge">
+        <span class="icon">🎯</span>
+        {{ getRoleLabel(user.role) }}
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="value">{{ user.activeJobs }}</span>
+          <span class="label">Active Jobs</span>
+        </div>
+        <div class="stat">
+          <span class="value">{{ user.placements }}</span>
+          <span class="label">Placements</span>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span class="last-active">Last active {{ user.lastActive | date:'MMM d, h:mm a' }}</span>
+        <button class="btn-link">View Profile →</button>
+      </div>
+    </div>
+  </div>
+</div>

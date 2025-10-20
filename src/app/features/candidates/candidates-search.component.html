@@ -1,0 +1,109 @@
+<div class="candidates-search">
+  <div class="page-header">
+    <div>
+      <h1>Candidate Database</h1>
+      <p class="subtitle">{{ totalCandidates }} candidates in database</p>
+    </div>
+    <button class="btn-primary">+ Add Candidate</button>
+  </div>
+
+  <div class="search-section">
+    <div class="search-bar">
+      <span class="icon">🔍</span>
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Search by name, skills, or experience...">
+    </div>
+    <div class="filters">
+      <select class="filter-select" [(ngModel)]="selectedClient">
+        <option value="all">All Clients</option>
+        <option value="TechCorp">TechCorp Solutions</option>
+        <option value="FinanceInc">Global Finance Inc</option>
+        <option value="HealthPlus">HealthPlus Medical</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedPosition">
+        <option value="all">All Positions</option>
+        <option value="Developer">Developer</option>
+        <option value="Manager">Manager</option>
+        <option value="Designer">Designer</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedLocation">
+        <option value="all">All Locations</option>
+        <option value="San Francisco">San Francisco</option>
+        <option value="New York">New York</option>
+        <option value="Remote">Remote</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedExperience">
+        <option value="all">All Experience</option>
+        <option value="Entry">Entry Level</option>
+        <option value="Mid">Mid Level</option>
+        <option value="Senior">Senior Level</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedStatus">
+        <option value="all">All Status</option>
+        <option value="Available">Available</option>
+        <option value="Interviewing">Interviewing</option>
+        <option value="Placed">Placed</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Position</th>
+          <th>Location</th>
+          <th>Experience</th>
+          <th>Salary</th>
+          <th>Status</th>
+          <th>Skills</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let candidate of paginatedCandidates" (click)="viewCandidate(candidate.id)">
+          <td>
+            <div class="name-cell">
+              <span class="avatar">{{ candidate.initials }}</span>
+              <strong>{{ candidate.name }}</strong>
+            </div>
+          </td>
+          <td>{{ candidate.role }}</td>
+          <td>{{ candidate.location }}</td>
+          <td>{{ candidate.experience }} years</td>
+          <td>{{ candidate.salary }}</td>
+          <td><span class="badge" [class]="candidate.status.toLowerCase()">{{ candidate.status }}</span></td>
+          <td>
+            <div class="skills-inline">
+              <span class="skill-tag" *ngFor="let skill of candidate.skills.slice(0, 2)">{{ skill }}</span>
+              <span class="skill-tag more" *ngIf="candidate.skills.length > 2">+{{ candidate.skills.length - 2 }}</span>
+            </div>
+          </td>
+          <td>
+            <button class="btn-action" (click)="viewCandidate(candidate.id); $event.stopPropagation()">View</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <div class="pagination-info">
+      Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalCandidates }} candidates
+    </div>
+    <div class="pagination-controls">
+      <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+        <option [value]="25">25 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
+      <button [disabled]="currentPage === 1" (click)="previousPage()">Previous</button>
+      <span class="page-numbers">
+        <button *ngFor="let page of pageNumbers" 
+                [class.active]="page === currentPage" 
+                (click)="goToPage(page)">{{ page }}</button>
+      </span>
+      <button [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+    </div>
+  </div>
+</div>
