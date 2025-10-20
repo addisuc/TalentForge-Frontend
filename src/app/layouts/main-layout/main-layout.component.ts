@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { SessionTimeoutComponent } from '../../shared/components/session-timeout/session-timeout.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SessionTimeoutComponent],
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.scss']
 })

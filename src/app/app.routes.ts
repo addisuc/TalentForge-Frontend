@@ -1,10 +1,17 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/auth/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+import { UserRole } from './core/models/user.model';
 
 export const routes: Routes = [
   {
     path: 'home',
     loadComponent: () => import('./homepage.component').then(m => m.HomepageComponent)
+  },
+  {
+    path: '',
+    redirectTo: '/home',
+    pathMatch: 'full'
   },
   {
     path: 'auth',
@@ -67,23 +74,28 @@ export const routes: Routes = [
   },
   {
     path: 'platform-admin',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, roleGuard(['PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
     loadComponent: () => import('./features/platform-admin/platform-admin-dashboard.component').then(m => m.PlatformAdminDashboardComponent)
   },
   {
     path: 'platform-admin/tenants',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, roleGuard(['PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
     loadComponent: () => import('./features/platform-admin/tenants-manage.component').then(m => m.TenantsManageComponent)
   },
   {
     path: 'platform-admin/billing',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, roleGuard(['PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
     loadComponent: () => import('./features/platform-admin/billing.component').then(m => m.BillingComponent)
   },
   {
     path: 'platform-admin/system',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, roleGuard(['PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
     loadComponent: () => import('./features/platform-admin/system.component').then(m => m.SystemComponent)
+  },
+  {
+    path: 'admin/invite-user',
+    canActivate: [AuthGuard, roleGuard(['TENANT_ADMIN', 'PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
+    loadComponent: () => import('./features/admin/components/invite-user/invite-user.component').then(m => m.InviteUserComponent)
   },
   {
     path: 'client',
@@ -136,12 +148,23 @@ export const routes: Routes = [
     loadComponent: () => import('./features/candidate-portal/candidate-messages.component').then(m => m.CandidateMessagesComponent)
   },
   {
-    path: '',
-    redirectTo: '/dashboard',
-    pathMatch: 'full'
+    path: 'auth/forgot-password',
+    loadComponent: () => import('./features/auth/components/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'auth/reset-password/:token',
+    loadComponent: () => import('./features/auth/components/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
+    path: 'auth/verify-email/:token',
+    loadComponent: () => import('./features/auth/components/verify-email/verify-email.component').then(m => m.VerifyEmailComponent)
+  },
+  {
+    path: 'auth/accept-invitation/:token',
+    loadComponent: () => import('./features/auth/components/accept-invitation/accept-invitation.component').then(m => m.AcceptInvitationComponent)
   },
   {
     path: '**',
-    redirectTo: '/auth/login'
+    redirectTo: '/home'
   }
 ];

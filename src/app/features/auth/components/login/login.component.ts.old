@@ -1,0 +1,164 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Store } from '@ngrx/store';
+import { Observable, interval, Subscription } from 'rxjs';
+import { LoginRequest } from '../../../../core/models/user.model';
+import { AuthFacadeService } from '../../services/auth-facade.service';
+
+@Component({
+  selector: 'app-login',
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss']
+})
+export class LoginComponent implements OnInit, OnDestroy {
+  loginForm!: FormGroup;
+  loading$: Observable<boolean>;
+  error$: Observable<string | null>;
+  hidePassword = true;
+  
+  // Rate limiting properties
+  failedAttempts = 0;
+  maxAttempts = 5;
+  isLocked = false;
+  lockoutEndTime: Date | null = null;
+  remainingLockoutTime = '';
+  private lockoutSubscription?: Subscription;
+
+  constructor(
+    private fb: FormBuilder,
+    private authFacade: AuthFacadeService
+  ) {
+    this.loading$ = this.authFacade.loading$;
+    this.error$ = this.authFacade.error$;
+  }
+
+  ngOnInit(): void {
+    this.initForm();
+    this.authFacade.clearError();
+    this.checkExistingLockout();
+  }
+
+  ngOnDestroy(): void {
+    this.lockoutSubscription?.unsubscribe();
+  }
+
+  private initForm(): void {
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      rememberMe: [false]
+    });
+  }
+
+  private checkExistingLockout(): void {
+    const lockoutData = localStorage.getItem('loginLockout');
+    if (lockoutData) {
+      const { endTime, attempts } = JSON.parse(lockoutData);
+      this.lockoutEndTime = new Date(endTime);
+      this.failedAttempts = attempts;
+      
+      if (this.lockoutEndTime > new Date()) {
+        this.isLocked = true;
+        this.startLockoutTimer();
+      } else {
+        this.clearLockout();
+      }
+    }
+  }
+
+  private startLockoutTimer(): void {
+    this.lockoutSubscription = interval(1000).subscribe(() => {
+      if (this.lockoutEndTime) {
+        const now = new Date();
+        const diff = this.lockoutEndTime.getTime() - now.getTime();
+        
+        if (diff <= 0) {
+          this.clearLockout();
+        } else {
+          const minutes = Math.floor(diff / 60000);
+          const seconds = Math.floor((diff % 60000) / 1000);
+          this.remainingLockoutTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+      }
+    });
+  }
+
+  private clearLockout(): void {
+    this.isLocked = false;
+    this.failedAttempts = 0;
+    this.lockoutEndTime = null;
+    this.remainingLockoutTime = '';
+    localStorage.removeItem('loginLockout');
+    this.lockoutSubscription?.unsubscribe();
+  }
+
+  private handleFailedLogin(): void {
+    this.failedAttempts++;
+    
+    if (this.failedAttempts >= this.maxAttempts) {
+      this.lockAccount();
+    } else {
+      localStorage.setItem('loginLockout', JSON.stringify({
+        attempts: this.failedAttempts,
+        endTime: new Date().getTime()
+      }));
+    }
+  }
+
+  private lockAccount(): void {
+    this.isLocked = true;
+    const lockoutDuration = 15 * 60 * 1000; // 15 minutes
+    this.lockoutEndTime = new Date(Date.now() + lockoutDuration);
+    
+    localStorage.setItem('loginLockout', JSON.stringify({
+      endTime: this.lockoutEndTime.getTime(),
+      attempts: this.failedAttempts
+    }));
+    
+    this.startLockoutTimer();
+  }
+
+  get remainingAttempts(): number {
+    return Math.max(0, this.maxAttempts - this.failedAttempts);
+  }
+
+  get showAttemptsWarning(): boolean {
+    return this.failedAttempts > 0 && !this.isLocked;
+  }
+
+  onSubmit(): void {
+    if (this.loginForm.valid && !this.isLocked) {
+      const credentials: LoginRequest = this.loginForm.value;
+      this.authFacade.login(credentials);
+      
+      // TODO: Replace with actual backend response handling
+      // Simulate failed login for demo
+      setTimeout(() => {
+        // If login fails, increment attempts
+        // this.handleFailedLogin();
+        
+        // If login succeeds, clear lockout
+        // this.clearLockout();
+      }, 1000);
+    }
+  }
+
+  getErrorMessage(field: string): string {
+    const control = this.loginForm.get(field);
+    if (control?.hasError('required')) {
+      return `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+    }
+    if (control?.hasError('email')) {
+      return 'Please enter a valid email';
+    }
+    if (control?.hasError('minlength')) {
+      return 'Password must be at least 6 characters';
+    }
+    return '';
+  }
+
+  // Public method to simulate failed login (for testing)
+  simulateFailedLogin(): void {
+    this.handleFailedLogin();
+  }
+}

@@ -1,7 +1,13 @@
 export enum UserRole {
+  // Public registration roles
   CANDIDATE = 'CANDIDATE',
   RECRUITER = 'RECRUITER',
-  CLIENT = 'CLIENT'
+  
+  // Invitation-only roles
+  TENANT_ADMIN = 'TENANT_ADMIN',
+  BILLING_MANAGER = 'BILLING_MANAGER',
+  PLATFORM_ADMIN = 'PLATFORM_ADMIN',
+  PLATFORM_SUPER_ADMIN = 'PLATFORM_SUPER_ADMIN'
 }
 
 export interface User {
@@ -27,7 +33,7 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   role: UserRole;
-  acceptTerms: boolean;
+  acceptTerms?: boolean;
 }
 
 export interface AuthResponse {
@@ -43,4 +49,18 @@ export interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+}
+
+export interface InvitationRequest {
+  email: string;
+  role: UserRole;
+  tenantId?: string;
+  invitedBy: string;
+}
+
+export interface AcceptInvitationRequest {
+  token: string;
+  firstName: string;
+  lastName: string;
+  password: string;
 }
