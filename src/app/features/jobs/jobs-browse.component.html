@@ -4,7 +4,7 @@
       <h1>Browse Jobs</h1>
       <p class="subtitle">{{ totalJobs }} active positions available</p>
     </div>
-    <button class="btn-primary" routerLink="/jobs/create">+ Post New Job</button>
+    <button class="btn-primary" (click)="openPostModal()">+ Post New Job</button>
   </div>
 
   <div class="filters-section">
@@ -100,6 +100,55 @@
                 (click)="goToPage(page)">{{ page }}</button>
       </span>
       <button [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showPostModal" (click)="closePostModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Post New Job</h2>
+        <button class="close-btn" (click)="closePostModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Job Title *</label>
+          <input type="text" [(ngModel)]="jobTitle" class="form-control" placeholder="Senior Software Engineer">
+        </div>
+        <div class="form-group">
+          <label>Company/Client *</label>
+          <input type="text" [(ngModel)]="jobCompany" class="form-control" placeholder="Tech Corp">
+        </div>
+        <div class="form-group">
+          <label>Location *</label>
+          <input type="text" [(ngModel)]="jobLocation" class="form-control" placeholder="San Francisco, CA or Remote">
+        </div>
+        <div class="form-group">
+          <label>Job Type *</label>
+          <select [(ngModel)]="jobType" class="form-control">
+            <option value="full-time">Full Time</option>
+            <option value="part-time">Part Time</option>
+            <option value="contract">Contract</option>
+            <option value="remote">Remote</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Salary Range</label>
+          <input type="text" [(ngModel)]="jobSalary" class="form-control" placeholder="$120k - $180k">
+        </div>
+        <div class="form-group">
+          <label>Job Description</label>
+          <textarea [(ngModel)]="jobDescription" class="form-control" rows="4" placeholder="Describe the role, responsibilities, and requirements..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Required Skills</label>
+          <input type="text" [(ngModel)]="jobSkills" class="form-control" placeholder="React, Node.js, TypeScript">
+          <p class="help-text">Comma-separated list of skills</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closePostModal()">Cancel</button>
+        <button class="btn-primary" [disabled]="!jobTitle || !jobCompany || !jobLocation" (click)="postJob()">Post Job</button>
+      </div>
     </div>
   </div>
 </div>

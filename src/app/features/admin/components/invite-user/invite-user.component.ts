@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthFacadeService } from '../../../auth/services/auth-facade.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { UserRole } from '../../../../core/models/user.model';
 
 @Component({
   selector: 'app-invite-user',
@@ -29,10 +31,10 @@ import { AuthFacadeService } from '../../../auth/services/auth-facade.service';
             <select id="role" formControlName="role" class="form-control" 
                     [class.error]="role?.invalid && role?.touched">
               <option value="">Select role</option>
-              <option value="RECRUITER">Recruiter</option>
-              <option value="TENANT_ADMIN">Tenant Admin</option>
-              <option value="BILLING_MANAGER">Billing Manager</option>
-              <option value="PLATFORM_ADMIN" *ngIf="canInvitePlatformAdmin">Platform Admin</option>
+              <option value="RECRUITER" *ngIf="isTenantAdmin || isPlatformAdmin">Recruiter</option>
+              <option value="TENANT_ADMIN" *ngIf="isTenantAdmin || isPlatformAdmin">Admin</option>
+              <option value="BILLING_MANAGER" *ngIf="isPlatformAdmin">Billing Manager</option>
+              <option value="PLATFORM_ADMIN" *ngIf="isPlatformSuperAdmin">Platform Admin</option>
             </select>
             <div class="error-message" *ngIf="role?.invalid && role?.touched">
               <span *ngIf="role?.errors?.['required']">Please select a role</span>
@@ -72,24 +74,33 @@ import { AuthFacadeService } from '../../../auth/services/auth-facade.service';
     .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
   `]
 })
-export class InviteUserComponent {
+export class InviteUserComponent implements OnInit {
   inviteForm: FormGroup;
   loading = false;
   successMessage = '';
   errorMessage = '';
-  canInvitePlatformAdmin = false; // Set based on current user role
+  isTenantAdmin = false;
+  isPlatformAdmin = false;
+  isPlatformSuperAdmin = false;
 
   constructor(
     private fb: FormBuilder,
-    private authFacade: AuthFacadeService
+    private authFacade: AuthFacadeService,
+    private authService: AuthService
   ) {
     this.inviteForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       role: ['', Validators.required]
     });
+  }
 
-    // TODO: Check if current user is PLATFORM_SUPER_ADMIN
-    this.canInvitePlatformAdmin = true; // Mock for now
+  ngOnInit() {
+    const user = this.authService.getCurrentUserValue();
+    if (user) {
+      this.isTenantAdmin = user.role === UserRole.TENANT_ADMIN;
+      this.isPlatformAdmin = user.role === UserRole.PLATFORM_ADMIN || user.role === UserRole.PLATFORM_SUPER_ADMIN;
+      this.isPlatformSuperAdmin = user.role === UserRole.PLATFORM_SUPER_ADMIN;
+    }
   }
 
   get email() { return this.inviteForm.get('email'); }

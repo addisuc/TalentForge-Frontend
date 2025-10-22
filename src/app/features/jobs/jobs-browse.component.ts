@@ -11,6 +11,15 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./jobs-browse.component.scss']
 })
 export class JobsBrowseComponent {
+  showPostModal = false;
+  jobTitle = '';
+  jobCompany = '';
+  jobLocation = '';
+  jobType = 'full-time';
+  jobSalary = '';
+  jobDescription = '';
+  jobSkills = '';
+
   searchQuery = '';
   selectedType = 'all';
   selectedClient = 'all';
@@ -157,5 +166,35 @@ export class JobsBrowseComponent {
 
   viewJob(id: number) {
     console.log('View job:', id);
+  }
+
+  openPostModal() {
+    this.showPostModal = true;
+    this.jobTitle = '';
+    this.jobCompany = '';
+    this.jobLocation = '';
+    this.jobType = 'full-time';
+    this.jobSalary = '';
+    this.jobDescription = '';
+    this.jobSkills = '';
+  }
+
+  closePostModal() {
+    this.showPostModal = false;
+  }
+
+  postJob() {
+    if (this.jobTitle && this.jobCompany && this.jobLocation) {
+      console.log('Posting job:', {
+        title: this.jobTitle,
+        company: this.jobCompany,
+        location: this.jobLocation,
+        type: this.jobType,
+        salary: this.jobSalary,
+        description: this.jobDescription,
+        skills: this.jobSkills
+      });
+      this.closePostModal();
+    }
   }
 }

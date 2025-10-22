@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { AuthFacadeService } from '../../services/auth-facade.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
 
 @Component({
   selector: 'app-login-standalone',
@@ -171,7 +173,8 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private authFacade: AuthFacadeService,
-    private router: Router
+    private router: Router,
+    private navigationService: NavigationService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -265,13 +268,29 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
     if (this.loginForm.valid && !this.isLocked) {
       this.loading = true;
       this.errorMessage = '';
+      this.authFacade.login(this.loginForm.value);
       
-      // Simulate login - replace with actual auth
+      // Wait briefly for store to update
       setTimeout(() => {
-        this.loading = false;
-        this.errorMessage = 'Invalid email or password';
-        this.handleFailedLogin();
-      }, 1000);
+        this.authFacade.user$.pipe(take(1)).subscribe(user => {
+          if (user) {
+            this.loading = false;
+            this.clearLockout();
+            
+            // Redirect to role-specific dashboard
+            const dashboardRoute = this.navigationService.getDashboardRoute(user.role);
+            this.router.navigate([dashboardRoute]);
+          }
+        });
+        
+        this.authFacade.error$.pipe(take(1)).subscribe(error => {
+          if (error) {
+            this.loading = false;
+            this.errorMessage = error;
+            this.handleFailedLogin();
+          }
+        });
+      }, 500);
     }
   }
 }

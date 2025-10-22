@@ -4,7 +4,7 @@
       <h1>Team Members</h1>
       <p>Manage your recruiting team and permissions</p>
     </div>
-    <button class="btn-primary">
+    <button class="btn-primary" (click)="openInviteModal()">
       <span>➕</span> Invite User
     </button>
   </div>
@@ -59,6 +59,31 @@
       <div class="footer">
         <span class="last-active">Last active {{ user.lastActive | date:'MMM d, h:mm a' }}</span>
         <button class="btn-link">View Profile →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showInviteModal" (click)="closeInviteModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Invite Team Member</h2>
+        <button class="close-btn" (click)="closeInviteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" [(ngModel)]="inviteEmail" (blur)="onEmailBlur()" class="form-control" [class.error]="emailTouched && !isValidEmail()" placeholder="colleague@example.com">
+          <p class="error-text" *ngIf="emailTouched && !isValidEmail()">Please enter a valid email address</p>
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <input type="text" class="form-control" value="Recruiter" readonly>
+          <p class="help-text" *ngIf="isRecruiter">You can only invite other recruiters</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeInviteModal()">Cancel</button>
+        <button class="btn-primary" [disabled]="!isValidEmail()" (click)="sendInvite()">Send Invitation</button>
       </div>
     </div>
   </div>

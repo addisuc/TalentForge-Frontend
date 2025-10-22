@@ -3,6 +3,9 @@
 }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
 
   h1 {
@@ -14,6 +17,39 @@
 
   p {
     color: #64748b;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .btn-primary, .btn-secondary {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-size: 0.875rem;
+  }
+
+  .btn-primary {
+    background: #0066ff;
+    color: white;
+
+    &:hover {
+      background: #0052cc;
+    }
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #0066ff;
+    border: 1px solid #0066ff;
+
+    &:hover {
+      background: #f0f7ff;
+    }
   }
 }
 
@@ -183,5 +219,39 @@
   .alert-time {
     font-size: 0.75rem;
     color: #64748b;
+  }
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+  }
+
+  .action-icon {
+    font-size: 2rem;
+  }
+
+  .action-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
   }
 }

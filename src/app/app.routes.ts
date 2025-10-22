@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { roleRedirectGuard } from './core/guards/role-redirect.guard';
 import { UserRole } from './core/models/user.model';
 
 export const routes: Routes = [
@@ -74,28 +75,48 @@ export const routes: Routes = [
   },
   {
     path: 'platform-admin',
-    canActivate: [AuthGuard, roleGuard(['PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
+    canActivate: [AuthGuard, roleGuard([UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_SUPER_ADMIN])],
     loadComponent: () => import('./features/platform-admin/platform-admin-dashboard.component').then(m => m.PlatformAdminDashboardComponent)
   },
   {
     path: 'platform-admin/tenants',
-    canActivate: [AuthGuard, roleGuard(['PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
+    canActivate: [AuthGuard, roleGuard([UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_SUPER_ADMIN])],
     loadComponent: () => import('./features/platform-admin/tenants-manage.component').then(m => m.TenantsManageComponent)
   },
   {
     path: 'platform-admin/billing',
-    canActivate: [AuthGuard, roleGuard(['PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
+    canActivate: [AuthGuard, roleGuard([UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_SUPER_ADMIN])],
     loadComponent: () => import('./features/platform-admin/billing.component').then(m => m.BillingComponent)
   },
   {
     path: 'platform-admin/system',
-    canActivate: [AuthGuard, roleGuard(['PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
+    canActivate: [AuthGuard, roleGuard([UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_SUPER_ADMIN])],
     loadComponent: () => import('./features/platform-admin/system.component').then(m => m.SystemComponent)
   },
   {
+    path: 'admin',
+    canActivate: [AuthGuard, roleGuard([UserRole.TENANT_ADMIN])],
+    loadComponent: () => import('./features/admin/admin-dashboard.component').then(m => m.AdminDashboardComponent)
+  },
+  {
     path: 'admin/invite-user',
-    canActivate: [AuthGuard, roleGuard(['TENANT_ADMIN', 'PLATFORM_ADMIN', 'PLATFORM_SUPER_ADMIN'])],
+    canActivate: [AuthGuard, roleGuard([UserRole.TENANT_ADMIN, UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_SUPER_ADMIN])],
     loadComponent: () => import('./features/admin/components/invite-user/invite-user.component').then(m => m.InviteUserComponent)
+  },
+  {
+    path: 'billing',
+    canActivate: [AuthGuard, roleGuard([UserRole.BILLING_MANAGER])],
+    loadComponent: () => import('./features/billing/billing-dashboard.component').then(m => m.BillingDashboardComponent)
+  },
+  {
+    path: 'billing/subscriptions',
+    canActivate: [AuthGuard, roleGuard([UserRole.BILLING_MANAGER])],
+    loadComponent: () => import('./features/billing/billing-subscriptions.component').then(m => m.BillingSubscriptionsComponent)
+  },
+  {
+    path: 'billing/reports',
+    canActivate: [AuthGuard, roleGuard([UserRole.BILLING_MANAGER])],
+    loadComponent: () => import('./features/billing/billing-reports.component').then(m => m.BillingReportsComponent)
   },
   {
     path: 'client',

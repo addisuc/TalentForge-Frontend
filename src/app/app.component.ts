@@ -16,11 +16,12 @@ export class AppComponent {
   showLayout = false;
 
   constructor(private router: Router) {
+    // Listen to navigation changes
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       const url = event.url;
-      this.showLayout = !url.includes('/auth') && !url.includes('/home');
+      this.showLayout = !url.includes('/auth') && !url.includes('/home') && url !== '/';
     });
   }
 }

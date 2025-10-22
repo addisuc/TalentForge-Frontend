@@ -1,7 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { SessionTimeoutComponent } from '../../shared/components/session-timeout/session-timeout.component';
+import { AuthService } from '../../core/auth/auth.service';
+import { NavigationService, NavigationItem } from '../../core/services/navigation.service';
+import { User } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-main-layout',
@@ -10,40 +14,82 @@ import { SessionTimeoutComponent } from '../../shared/components/session-timeout
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.scss']
 })
-export class MainLayoutComponent {
-  currentUser = {
-    tenantName: 'Acme Recruiting',
-    name: 'John Doe',
-    initials: 'JD',
-    role:'TENANT_ADMIN'//'CANDIDATE' //'CLIENT'//'RECRUITER','RECRUITING_MANAGER','TENANT_ADMIN'// PLATFORM_ADMIN,
-  };
+export class MainLayoutComponent implements OnInit, OnDestroy {
+  currentUser: User | null = null;
+  navigationItems: NavigationItem[] = [];
+  private destroy$ = new Subject<void>();
 
-  get isPlatformAdmin() {
-    return this.currentUser.role === 'PLATFORM_ADMIN';
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private navigationService: NavigationService
+  ) {}
+
+  ngOnInit() {
+    // Initialize with current user value immediately
+    const currentUser = this.authService.getCurrentUserValue();
+    if (currentUser) {
+      this.currentUser = currentUser;
+      this.navigationItems = this.navigationService.getNavigationForRole(currentUser.role);
+    }
+
+    // Subscribe to changes
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        this.currentUser = user;
+        if (user) {
+          this.navigationItems = this.navigationService.getNavigationForRole(user.role);
+        } else {
+          this.navigationItems = [];
+        }
+      });
   }
 
-  get isRecruiter() {
-    return ['RECRUITER', 'RECRUITING_MANAGER', 'TENANT_ADMIN'].includes(this.currentUser.role);
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  get isClient() {
-    return this.currentUser.role === 'CLIENT';
+  get userName(): string {
+    return this.currentUser 
+      ? `${this.currentUser.firstName} ${this.currentUser.lastName}`
+      : 'User';
   }
 
-  get isCandidate() {
-    return this.currentUser.role === 'CANDIDATE';
+  get userInitials(): string {
+    return this.currentUser
+      ? `${this.currentUser.firstName[0]}${this.currentUser.lastName[0]}`
+      : 'U';
   }
 
-  get searchPlaceholder() {
-    if (this.isCandidate) return 'Search jobs or companies...';
-    if (this.isClient) return 'Search candidates or jobs...';
-    if (this.isRecruiter) return 'Search candidates, jobs, or companies...';
-    return 'Search...';
+  get showTenantName(): boolean {
+    return this.currentUser 
+      ? this.navigationService.isTenantRole(this.currentUser.role)
+      : false;
   }
 
-  constructor(private router: Router) {}
+  get searchPlaceholder(): string {
+    if (!this.currentUser) return 'Search...';
+    
+    switch(this.currentUser.role) {
+      case 'CANDIDATE':
+        return 'Search jobs or companies...';
+      case 'RECRUITER':
+        return 'Search candidates, jobs, or companies...';
+      case 'TENANT_ADMIN':
+        return 'Search team, jobs, or candidates...';
+      case 'PLATFORM_ADMIN':
+      case 'PLATFORM_SUPER_ADMIN':
+        return 'Search tenants...';
+      case 'BILLING_MANAGER':
+        return 'Search subscriptions or invoices...';
+      default:
+        return 'Search...';
+    }
+  }
 
   logout() {
-    this.router.navigate(['/home']);
+    this.authService.logout();
   }
 }

@@ -11,6 +11,15 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./candidates-search.component.scss']
 })
 export class CandidatesSearchComponent {
+  showAddModal = false;
+  candidateName = '';
+  candidateEmail = '';
+  candidatePhone = '';
+  candidatePosition = '';
+  candidateSkills = '';
+  candidateResume: File | null = null;
+  emailTouched = false;
+
   candidates = [
     {
       id: 1,
@@ -146,5 +155,50 @@ export class CandidatesSearchComponent {
 
   viewCandidate(id: number) {
     console.log('View candidate:', id);
+  }
+
+  openAddModal() {
+    this.showAddModal = true;
+    this.candidateName = '';
+    this.candidateEmail = '';
+    this.candidatePhone = '';
+    this.candidatePosition = '';
+    this.candidateSkills = '';
+    this.candidateResume = null;
+    this.emailTouched = false;
+  }
+
+  closeAddModal() {
+    this.showAddModal = false;
+  }
+
+  isValidEmail(): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(this.candidateEmail);
+  }
+
+  onEmailBlur() {
+    this.emailTouched = true;
+  }
+
+  onFileSelect(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.candidateResume = file;
+    }
+  }
+
+  addCandidate() {
+    if (this.candidateName && this.isValidEmail()) {
+      console.log('Adding candidate:', { 
+        name: this.candidateName, 
+        email: this.candidateEmail, 
+        phone: this.candidatePhone,
+        position: this.candidatePosition,
+        skills: this.candidateSkills,
+        resume: this.candidateResume?.name
+      });
+      this.closeAddModal();
+    }
   }
 }

@@ -4,7 +4,7 @@
       <h1>Candidate Database</h1>
       <p class="subtitle">{{ totalCandidates }} candidates in database</p>
     </div>
-    <button class="btn-primary">+ Add Candidate</button>
+    <button class="btn-primary" (click)="openAddModal()">+ Add Candidate</button>
   </div>
 
   <div class="search-section">
@@ -104,6 +104,48 @@
                 (click)="goToPage(page)">{{ page }}</button>
       </span>
       <button [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Add Candidate</h2>
+        <button class="close-btn" (click)="closeAddModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" [(ngModel)]="candidateName" class="form-control" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" [(ngModel)]="candidateEmail" (blur)="onEmailBlur()" class="form-control" [class.error]="emailTouched && !isValidEmail()" placeholder="john@example.com">
+          <p class="error-text" *ngIf="emailTouched && !isValidEmail()">Please enter a valid email address</p>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" [(ngModel)]="candidatePhone" class="form-control" placeholder="(555) 123-4567">
+        </div>
+        <div class="form-group">
+          <label>Position/Title</label>
+          <input type="text" [(ngModel)]="candidatePosition" class="form-control" placeholder="Senior Software Engineer">
+        </div>
+        <div class="form-group">
+          <label>Skills</label>
+          <input type="text" [(ngModel)]="candidateSkills" class="form-control" placeholder="React, Node.js, TypeScript">
+          <p class="help-text">Comma-separated list of skills</p>
+        </div>
+        <div class="form-group">
+          <label>Resume</label>
+          <input type="file" (change)="onFileSelect($event)" class="form-control" accept=".pdf,.doc,.docx">
+          <p class="help-text">PDF, DOC, or DOCX format</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeAddModal()">Cancel</button>
+        <button class="btn-primary" [disabled]="!candidateName || !isValidEmail()" (click)="addCandidate()">Add Candidate</button>
+      </div>
     </div>
   </div>
 </div>

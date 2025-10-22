@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { User, LoginRequest, RegisterRequest, AuthResponse, UserRole } from '../models/user.model';
 
@@ -24,23 +24,30 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials)
+    return this.http.post<any>(`${this.API_URL}/login`, credentials)
       .pipe(
+        map(response => this.mapLoginResponse(response)),
         tap(response => this.setAuthData(response)),
         catchError(error => this.handleAuthError(error))
       );
   }
 
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/register`, userData)
+    return this.http.post<any>(`${this.API_URL}/register`, userData)
       .pipe(
+        map(response => this.mapLoginResponse(response)),
         tap(response => this.setAuthData(response)),
         catchError(error => this.handleAuthError(error))
       );
   }
 
   logout(): void {
-    this.http.post(`${this.API_URL}/logout`, {}).subscribe();
+    const token = this.getToken();
+    if (token) {
+      this.http.post(`${this.API_URL}/logout`, {}, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).subscribe();
+    }
     this.clearAuthData();
     this.router.navigate(['/auth/login']);
   }
@@ -73,6 +80,10 @@ export class AuthService {
     return this.tokenSubject.value;
   }
 
+  getCurrentUserValue(): User | null {
+    return this.currentUserSubject.value;
+  }
+
   private setAuthData(response: AuthResponse): void {
     localStorage.setItem('token', response.token);
     localStorage.setItem('user', JSON.stringify(response.user));
@@ -100,6 +111,24 @@ export class AuthService {
         this.clearAuthData();
       }
     }
+  }
+
+  private mapLoginResponse(response: any): AuthResponse {
+    return {
+      user: {
+        id: response.userId,
+        email: response.email,
+        firstName: response.firstName,
+        lastName: response.lastName,
+        role: response.role,
+        isEmailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      token: response.accessToken,
+      refreshToken: response.refreshToken,
+      expiresIn: response.expiresIn
+    };
   }
 
   private handleAuthError(error: any): Observable<never> {

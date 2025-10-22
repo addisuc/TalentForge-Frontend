@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./billing.component.scss']
 })
 export class BillingComponent {
+  searchTenant = '';
   selectedPeriod = '30';
   selectedStatus = 'all';
 

@@ -32,9 +32,9 @@ import { FormsModule } from '@angular/forms';
               <td>{{ interview.type }}</td>
               <td><span class="badge" [class]="interview.status.toLowerCase()">{{ interview.status }}</span></td>
               <td>
-                <button *ngIf="interview.status === 'Scheduled'" class="btn-action">Join</button>
+                <button *ngIf="interview.status === 'Scheduled' && interview.meetingLink" class="btn-action" (click)="joinInterview(interview)">Join</button>
                 <button class="btn-action secondary">Details</button>
-                <button *ngIf="interview.status === 'Scheduled'" class="btn-action secondary">Request Reschedule</button>
+                <button *ngIf="interview.status === 'Scheduled'" class="btn-action secondary" (click)="requestReschedule(interview)">Request Reschedule</button>
               </td>
             </tr>
           </tbody>
@@ -53,6 +53,27 @@ import { FormsModule } from '@angular/forms';
           <button (click)="previousPage()" [disabled]="currentPage === 1" class="btn-page">Previous</button>
           <button *ngFor="let page of pageNumbers" (click)="goToPage(page)" [class.active]="page === currentPage" class="btn-page">{{ page }}</button>
           <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="btn-page">Next</button>
+        </div>
+      </div>
+
+      <div class="modal-overlay" *ngIf="showRescheduleModal" (click)="showRescheduleModal = false">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Request Reschedule</h2>
+            <button class="close-btn" (click)="showRescheduleModal = false">✕</button>
+          </div>
+          <div class="modal-body">
+            <p><strong>{{ selectedInterview?.position }}</strong> at {{ selectedInterview?.company }}</p>
+            <p>Current: {{ selectedInterview?.datetime }}</p>
+            <div class="form-group">
+              <label>Reason for Reschedule</label>
+              <textarea [(ngModel)]="rescheduleReason" class="form-control" rows="3" placeholder="Please explain why you need to reschedule..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="showRescheduleModal = false">Cancel</button>
+            <button class="btn-primary" (click)="submitReschedule()">Submit Request</button>
+          </div>
         </div>
       </div>
     </div>
@@ -83,6 +104,19 @@ import { FormsModule } from '@angular/forms';
     .btn-page:hover:not(:disabled) { background: #f8fafc; }
     .btn-page.active { background: #0066ff; color: white; border-color: #0066ff; }
     .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: white; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid #e2e8f0; }
+    .modal-header h2 { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0; }
+    .close-btn { background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer; padding: 0; width: 32px; height: 32px; }
+    .modal-body { padding: 1.5rem; }
+    .modal-body p { margin: 0 0 1rem 0; color: #475569; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 600; color: #0f172a; margin-bottom: 0.5rem; font-size: 0.875rem; }
+    .form-control { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: inherit; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1.5rem; border-top: 1px solid #e2e8f0; }
+    .btn-primary { background: #0066ff; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.875rem; }
+    .btn-secondary { background: white; color: #64748b; border: 1px solid #e2e8f0; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.875rem; }
   `]
 })
 export class CandidateInterviewsComponent {
@@ -90,10 +124,10 @@ export class CandidateInterviewsComponent {
   itemsPerPage = 25;
 
   interviews = [
-    { id: 1, position: 'Senior Full Stack Developer', company: 'TechCorp', datetime: 'Jan 30, 2024 - 2:00 PM', type: 'Video', status: 'Scheduled' },
-    { id: 2, position: 'Frontend Engineer', company: 'StartupXYZ', datetime: 'Feb 2, 2024 - 10:00 AM', type: 'Video', status: 'Scheduled' },
-    { id: 3, position: 'Backend Developer', company: 'Cloud Systems', datetime: 'Jan 25, 2024 - 3:00 PM', type: 'Phone', status: 'Completed' },
-    { id: 4, position: 'DevOps Engineer', company: 'Innovation Labs', datetime: 'Jan 20, 2024 - 11:00 AM', type: 'Video', status: 'Completed' }
+    { id: 1, position: 'Senior Full Stack Developer', company: 'TechCorp', datetime: 'Jan 30, 2024 - 2:00 PM', type: 'Zoom', status: 'Scheduled', meetingLink: 'https://zoom.us/j/1234567890' },
+    { id: 2, position: 'Frontend Engineer', company: 'StartupXYZ', datetime: 'Feb 2, 2024 - 10:00 AM', type: 'Google Meet', status: 'Scheduled', meetingLink: 'https://meet.google.com/abc-defg-hij' },
+    { id: 3, position: 'Backend Developer', company: 'Cloud Systems', datetime: 'Jan 25, 2024 - 3:00 PM', type: 'Phone', status: 'Completed', meetingLink: '' },
+    { id: 4, position: 'DevOps Engineer', company: 'Innovation Labs', datetime: 'Jan 20, 2024 - 11:00 AM', type: 'MS Teams', status: 'Completed', meetingLink: 'https://teams.microsoft.com/l/meetup-join/xyz' }
   ];
 
   get totalInterviews() { return this.interviews.length; }
@@ -106,4 +140,25 @@ export class CandidateInterviewsComponent {
   nextPage() { if (this.currentPage < this.totalPages) this.currentPage++; }
   goToPage(page: number) { this.currentPage = page; }
   onItemsPerPageChange() { this.currentPage = 1; }
+
+  showRescheduleModal = false;
+  selectedInterview: any = null;
+  rescheduleReason = '';
+
+  joinInterview(interview: any) {
+    if (interview.meetingLink) {
+      window.open(interview.meetingLink, '_blank');
+    }
+  }
+
+  requestReschedule(interview: any) {
+    this.selectedInterview = interview;
+    this.rescheduleReason = '';
+    this.showRescheduleModal = true;
+  }
+
+  submitReschedule() {
+    alert(`Reschedule request submitted for ${this.selectedInterview.position}`);
+    this.showRescheduleModal = false;
+  }
 }

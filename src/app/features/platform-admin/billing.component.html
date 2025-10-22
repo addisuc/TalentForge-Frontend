@@ -5,8 +5,7 @@
       <p>Monitor platform revenue and subscription metrics</p>
     </div>
     <div class="header-actions">
-      <button class="btn-secondary">Export Report</button>
-      <button class="btn-primary">Send Invoices</button>
+      <button class="btn-primary">Export Report</button>
     </div>
   </div>
 
@@ -44,6 +43,7 @@
     <div class="section-header">
       <h2>Invoices</h2>
       <div class="filters">
+        <input type="text" class="filter-input" placeholder="Search tenant..." [(ngModel)]="searchTenant">
         <select class="filter-select" [(ngModel)]="selectedPeriod">
           <option value="30">Last 30 Days</option>
           <option value="90">Last 3 Months</option>
@@ -80,8 +80,8 @@
             <td><span class="badge" [class]="transaction.status.toLowerCase()">{{ transaction.status }}</span></td>
             <td>
               <div class="action-buttons">
-                <button class="btn-action" *ngIf="transaction.status === 'Paid'">View Invoice</button>
-                <button class="btn-action" *ngIf="transaction.status === 'Pending'">Send Reminder</button>
+                <button class="btn-action" *ngIf="transaction.status === 'Paid'">View</button>
+                <button class="btn-action" *ngIf="transaction.status === 'Pending'">Send Invoice</button>
                 <button class="btn-action secondary">Download</button>
               </div>
             </td>

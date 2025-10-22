@@ -27,4 +27,13 @@ export class PlatformAdminDashboardComponent {
     { type: 'warning', message: 'High API usage detected for tenant: TechCorp', time: '10 mins ago' },
     { type: 'info', message: 'New tenant signup: HR Solutions Ltd', time: '2 hours ago' }
   ];
+
+  quickActions = [
+    { icon: '➕', label: 'Add Tenant' },
+    { icon: '⏸️', label: 'Suspend Tenant' },
+    { icon: '📧', label: 'Send Message' },
+    { icon: '📊', label: 'View Reports' },
+    { icon: '⚙️', label: 'System Settings' },
+    { icon: '🔔', label: 'Announcements' }
+  ];
 }

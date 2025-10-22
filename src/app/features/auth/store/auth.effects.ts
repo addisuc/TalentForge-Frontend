@@ -45,8 +45,13 @@ export class AuthEffects {
           case 'RECRUITER':
             this.router.navigate(['/recruiter/dashboard']);
             break;
-          case 'CLIENT':
-            this.router.navigate(['/client/dashboard']);
+          case 'TENANT_ADMIN':
+          case 'BILLING_MANAGER':
+            this.router.navigate(['/admin/dashboard']);
+            break;
+          case 'PLATFORM_ADMIN':
+          case 'PLATFORM_SUPER_ADMIN':
+            this.router.navigate(['/platform-admin/dashboard']);
             break;
           default:
             this.router.navigate(['/dashboard']);

@@ -1,30 +1,28 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { map, take } from 'rxjs/operators';
-import { selectUser } from '../../features/auth/store/auth.selectors';
+import { AuthService } from '../auth/auth.service';
+import { NavigationService } from '../services/navigation.service';
 import { UserRole } from '../models/user.model';
 
 export const roleGuard = (allowedRoles: UserRole[]): CanActivateFn => {
   return () => {
-    const store = inject(Store);
+    const authService = inject(AuthService);
+    const navigationService = inject(NavigationService);
     const router = inject(Router);
 
-    return store.select(selectUser).pipe(
-      take(1),
-      map(user => {
-        if (!user) {
-          router.navigate(['/auth/login']);
-          return false;
-        }
+    const user = authService.getCurrentUserValue();
+    
+    if (!user) {
+      router.navigate(['/auth/login']);
+      return false;
+    }
 
-        if (allowedRoles.includes(user.role)) {
-          return true;
-        }
+    if (allowedRoles.includes(user.role)) {
+      return true;
+    }
 
-        router.navigate(['/dashboard']);
-        return false;
-      })
-    );
+    const dashboardRoute = navigationService.getDashboardRoute(user.role);
+    router.navigate([dashboardRoute]);
+    return false;
   };
 };

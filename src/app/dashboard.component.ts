@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
+import { AuthService } from './core/auth/auth.service';
+import { NavigationService } from './core/services/navigation.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -13,7 +15,7 @@ import { MainLayoutComponent } from './layouts/main-layout/main-layout.component
           <div class="page-header">
             <div>
               <h1>Dashboard Overview</h1>
-              <p class="page-subtitle">Welcome back, John Doe</p>
+              <p class="page-subtitle">Welcome back, {{ userName }}</p>
             </div>
             <button class="btn-primary">+ Post New Job</button>
           </div>
@@ -391,8 +393,23 @@ import { MainLayoutComponent } from './layouts/main-layout/main-layout.component
     }
   `]
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   Math = Math;
+  userName = 'User';
+
+  constructor(
+    private authService: AuthService,
+    private navigationService: NavigationService,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.userName = `${user.firstName} ${user.lastName}`;
+      }
+    });
+  }
 
   stats = [
     { icon: '👥', value: '1,234', label: 'Total Candidates', trend: 12 },
