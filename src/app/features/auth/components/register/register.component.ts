@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthFacadeService } from '../../services/auth-facade.service';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-register',
@@ -92,10 +93,14 @@ import { AuthFacadeService } from '../../services/auth-facade.service';
           </div>
 
           <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" formControlName="acceptTerms" />
-              <span>I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a></span>
-            </label>
+            <div style="display: flex; align-items: start; gap: 0.5rem;">
+              <input type="checkbox" formControlName="acceptTerms" id="terms" style="margin-top: 0.25rem;" />
+              <label for="terms" style="font-size: 0.875rem; color: #475569; cursor: pointer;">I agree to the Terms of Service and Privacy Policy</label>
+            </div>
+            <div style="font-size: 0.75rem; margin-top: 0.25rem; margin-left: 1.75rem;">
+              <a [routerLink]="['/legal/terms']" target="_blank" style="color: #0066ff; cursor: pointer; text-decoration: underline;">Terms of Service</a> • 
+              <a [routerLink]="['/legal/privacy']" target="_blank" style="color: #0066ff; cursor: pointer; text-decoration: underline;">Privacy Policy</a>
+            </div>
             <div class="error-message" *ngIf="acceptTerms?.invalid && acceptTerms?.touched">
               <span>You must accept the terms and conditions</span>
             </div>
@@ -233,6 +238,8 @@ export class RegisterComponent {
       this.passwordStrengthText = 'Strong';
     }
   }
+
+
 
   onSubmit() {
     if (this.registerForm.valid) {

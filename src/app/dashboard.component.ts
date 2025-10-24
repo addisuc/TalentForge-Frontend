@@ -17,7 +17,7 @@ import { NavigationService } from './core/services/navigation.service';
               <h1>Dashboard Overview</h1>
               <p class="page-subtitle">Welcome back, {{ userName }}</p>
             </div>
-            <button class="btn-primary">+ Post New Job</button>
+            <button class="btn-primary" (click)="navigateToJobs()">+ Post New Job</button>
           </div>
 
           <div class="stats-grid">
@@ -445,4 +445,8 @@ export class DashboardComponent implements OnInit {
     { icon: '📧', label: 'Send Email' },
     { icon: '📊', label: 'View Reports' }
   ];
+
+  navigateToJobs() {
+    this.router.navigate(['/jobs']);
+  }
 }

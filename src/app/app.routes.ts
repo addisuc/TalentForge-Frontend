@@ -185,6 +185,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/components/accept-invitation/accept-invitation.component').then(m => m.AcceptInvitationComponent)
   },
   {
+    path: 'legal/terms',
+    loadComponent: () => import('./features/legal/terms-and-conditions.component').then(m => m.TermsAndConditionsComponent)
+  },
+  {
+    path: 'legal/privacy',
+    loadComponent: () => import('./features/legal/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
+  },
+  {
     path: '**',
     redirectTo: '/home'
   }

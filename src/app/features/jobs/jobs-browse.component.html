@@ -10,7 +10,7 @@
   <div class="filters-section">
     <div class="search-box">
       <span class="icon">🔍</span>
-      <input type="text" placeholder="Search by title, skills, or company..." [(ngModel)]="searchQuery">
+      <input type="text" placeholder="Search by title, skills, or company..." [(ngModel)]="searchQuery" (keyup.enter)="onSearch()">
     </div>
     <div class="filters">
       <select class="filter-select" [(ngModel)]="selectedClient">
@@ -65,18 +65,20 @@
             <div class="job-title-cell">
               <strong>{{ job.title }}</strong>
               <div class="skills-inline">
-                <span class="skill-tag" *ngFor="let skill of job.skills.slice(0, 2)">{{ skill }}</span>
+                <span class="skill-tag" *ngFor="let skill of getJobSkills(job).slice(0, 2)">{{ skill }}</span>
               </div>
             </div>
           </td>
-          <td>{{ job.company }}</td>
-          <td>{{ job.location }}</td>
-          <td><span class="badge" [class]="job.type">{{ job.type }}</span></td>
-          <td>{{ job.salary }}</td>
-          <td>{{ job.applicants }}</td>
-          <td>{{ job.postedDays }}d ago</td>
+          <td>{{ getCompanyName(job) }}</td>
+          <td>{{ getLocationString(job) }}</td>
+          <td><span class="badge" [class]="getJobTypeClass(job)">{{ getJobTypeDisplay(job) }}</span></td>
+          <td>{{ getSalaryRange(job) }}</td>
+          <td>{{ getApplicantCount(job) }}</td>
+          <td>{{ getDaysAgo(job.createdAt) }}d ago</td>
           <td>
-            <button class="btn-action" (click)="viewJob(job.id); $event.stopPropagation()">View</button>
+            <button class="btn-action" (click)="viewJobDetails($event, job.id)">View</button>
+            <button class="btn-action secondary" (click)="editJobDetails($event, job)">Edit</button>
+            <button class="btn-action danger" (click)="deleteJobDetails($event, job.id)">Delete</button>
           </td>
         </tr>
       </tbody>
@@ -106,10 +108,11 @@
   <div class="modal-overlay" *ngIf="showPostModal" (click)="closePostModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>Post New Job</h2>
+        <h2>{{ editingJob ? 'Edit Job' : 'Post New Job' }}</h2>
         <button class="close-btn" (click)="closePostModal()">✕</button>
       </div>
       <div class="modal-body">
+        <div *ngIf="error" class="error-message">{{ error }}</div>
         <div class="form-group">
           <label>Job Title *</label>
           <input type="text" [(ngModel)]="jobTitle" class="form-control" placeholder="Senior Software Engineer">
@@ -128,7 +131,8 @@
             <option value="full-time">Full Time</option>
             <option value="part-time">Part Time</option>
             <option value="contract">Contract</option>
-            <option value="remote">Remote</option>
+            <option value="temporary">Temporary</option>
+            <option value="internship">Internship</option>
           </select>
         </div>
         <div class="form-group">
@@ -147,7 +151,79 @@
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closePostModal()">Cancel</button>
-        <button class="btn-primary" [disabled]="!jobTitle || !jobCompany || !jobLocation" (click)="postJob()">Post Job</button>
+        <button class="btn-primary" [disabled]="!jobTitle || !jobCompany || !jobLocation || loading" (click)="postJob()">{{ loading ? (editingJob ? 'Updating...' : 'Posting...') : (editingJob ? 'Update Job' : 'Post Job') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Job Modal -->
+  <div class="modal-overlay" *ngIf="showViewModal" (click)="closeViewModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Job Details</h2>
+        <button class="close-btn" (click)="closeViewModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="viewingJob">
+        <div class="job-detail-grid">
+          <div class="detail-item">
+            <label>Job Title</label>
+            <div class="detail-value">{{ viewingJob.title }}</div>
+          </div>
+          <div class="detail-item">
+            <label>Company</label>
+            <div class="detail-value">{{ getCompanyName(viewingJob) }}</div>
+          </div>
+          <div class="detail-item">
+            <label>Location</label>
+            <div class="detail-value">{{ getLocationString(viewingJob) }}</div>
+          </div>
+          <div class="detail-item">
+            <label>Job Type</label>
+            <div class="detail-value">{{ getJobTypeDisplay(viewingJob) }}</div>
+          </div>
+          <div class="detail-item">
+            <label>Salary Range</label>
+            <div class="detail-value">{{ getSalaryRange(viewingJob) }}</div>
+          </div>
+          <div class="detail-item full-width">
+            <label>Description</label>
+            <div class="detail-value description">{{ viewingJob.description }}</div>
+          </div>
+          <div class="detail-item full-width" *ngIf="viewingJob.requirements">
+            <label>Requirements</label>
+            <div class="detail-value">{{ viewingJob.requirements }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeViewModal()">Close</button>
+        <button class="btn-primary" (click)="editFromView()">Edit Job</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+    <div class="modal delete-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Delete Job</h2>
+        <button class="close-btn" (click)="closeDeleteModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="deletingJob">
+        <div class="delete-warning">
+          <div class="warning-icon">⚠️</div>
+          <div class="warning-text">
+            <p>Are you sure you want to delete this job?</p>
+            <p class="job-title">"{{ deletingJob.title }}"</p>
+            <p class="warning-note">This action cannot be undone.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+        <button class="btn-danger" [disabled]="loading" (click)="confirmDelete()">
+          {{ loading ? 'Deleting...' : 'Delete Job' }}
+        </button>
       </div>
     </div>
   </div>

@@ -215,9 +215,26 @@ h1 {
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
+  margin-right: 4px;
 
   &:hover {
     background: #0052cc;
+  }
+
+  &.secondary {
+    background: #6b7280;
+    
+    &:hover {
+      background: #4b5563;
+    }
+  }
+
+  &.danger {
+    background: #dc2626;
+    
+    &:hover {
+      background: #b91c1c;
+    }
   }
 }
 
@@ -404,4 +421,100 @@ textarea.form-control {
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.error-message {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  border: 1px solid #fecaca;
+}
+
+.job-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.detail-item {
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+  }
+
+  .detail-value {
+    color: #0f172a;
+    font-size: 0.875rem;
+    line-height: 1.5;
+
+    &.description {
+      white-space: pre-wrap;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+  }
+}
+
+.delete-modal {
+  max-width: 400px;
+}
+
+.delete-warning {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+
+  .warning-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  .warning-text {
+    p {
+      margin: 0 0 8px 0;
+      color: #0f172a;
+    }
+
+    .job-title {
+      font-weight: 600;
+      color: #dc2626;
+      font-size: 1rem;
+    }
+
+    .warning-note {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #b91c1c;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }

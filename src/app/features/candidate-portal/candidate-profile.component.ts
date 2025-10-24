@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { UserService, User, UpdateUserRequest } from '../../core/services/user.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-candidate-profile',
@@ -45,7 +47,7 @@ import { FormsModule } from '@angular/forms';
           <div class="form-grid">
             <div class="form-group">
               <label>Full Name</label>
-              <input type="text" [(ngModel)]="profile.name" class="form-input">
+              <input type="text" [(ngModel)]="profile.name" class="form-input" [disabled]="loading">
             </div>
             <div class="form-group">
               <label>Email</label>
@@ -95,8 +97,8 @@ import { FormsModule } from '@angular/forms';
         </div>
 
         <div class="profile-actions">
-          <button class="btn-save">Save Changes</button>
-          <button class="btn-cancel">Cancel</button>
+          <button class="btn-save" (click)="saveProfile()" [disabled]="loading">{{ loading ? 'Saving...' : 'Save Changes' }}</button>
+          <button class="btn-cancel" (click)="loadProfile()" [disabled]="loading">Cancel</button>
         </div>
       </div>
     </div>
@@ -142,23 +144,103 @@ import { FormsModule } from '@angular/forms';
     .btn-icon:hover { background: #f1f5f9; }
   `]
 })
-export class CandidateProfileComponent {
-  profile = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    summary: 'Experienced full-stack developer with 5+ years of expertise in building scalable web applications.',
-    resume: null as any,
-    skills: ['JavaScript', 'TypeScript', 'Angular', 'React', 'Node.js', 'Python', 'AWS'],
-    experience: [
-      { title: 'Senior Developer', company: 'TechCorp', duration: '2021 - Present', description: 'Lead development of enterprise applications using Angular and Node.js.' },
-      { title: 'Full Stack Developer', company: 'StartupXYZ', duration: '2019 - 2021', description: 'Built and maintained multiple web applications from scratch.' }
-    ],
-    education: [
-      { degree: 'Bachelor of Science in Computer Science', school: 'University of California', year: '2019' }
-    ]
+export class CandidateProfileComponent implements OnInit {
+  profile: any = {
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    summary: '',
+    resume: null,
+    skills: [],
+    experience: [],
+    education: []
   };
+  loading = false;
+  error = '';
+  user: User | null = null;
+
+  constructor(
+    private userService: UserService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    this.loadProfile();
+  }
+
+  loadProfile() {
+    this.loading = true;
+    this.error = '';
+    
+    this.authService.getCurrentUser().subscribe({
+      next: (currentUser) => {
+        if (!currentUser?.id) {
+          this.error = 'User not authenticated';
+          this.loading = false;
+          return;
+        }
+
+        this.userService.getUserProfile(currentUser.id).subscribe({
+          next: (user: User) => {
+            this.user = user;
+            this.profile = {
+              name: `${user.firstName} ${user.lastName}`,
+              email: user.email,
+              phone: user.phoneNumber || '',
+              location: user.location || '',
+              summary: user.experience || '',
+              resume: null,
+              skills: user.skills || [],
+              experience: [],
+              education: []
+            };
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error('Error loading profile:', err);
+            this.error = 'Failed to load profile';
+            this.loading = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error getting current user:', err);
+        this.error = 'Authentication error';
+        this.loading = false;
+      }
+    });
+  }
+
+  saveProfile() {
+    if (!this.user) return;
+
+    this.loading = true;
+    const [firstName, ...lastNameParts] = this.profile.name.split(' ');
+    const lastName = lastNameParts.join(' ');
+
+    const updateRequest: UpdateUserRequest = {
+      firstName,
+      lastName,
+      phoneNumber: this.profile.phone,
+      location: this.profile.location,
+      experience: this.profile.summary,
+      skills: this.profile.skills
+    };
+
+    this.userService.updateUser(this.user.id, updateRequest).subscribe({
+      next: (updatedUser: User) => {
+        this.user = updatedUser;
+        this.loading = false;
+        alert('Profile updated successfully!');
+      },
+      error: (err) => {
+        console.error('Error updating profile:', err);
+        this.error = 'Failed to update profile';
+        this.loading = false;
+      }
+    });
+  }
 
   onDragOver(event: DragEvent) {
     event.preventDefault();

@@ -21,7 +21,7 @@ export class AppComponent {
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       const url = event.url;
-      this.showLayout = !url.includes('/auth') && !url.includes('/home') && url !== '/';
+      this.showLayout = !url.includes('/auth') && !url.includes('/home') && !url.includes('/legal') && url !== '/';
     });
   }
 }

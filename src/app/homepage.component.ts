@@ -95,7 +95,7 @@ import { RouterModule } from '@angular/router';
 
       <footer class="footer">
         <div class="container">
-          <p>&copy; 2024 TalentForge. All rights reserved.</p>
+          <p>&copy; 2025 TalentForge. All rights reserved.</p>
         </div>
       </footer>
     </div>

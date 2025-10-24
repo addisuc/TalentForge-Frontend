@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { InterviewService, Interview, RescheduleRequest } from '../../core/services/interview.service';
 
 @Component({
   selector: 'app-candidate-interviews',
@@ -119,16 +120,46 @@ import { FormsModule } from '@angular/forms';
     .btn-secondary { background: white; color: #64748b; border: 1px solid #e2e8f0; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.875rem; }
   `]
 })
-export class CandidateInterviewsComponent {
+export class CandidateInterviewsComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 25;
+  interviews: any[] = [];
+  loading = false;
+  error = '';
 
-  interviews = [
-    { id: 1, position: 'Senior Full Stack Developer', company: 'TechCorp', datetime: 'Jan 30, 2024 - 2:00 PM', type: 'Zoom', status: 'Scheduled', meetingLink: 'https://zoom.us/j/1234567890' },
-    { id: 2, position: 'Frontend Engineer', company: 'StartupXYZ', datetime: 'Feb 2, 2024 - 10:00 AM', type: 'Google Meet', status: 'Scheduled', meetingLink: 'https://meet.google.com/abc-defg-hij' },
-    { id: 3, position: 'Backend Developer', company: 'Cloud Systems', datetime: 'Jan 25, 2024 - 3:00 PM', type: 'Phone', status: 'Completed', meetingLink: '' },
-    { id: 4, position: 'DevOps Engineer', company: 'Innovation Labs', datetime: 'Jan 20, 2024 - 11:00 AM', type: 'MS Teams', status: 'Completed', meetingLink: 'https://teams.microsoft.com/l/meetup-join/xyz' }
-  ];
+  constructor(private interviewService: InterviewService) {}
+
+  ngOnInit() {
+    this.loadInterviews();
+  }
+
+  loadInterviews() {
+    this.loading = true;
+    this.error = '';
+    this.interviewService.getUpcomingInterviews(90).subscribe({
+      next: (data) => {
+        this.interviews = data.map(interview => this.mapInterviewToDisplay(interview));
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading interviews:', err);
+        this.error = 'Failed to load interviews';
+        this.loading = false;
+      }
+    });
+  }
+
+  mapInterviewToDisplay(interview: Interview) {
+    return {
+      id: interview.id,
+      position: interview.interviewType,
+      company: interview.interviewerName || 'Company',
+      datetime: new Date(interview.scheduledAt).toLocaleString(),
+      type: interview.meetingPlatform || 'Not specified',
+      status: interview.status,
+      meetingLink: interview.meetingLink
+    };
+  }
 
   get totalInterviews() { return this.interviews.length; }
   get totalPages() { return Math.ceil(this.totalInterviews / this.itemsPerPage); }
@@ -158,7 +189,25 @@ export class CandidateInterviewsComponent {
   }
 
   submitReschedule() {
-    alert(`Reschedule request submitted for ${this.selectedInterview.position}`);
-    this.showRescheduleModal = false;
+    if (!this.rescheduleReason.trim()) {
+      alert('Please provide a reason for rescheduling');
+      return;
+    }
+
+    const request: RescheduleRequest = {
+      reason: this.rescheduleReason
+    };
+
+    this.interviewService.requestReschedule(this.selectedInterview.id, request).subscribe({
+      next: () => {
+        alert(`Reschedule request submitted for ${this.selectedInterview.position}`);
+        this.showRescheduleModal = false;
+        this.loadInterviews();
+      },
+      error: (err) => {
+        console.error('Error requesting reschedule:', err);
+        alert('Failed to submit reschedule request');
+      }
+    });
   }
 }

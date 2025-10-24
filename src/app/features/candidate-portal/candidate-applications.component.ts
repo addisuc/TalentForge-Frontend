@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ApplicationService, JobApplication, ApplicationPage } from '../../core/services/application.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-candidate-applications',
@@ -25,9 +27,9 @@ import { FormsModule } from '@angular/forms';
           </thead>
           <tbody>
             <tr *ngFor="let app of paginatedApplications">
-              <td><strong>{{ app.position }}</strong></td>
-              <td>{{ app.company }}</td>
-              <td>{{ app.appliedDate }}</td>
+              <td><strong>{{ app.jobTitle || 'Job Title' }}</strong></td>
+              <td>{{ app.companyName || 'Company' }}</td>
+              <td>{{ app.appliedAt | date:'MMM d, y' }}</td>
               <td><span class="badge" [class]="app.status.toLowerCase()">{{ app.status }}</span></td>
               <td>
                 <button class="btn-action">View Details</button>
@@ -84,26 +86,67 @@ import { FormsModule } from '@angular/forms';
     .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
   `]
 })
-export class CandidateApplicationsComponent {
+export class CandidateApplicationsComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 25;
 
-  applications = [
-    { id: 1, position: 'Senior Full Stack Developer', company: 'TechCorp', appliedDate: 'Jan 25, 2024', status: 'Interview' },
-    { id: 2, position: 'Frontend Engineer', company: 'StartupXYZ', appliedDate: 'Jan 28, 2024', status: 'Review' },
-    { id: 3, position: 'Backend Developer', company: 'Cloud Systems', appliedDate: 'Jan 29, 2024', status: 'Applied' },
-    { id: 4, position: 'DevOps Engineer', company: 'Innovation Labs', appliedDate: 'Jan 20, 2024', status: 'Rejected' },
-    { id: 5, position: 'Mobile Developer', company: 'AppWorks', appliedDate: 'Jan 15, 2024', status: 'Offer' }
-  ];
+  applications: JobApplication[] = [];
+  loading = false;
+  error = '';
+  totalApplications = 0;
+  totalPages = 0;
 
-  get totalApplications() { return this.applications.length; }
-  get totalPages() { return Math.ceil(this.totalApplications / this.itemsPerPage); }
+  constructor(
+    private applicationService: ApplicationService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    this.loadApplications();
+  }
+
+  loadApplications() {
+    this.loading = true;
+    this.error = '';
+    
+    this.authService.getCurrentUser().subscribe({
+      next: (user) => {
+        if (!user?.id) {
+          this.error = 'User not authenticated';
+          this.loading = false;
+          return;
+        }
+
+        const page = this.currentPage - 1;
+        this.applicationService.getApplicationsByCandidate(user.id, page, this.itemsPerPage).subscribe({
+          next: (data: ApplicationPage) => {
+            this.applications = data.content;
+            this.totalApplications = data.totalElements;
+            this.totalPages = data.totalPages;
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error('Error loading applications:', err);
+            this.error = 'Failed to load applications';
+            this.loading = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error getting current user:', err);
+        this.error = 'Authentication error';
+        this.loading = false;
+      }
+    });
+  }
+
+
   get startIndex() { return (this.currentPage - 1) * this.itemsPerPage; }
   get endIndex() { return Math.min(this.startIndex + this.itemsPerPage, this.totalApplications); }
-  get paginatedApplications() { return this.applications.slice(this.startIndex, this.endIndex); }
+  get paginatedApplications() { return this.applications; }
   get pageNumbers() { const pages = []; for (let i = 1; i <= this.totalPages; i++) pages.push(i); return pages; }
-  previousPage() { if (this.currentPage > 1) this.currentPage--; }
-  nextPage() { if (this.currentPage < this.totalPages) this.currentPage++; }
-  goToPage(page: number) { this.currentPage = page; }
-  onItemsPerPageChange() { this.currentPage = 1; }
+  previousPage() { if (this.currentPage > 1) { this.currentPage--; this.loadApplications(); } }
+  nextPage() { if (this.currentPage < this.totalPages) { this.currentPage++; this.loadApplications(); } }
+  goToPage(page: number) { this.currentPage = page; this.loadApplications(); }
+  onItemsPerPageChange() { this.currentPage = 1; this.loadApplications(); }
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { LoginRequest, RegisterRequest, User } from '../../../core/models/user.model';
 import { AppState } from '../../../store';
 import * as AuthActions from '../store/auth.actions';
@@ -17,7 +18,10 @@ export class AuthFacadeService {
   loading$: Observable<boolean> = this.store.select(selectAuthLoading);
   error$: Observable<string | null> = this.store.select(selectAuthError);
 
-  constructor(private store: Store<AppState>) {}
+  constructor(
+    private store: Store<AppState>,
+    private http: HttpClient
+  ) {}
 
   // Actions
   login(credentials: LoginRequest): void {
@@ -37,87 +41,30 @@ export class AuthFacadeService {
   }
 
   forgotPassword(email: string): Observable<any> {
-    // TODO: Implement when backend is ready
-    // return this.http.post('/api/auth/forgot-password', { email });
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next({ message: 'Password reset email sent' });
-        observer.complete();
-      }, 1000);
-    });
+    return this.http.post('/api/auth/forgot-password', { email });
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {
-    // TODO: Implement when backend is ready
-    // return this.http.post('/api/auth/reset-password', { token, newPassword });
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next({ message: 'Password reset successful' });
-        observer.complete();
-      }, 1000);
-    });
+    return this.http.post('/api/auth/reset-password', { token, newPassword });
   }
 
   verifyEmail(token: string): Observable<any> {
-    // TODO: Implement when backend is ready
-    // return this.http.get(`/api/auth/verify-email/${token}`);
-    return new Observable(observer => {
-      setTimeout(() => {
-        if (token === 'valid-token') {
-          observer.next({ message: 'Email verified successfully' });
-          observer.complete();
-        } else {
-          observer.error({ message: 'The verification link is invalid or has expired' });
-        }
-      }, 2000);
-    });
+    return this.http.get(`/api/auth/verify-email/${token}`);
   }
 
   resendVerificationEmail(token: string): Observable<any> {
-    // TODO: Implement when backend is ready
-    // return this.http.post('/api/auth/resend-verification', { token });
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next({ message: 'Verification email sent' });
-        observer.complete();
-      }, 1000);
-    });
+    return this.http.post('/api/auth/resend-verification', { token });
   }
 
   validateInvitation(token: string): Observable<any> {
-    // TODO: Implement when backend is ready
-    // return this.http.get(`/api/invitations/${token}`);
-    return new Observable(observer => {
-      setTimeout(() => {
-        if (token === 'valid-invitation') {
-          observer.next({ email: 'invited@example.com', role: 'TENANT_ADMIN' });
-          observer.complete();
-        } else {
-          observer.error({ message: 'Invalid or expired invitation' });
-        }
-      }, 1000);
-    });
+    return this.http.get(`/api/auth/invitations/${token}`);
   }
 
   acceptInvitation(data: any): Observable<any> {
-    // TODO: Implement when backend is ready
-    // return this.http.post(`/api/invitations/${data.token}/accept`, data);
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next({ message: 'Invitation accepted successfully' });
-        observer.complete();
-      }, 1500);
-    });
+    return this.http.post(`/api/auth/invitations/${data.token}/accept`, data);
   }
 
   sendInvitation(data: any): Observable<any> {
-    // TODO: Implement when backend is ready
-    // return this.http.post('/api/admin/invitations', data);
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next({ message: 'Invitation sent successfully' });
-        observer.complete();
-      }, 1000);
-    });
+    return this.http.post('/api/auth/invitations', data);
   }
 }
