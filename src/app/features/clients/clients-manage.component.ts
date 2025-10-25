@@ -86,6 +86,17 @@ export class ClientsManageComponent {
   currentPage = 1;
   itemsPerPage = 25;
 
+  showAddModal = false;
+  newClient = {
+    name: '',
+    industry: '',
+    contact: '',
+    email: '',
+    phone: '',
+    address: '',
+    website: ''
+  };
+
   get filteredClients() {
     return this.clients.filter(client => {
       const matchesSearch = client.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
@@ -146,5 +157,80 @@ export class ClientsManageComponent {
 
   viewClient(id: number) {
     console.log('View client:', id);
+  }
+
+  editClient(id: number) {
+    console.log('Edit client:', id);
+    alert('Edit client functionality - Navigate to edit form');
+  }
+
+  sendEmail(id: number) {
+    const client = this.clients.find(c => c.id === id);
+    if (client) {
+      window.location.href = `mailto:${client.email}?subject=Regarding ${client.name}`;
+    }
+  }
+
+  viewJobs(id: number) {
+    console.log('View jobs for client:', id);
+    alert('Navigate to jobs filtered by this client');
+  }
+
+  deactivateClient(id: number) {
+    if (confirm('Are you sure you want to deactivate this client?')) {
+      const client = this.clients.find(c => c.id === id);
+      if (client) {
+        client.status = 'Inactive';
+      }
+    }
+  }
+
+  activateClient(id: number) {
+    const client = this.clients.find(c => c.id === id);
+    if (client) {
+      client.status = 'Active';
+    }
+  }
+
+  openAddModal() {
+    this.showAddModal = true;
+    this.newClient = {
+      name: '',
+      industry: '',
+      contact: '',
+      email: '',
+      phone: '',
+      address: '',
+      website: ''
+    };
+  }
+
+  closeAddModal() {
+    this.showAddModal = false;
+  }
+
+  saveClient() {
+    if (!this.newClient.name || !this.newClient.email) {
+      alert('Please fill in required fields (Name and Email)');
+      return;
+    }
+
+    const newId = Math.max(...this.clients.map(c => c.id)) + 1;
+    const client = {
+      id: newId,
+      name: this.newClient.name,
+      logo: '🏢',
+      industry: this.newClient.industry,
+      activeJobs: 0,
+      totalHires: 0,
+      status: 'Active',
+      contact: this.newClient.contact,
+      email: this.newClient.email,
+      phone: this.newClient.phone,
+      since: new Date().toISOString().split('T')[0]
+    };
+
+    this.clients.unshift(client);
+    this.closeAddModal();
   }
 }

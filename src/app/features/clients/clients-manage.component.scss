@@ -160,20 +160,39 @@
   }
 }
 
+.action-buttons {
+  display: flex;
+  gap: 4px;
+}
+
 .btn-action {
-  background: #0066ff;
-  color: white;
-  border: none;
-  padding: 6px 12px;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
+  transition: all 0.2s;
 
   &:hover {
-    background: #0052cc;
+    background: #0066ff;
+    color: white;
+    border-color: #0066ff;
+  }
+
+  &.danger:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: white;
+  }
+
+  &.success:hover {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: white;
   }
 }
 
@@ -388,5 +407,110 @@
         text-decoration: underline;
       }
     }
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+
+    &:hover {
+      color: #0f172a;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: #0066ff;
+    }
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-secondary {
+  background: white;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #f8fafc;
   }
 }
