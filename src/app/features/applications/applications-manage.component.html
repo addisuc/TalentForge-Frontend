@@ -31,27 +31,131 @@
     </select>
   </div>
 
-  <div class="pipeline-board" [class.compact-view]="compactView">
+  <div class="pipeline-board" [class.compact-view]="compactView" cdkDropListGroup>
     <div class="pipeline-column" *ngFor="let stage of stages">
       <div class="column-header">
         <h3>{{ stage.name }}</h3>
         <span class="count">{{ getVisibleCount(stage) }}/{{ stage.applications.length }}</span>
       </div>
-      <div class="applications-list">
-        <div class="application-row" 
-             *ngFor="let app of getVisibleApplications(stage)" 
-             (click)="viewApplication(app.id)"
+      <div class="applications-list" 
+           cdkDropList
+           [cdkDropListData]="stage.applications"
+           (cdkDropListDropped)="drop($event, stage)">
+        <div class="application-card" 
+             *ngFor="let app of getVisibleApplications(stage)"
+             cdkDrag
              [class.compact]="compactView">
-          <span class="avatar-mini">{{ app.initials }}</span>
-          <div class="app-info">
-            <strong class="name">{{ app.name }}</strong>
-            <span class="job" *ngIf="!compactView">{{ app.jobTitle }}</span>
+          <div class="card-content" (click)="viewApplication(app.id)">
+            <span class="avatar-mini">{{ app.initials }}</span>
+            <div class="app-info">
+              <strong class="name">{{ app.name }}</strong>
+              <span class="job" *ngIf="!compactView">{{ app.jobTitle }}</span>
+              <span class="time">{{ app.daysAgo }}d ago</span>
+            </div>
           </div>
-          <span class="time">{{ app.daysAgo }}d</span>
+          <div class="card-actions" *ngIf="!compactView">
+            <button class="btn-mini" (click)="updateApplicationStatus(app); $event.stopPropagation()">Update</button>
+          </div>
         </div>
         <button class="load-more" *ngIf="hasMore(stage)" (click)="loadMore(stage)">
           Load {{ getRemainingCount(stage) }} more
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Interview Modal -->
+  <div class="modal-overlay" *ngIf="showScheduleModal" (click)="closeScheduleModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Schedule Interview</h2>
+        <button class="close-btn" (click)="closeScheduleModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="pendingStatusChange">
+        <div class="application-summary">
+          <h3>{{ pendingStatusChange.app.name }}</h3>
+          <p>{{ pendingStatusChange.app.jobTitle }}</p>
+        </div>
+        <div class="form-group">
+          <label>Interview Type</label>
+          <select [(ngModel)]="interviewType" class="form-control">
+            <option value="PHONE_INTERVIEW">Phone Interview</option>
+            <option value="TECHNICAL_INTERVIEW">Technical Interview</option>
+            <option value="FINAL_INTERVIEW">Final Interview</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date & Time *</label>
+          <input type="datetime-local" [(ngModel)]="interviewDateTime" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Duration (minutes)</label>
+          <select [(ngModel)]="duration" class="form-control">
+            <option [value]="30">30 minutes</option>
+            <option [value]="45">45 minutes</option>
+            <option [value]="60">1 hour</option>
+            <option [value]="90">1.5 hours</option>
+            <option [value]="120">2 hours</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Meeting Link</label>
+          <input type="url" [(ngModel)]="meetingLink" class="form-control" placeholder="https://zoom.us/j/...">
+        </div>
+        <div class="form-group">
+          <label>Location (for in-person)</label>
+          <input type="text" [(ngModel)]="location" class="form-control" placeholder="Office address or room number">
+        </div>
+        <div class="form-group">
+          <label>Interviewer Name</label>
+          <input type="text" [(ngModel)]="interviewerName" class="form-control" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label>Interviewer Email</label>
+          <input type="email" [(ngModel)]="interviewerEmail" class="form-control" placeholder="interviewer@company.com">
+        </div>
+        <div class="form-group">
+          <label>Notes/Instructions</label>
+          <textarea [(ngModel)]="notes" class="form-control" rows="3" placeholder="Additional information for the candidate..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeScheduleModal()">Cancel</button>
+        <button class="btn-primary" (click)="confirmScheduleInterview()">Schedule Interview</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Update Modal -->
+  <div class="modal-overlay" *ngIf="showStatusModal" (click)="closeStatusModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Update Application Status</h2>
+        <button class="close-btn" (click)="closeStatusModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedApplication">
+        <div class="application-summary">
+          <h3>{{ selectedApplication.candidateName || 'Unknown Candidate' }}</h3>
+          <p>{{ selectedApplication.jobTitle || 'Unknown Position' }}</p>
+          <p class="current-status">Current Status: <strong>{{ selectedApplication.status }}</strong></p>
+        </div>
+        
+        <div class="status-options">
+          <h4>Update Status To:</h4>
+          <div class="status-grid">
+            <button 
+              *ngFor="let option of statusOptions" 
+              class="status-btn"
+              [class.current]="option.value === selectedApplication.status"
+              [disabled]="option.value === selectedApplication.status || updatingStatus"
+              (click)="handleStatusChange(option.value)">
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeStatusModal()">Cancel</button>
       </div>
     </div>
   </div>

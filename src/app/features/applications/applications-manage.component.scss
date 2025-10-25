@@ -46,13 +46,14 @@
 }
 
 .btn-secondary {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: 1px solid #e2e8f0;
   background: white;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  font-size: 0.875rem;
 
   &:hover {
     background: #f8fafc;
@@ -60,17 +61,40 @@
 }
 
 .pipeline-board {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
   gap: 16px;
   overflow-x: auto;
+  padding-bottom: 16px;
+  height: calc(100vh - 280px);
+
+  &::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 5px;
+
+    &:hover {
+      background: #94a3b8;
+    }
+  }
 }
 
 .pipeline-column {
-  min-width: 280px;
+  min-width: 320px;
+  max-width: 400px;
+  flex: 1;
   background: #f8fafc;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
 }
 
 .column-header {
@@ -101,96 +125,25 @@
 
 .applications-list {
   padding: 12px;
-  min-height: 200px;
-  max-height: 70vh;
+  flex: 1;
   overflow-y: auto;
-}
+  min-height: 200px;
 
-.application-row {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-color: #0066ff;
+  &::-webkit-scrollbar {
+    width: 8px;
   }
 
-  &.compact {
-    padding: 6px 12px;
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
     border-radius: 4px;
 
-    .avatar-mini {
-      width: 24px;
-      height: 24px;
-      font-size: 0.65rem;
+    &:hover {
+      background: #94a3b8;
     }
-
-    .name {
-      font-size: 0.8rem;
-    }
-
-    .time {
-      font-size: 0.7rem;
-    }
-  }
-
-  .avatar-mini {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0066ff, #00d4ff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    font-size: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  .app-info {
-    flex: 1;
-    min-width: 0;
-
-    .name {
-      display: block;
-      font-size: 0.875rem;
-      color: #0f172a;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .job {
-      display: block;
-      font-size: 0.75rem;
-      color: #64748b;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: 2px;
-    }
-  }
-
-  .time {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    flex-shrink: 0;
-  }
-}
-
-.pipeline-board.compact-view {
-  .application-row {
-    padding: 6px 12px;
   }
 }
 
@@ -230,14 +183,318 @@
   }
 }
 
+.application-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+  overflow: hidden;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #0066ff;
+  }
+
+  .card-content {
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .card-actions {
+    padding: 8px 12px;
+    border-top: 1px solid #f1f5f9;
+    background: #f8fafc;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .btn-mini {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #0066ff;
+      color: white;
+      border-color: #0066ff;
+    }
+  }
+
+  .avatar-mini {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0066ff, #00d4ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .app-info {
+    flex: 1;
+    min-width: 0;
+
+    .name {
+      display: block;
+      font-size: 0.875rem;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+
+    .job {
+      display: block;
+      font-size: 0.75rem;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+
+    .time {
+      font-size: 0.7rem;
+      color: #94a3b8;
+    }
+  }
+}
+
+// CDK Drag & Drop Styles
+.cdk-drag-preview {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  opacity: 0.95;
+  border-radius: 8px;
+  transform: rotate(3deg);
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging .application-card:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+}
+
+.applications-list.cdk-drop-list-receiving {
+  background: #f0f7ff;
+  border-radius: 8px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+
+  &:hover {
+    color: #0f172a;
+  }
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.application-summary {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    margin: 0 0 4px 0;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+
+  .current-status {
+    color: #0f172a;
+    font-weight: 500;
+  }
+}
+
+.status-options h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 16px 0;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.status-btn {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    border-color: #0066ff;
+    background: #f0f7ff;
+    color: #0066ff;
+  }
+
+  &.current {
+    border-color: #10b981;
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.form-group {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+  }
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #0066ff;
+  }
+}
+
+.btn-primary {
+  background: #0066ff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.875rem;
+
+  &:hover {
+    background: #0052cc;
+  }
+}
+
 @media (max-width: 1400px) {
-  .pipeline-board {
-    grid-template-columns: repeat(2, 1fr);
+  .pipeline-column {
+    min-width: 280px;
   }
 }
 
 @media (max-width: 768px) {
   .pipeline-board {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .pipeline-column {
+    min-width: 100%;
+    max-width: 100%;
   }
 }

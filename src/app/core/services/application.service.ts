@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { InterviewRequest, Interview } from './interview.service';
 
 export interface JobApplication {
   id: string;
@@ -13,6 +14,7 @@ export interface JobApplication {
   companyName?: string;
   candidateName?: string;
   candidateEmail?: string;
+  coverLetter?: string;
 }
 
 export interface ApplicationRequest {
@@ -51,6 +53,13 @@ export class ApplicationService {
     return this.http.get<ApplicationPage>(this.apiUrl, { params });
   }
 
+  getMyApplications(page: number = 0, size: number = 20): Observable<ApplicationPage> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<ApplicationPage>(`${this.apiUrl}/me`, { params });
+  }
+
   getApplicationsByCandidate(candidateId: string, page: number = 0, size: number = 20): Observable<ApplicationPage> {
     const params = new HttpParams()
       .set('page', page.toString())
@@ -67,5 +76,13 @@ export class ApplicationService {
 
   updateApplicationStatus(id: string, status: string): Observable<JobApplication> {
     return this.http.put<JobApplication>(`${this.apiUrl}/${id}/status`, { status });
+  }
+
+  withdrawApplication(id: string): Observable<JobApplication> {
+    return this.http.put<JobApplication>(`${this.apiUrl}/${id}/status`, { status: 'WITHDRAWN' });
+  }
+
+  createInterview(request: InterviewRequest): Observable<Interview> {
+    return this.http.post<Interview>('/api/interviews', request);
   }
 }

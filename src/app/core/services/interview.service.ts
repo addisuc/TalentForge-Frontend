@@ -3,8 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Interview {
-  id: number;
-  applicationId: number;
+  id: string;
+  applicationId: string;
   interviewType: string;
   scheduledAt: string;
   durationMinutes: number;
@@ -24,7 +24,7 @@ export interface Interview {
 }
 
 export interface InterviewRequest {
-  applicationId: number;
+  applicationId: string;
   interviewType: string;
   scheduledAt: string;
   durationMinutes?: number;
@@ -57,7 +57,7 @@ export class InterviewService {
     return this.http.get<Interview>(`${this.apiUrl}/${id}`);
   }
 
-  getInterviewsByApplication(applicationId: number): Observable<Interview[]> {
+  getInterviewsByApplication(applicationId: string): Observable<Interview[]> {
     return this.http.get<Interview[]>(`${this.apiUrl}/application/${applicationId}`);
   }
 

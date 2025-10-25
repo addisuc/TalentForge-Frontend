@@ -270,25 +270,32 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.authFacade.login(this.loginForm.value);
       
-      // Wait for auth state to update, then redirect
-      this.authFacade.user$.pipe(take(1)).subscribe(user => {
-        if (user) {
-          this.loading = false;
-          this.clearLockout();
-          
-          // Redirect to role-specific dashboard
-          const dashboardRoute = this.navigationService.getDashboardRoute(user.role);
-          console.log('Redirecting to:', dashboardRoute, 'for user:', user.email, 'role:', user.role);
-          this.router.navigate([dashboardRoute]);
-        } else {
-          // Check for error if no user
-          this.authFacade.error$.pipe(take(1)).subscribe(error => {
-            if (error) {
+      // Subscribe to auth state changes with proper cleanup
+      const authSubscription = this.authFacade.isAuthenticated$.subscribe(isAuthenticated => {
+        if (isAuthenticated) {
+          // Get the current user and redirect
+          this.authFacade.user$.pipe(take(1)).subscribe(user => {
+            if (user) {
               this.loading = false;
-              this.errorMessage = error;
-              this.handleFailedLogin();
+              this.clearLockout();
+              
+              // Redirect to role-specific dashboard
+              const dashboardRoute = this.navigationService.getDashboardRoute(user.role);
+              console.log('Redirecting to:', dashboardRoute, 'for user:', user.email, 'role:', user.role);
+              this.router.navigate([dashboardRoute]);
             }
           });
+          authSubscription.unsubscribe();
+        }
+      });
+      
+      // Subscribe to errors
+      const errorSubscription = this.authFacade.error$.subscribe(error => {
+        if (error) {
+          this.loading = false;
+          this.errorMessage = error;
+          this.handleFailedLogin();
+          errorSubscription.unsubscribe();
         }
       });
     }

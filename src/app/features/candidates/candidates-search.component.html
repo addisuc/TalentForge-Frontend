@@ -80,7 +80,13 @@
             </div>
           </td>
           <td>
-            <button class="btn-action" (click)="viewCandidate(candidate.id); $event.stopPropagation()">View</button>
+            <div class="action-buttons">
+              <button class="btn-action" (click)="viewCandidate(candidate.id); $event.stopPropagation()" title="View Profile">👤</button>
+              <button class="btn-action" (click)="contactCandidate(candidate.id); $event.stopPropagation()" title="Send Email">✉️</button>
+              <button class="btn-action" (click)="scheduleInterview(candidate.id); $event.stopPropagation()" title="Schedule Interview">📅</button>
+              <button class="btn-action" (click)="addToJob(candidate.id); $event.stopPropagation()" title="Add to Job">➕</button>
+              <button class="btn-action" (click)="downloadResume(candidate.id); $event.stopPropagation()" title="Download Resume">📄</button>
+            </div>
           </td>
         </tr>
       </tbody>

@@ -154,7 +154,38 @@ export class CandidatesSearchComponent {
   }
 
   viewCandidate(id: number) {
-    console.log('View candidate:', id);
+    const candidate = this.candidates.find(c => c.id === id);
+    if (candidate) {
+      alert(`Candidate Profile\n\nName: ${candidate.name}\nRole: ${candidate.role}\nLocation: ${candidate.location}\nExperience: ${candidate.experience} years\nSalary: ${candidate.salary}\nStatus: ${candidate.status}\nSkills: ${candidate.skills.join(', ')}`);
+    }
+  }
+
+  contactCandidate(id: number) {
+    const candidate = this.candidates.find(c => c.id === id);
+    if (candidate) {
+      alert(`Opening email client to contact ${candidate.name}...`);
+    }
+  }
+
+  scheduleInterview(id: number) {
+    const candidate = this.candidates.find(c => c.id === id);
+    if (candidate) {
+      alert(`Schedule interview with ${candidate.name}\n\nThis would open the interview scheduling modal.`);
+    }
+  }
+
+  addToJob(id: number) {
+    const candidate = this.candidates.find(c => c.id === id);
+    if (candidate) {
+      alert(`Add ${candidate.name} to a job opening\n\nThis would show a list of open positions to add the candidate to.`);
+    }
+  }
+
+  downloadResume(id: number) {
+    const candidate = this.candidates.find(c => c.id === id);
+    if (candidate) {
+      alert(`Downloading resume for ${candidate.name}...`);
+    }
   }
 
   openAddModal() {

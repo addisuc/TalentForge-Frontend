@@ -208,6 +208,51 @@ If backend development takes longer:
 
 ---
 
+## 🔮 Future Enhancements (Backlog)
+
+### **Candidate Actions - Full Implementation**
+Location: `candidates-search.component.ts`
+
+**Actions to Implement:**
+1. **👤 View Profile**
+   - Create full candidate profile modal/page
+   - Display: Contact info, work history, education, skills, resume
+   - Add notes section for recruiters
+
+2. **✉️ Send Email**
+   - Email composer modal with templates
+   - Templates: Interview invite, rejection, follow-up, offer
+   - Track email history
+
+3. **📅 Schedule Interview**
+   - Calendar integration (Google Calendar, Outlook)
+   - Time zone handling
+   - Send calendar invites automatically
+   - Link to video conferencing (Zoom/Teams/Meet)
+
+4. **➕ Add to Job**
+   - Modal showing list of open positions
+   - Match candidate skills to job requirements
+   - Create application automatically
+   - Notify hiring manager
+
+5. **📄 Download Resume**
+   - Fetch resume file from storage (S3/local)
+   - Support multiple formats (PDF, DOC, DOCX)
+   - Track download history
+
+**Backend Requirements:**
+- Candidate profile API with full details
+- Email service integration (SendGrid/AWS SES)
+- File storage service (S3/Azure Blob)
+- Calendar API integration
+- Notification service
+
+**Estimated Effort**: 2-3 days
+**Priority**: Medium (after core features complete)
+
+---
+
 **Estimated Total Time**: 6-8 hours
 **Priority Level**: High
 **Dependencies**: Backend services running, Database accessible

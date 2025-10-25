@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApplicationService, JobApplication, ApplicationPage } from '../../core/services/application.service';
-import { AuthService } from '../../core/auth/auth.service';
+import { InterviewService, Interview } from '../../core/services/interview.service';
 
 @Component({
   selector: 'app-candidate-applications',
@@ -32,8 +32,9 @@ import { AuthService } from '../../core/auth/auth.service';
               <td>{{ app.appliedAt | date:'MMM d, y' }}</td>
               <td><span class="badge" [class]="app.status.toLowerCase()">{{ app.status }}</span></td>
               <td>
-                <button class="btn-action">View Details</button>
-                <button class="btn-action secondary">Withdraw</button>
+                <button class="btn-action" (click)="viewDetails(app)">View Details</button>
+                <button class="btn-action secondary" (click)="withdrawApplication(app)" 
+                        [disabled]="app.status === 'WITHDRAWN' || app.status === 'REJECTED' || app.status === 'OFFER_ACCEPTED'">Withdraw</button>
               </td>
             </tr>
           </tbody>
@@ -52,6 +53,101 @@ import { AuthService } from '../../core/auth/auth.service';
           <button (click)="previousPage()" [disabled]="currentPage === 1" class="btn-page">Previous</button>
           <button *ngFor="let page of pageNumbers" (click)="goToPage(page)" [class.active]="page === currentPage" class="btn-page">{{ page }}</button>
           <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="btn-page">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal-overlay" *ngIf="selectedApp" (click)="closeDetails()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Application Details</h2>
+          <button class="btn-close" (click)="closeDetails()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-row">
+            <label>Position:</label>
+            <span>{{ selectedApp.jobTitle }}</span>
+          </div>
+          <div class="detail-row">
+            <label>Company:</label>
+            <span>{{ selectedApp.companyName }}</span>
+          </div>
+          <div class="detail-row">
+            <label>Status:</label>
+            <span class="badge" [class]="selectedApp.status.toLowerCase()">{{ selectedApp.status }}</span>
+          </div>
+          <div class="detail-row">
+            <label>Applied Date:</label>
+            <span>{{ selectedApp.appliedAt | date:'MMM d, y, h:mm a' }}</span>
+          </div>
+          <div class="detail-row">
+            <label>Last Updated:</label>
+            <span>{{ selectedApp.updatedAt | date:'MMM d, y, h:mm a' }}</span>
+          </div>
+          <div class="detail-row full-width" *ngIf="selectedApp.coverLetter">
+            <label>Cover Letter:</label>
+            <p class="cover-letter">{{ selectedApp.coverLetter }}</p>
+          </div>
+          <div class="interview-section" *ngIf="interviews.length > 0">
+            <h3>Scheduled Interviews</h3>
+            <div class="interview-card" *ngFor="let interview of interviews">
+              <div class="interview-header">
+                <span class="interview-type">{{ interview.interviewType.replace('_', ' ') }}</span>
+                <span class="interview-status" [class]="interview.status.toLowerCase()">{{ interview.status }}</span>
+              </div>
+              <div class="interview-details">
+                <div class="interview-row">
+                  <strong>📅 Date & Time:</strong>
+                  <span>{{ interview.scheduledAt | date:'EEEE, MMM d, y, h:mm a' }}</span>
+                </div>
+                <div class="interview-row" *ngIf="interview.durationMinutes">
+                  <strong>⏱️ Duration:</strong>
+                  <span>{{ interview.durationMinutes }} minutes</span>
+                </div>
+                <div class="interview-row" *ngIf="interview.meetingLink">
+                  <strong>🔗 Meeting Link:</strong>
+                  <a [href]="interview.meetingLink" target="_blank" rel="noopener noreferrer" class="meeting-link">Join Meeting</a>
+                </div>
+                <div class="interview-row" *ngIf="interview.location">
+                  <strong>📍 Location:</strong>
+                  <span>{{ interview.location }}</span>
+                </div>
+                <div class="interview-row" *ngIf="interview.interviewerName">
+                  <strong>👤 Interviewer:</strong>
+                  <span>{{ interview.interviewerName }}<span *ngIf="interview.interviewerEmail"> ({{ interview.interviewerEmail }})</span></span>
+                </div>
+                <div class="interview-row full" *ngIf="interview.notes">
+                  <strong>📝 Notes:</strong>
+                  <p>{{ interview.notes }}</p>
+                </div>
+              </div>
+              <div class="interview-actions" *ngIf="interview.status === 'SCHEDULED'">
+                <button class="btn-action" [disabled]="true" title="Coming soon">Request Reschedule</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-action secondary" (click)="closeDetails()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Withdraw Confirmation Modal -->
+    <div class="modal-overlay" *ngIf="showWithdrawConfirm" (click)="cancelWithdraw()">
+      <div class="modal-content small" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Withdraw Application</h2>
+          <button class="btn-close" (click)="cancelWithdraw()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to withdraw your application for <strong>{{ appToWithdraw?.jobTitle }}</strong> at <strong>{{ appToWithdraw?.companyName }}</strong>?</p>
+          <p class="warning">This action cannot be undone and the application will be removed from your list.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-action secondary" (click)="cancelWithdraw()">Cancel</button>
+          <button class="btn-action danger" (click)="confirmWithdraw()">Withdraw Application</button>
         </div>
       </div>
     </div>
@@ -75,6 +171,8 @@ import { AuthService } from '../../core/auth/auth.service';
     .badge.rejected { background: #fee2e2; color: #991b1b; }
     .btn-action { background: #0066ff; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-right: 8px; white-space: nowrap; }
     .btn-action.secondary { background: white; color: #64748b; border: 1px solid #e2e8f0; }
+    .btn-action.danger { background: #dc2626; }
+    .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
     .pagination { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: white; border-radius: 12px; border: 1px solid #e2e8f0; }
     .pagination-left { display: flex; align-items: center; gap: 1rem; }
     .pagination-info { color: #64748b; font-size: 0.875rem; }
@@ -84,6 +182,40 @@ import { AuthService } from '../../core/auth/auth.service';
     .btn-page:hover:not(:disabled) { background: #f8fafc; }
     .btn-page.active { background: #0066ff; color: white; border-color: #0066ff; }
     .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-content.small { max-width: 450px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid #e2e8f0; }
+    .modal-header h2 { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0; }
+    .btn-close { background: none; border: none; font-size: 2rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0; width: 32px; height: 32px; }
+    .btn-close:hover { color: #0f172a; }
+    .modal-body { padding: 1.5rem; }
+    .detail-row { display: flex; margin-bottom: 1rem; }
+    .detail-row label { font-weight: 600; color: #475569; min-width: 140px; }
+    .detail-row span { color: #0f172a; }
+    .detail-row.full-width { flex-direction: column; }
+    .detail-row.full-width label { margin-bottom: 0.5rem; }
+    .cover-letter { color: #0f172a; white-space: pre-wrap; line-height: 1.6; margin: 0; }
+    .interview-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; }
+    .interview-section h3 { font-size: 1rem; font-weight: 600; color: #0f172a; margin-bottom: 1rem; }
+    .interview-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+    .interview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .interview-type { font-weight: 600; color: #0f172a; text-transform: capitalize; }
+    .interview-status { padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; }
+    .interview-status.scheduled { background: #dbeafe; color: #1e40af; }
+    .interview-status.completed { background: #d1fae5; color: #065f46; }
+    .interview-status.cancelled { background: #fee2e2; color: #991b1b; }
+    .interview-details { display: flex; flex-direction: column; gap: 0.5rem; }
+    .interview-row { display: flex; gap: 0.5rem; font-size: 0.875rem; align-items: flex-start; }
+    .interview-row.full { flex-direction: column; }
+    .interview-row strong { color: #475569; min-width: 140px; flex-shrink: 0; }
+    .interview-row span, .interview-row p { color: #0f172a; margin: 0; flex: 1; }
+    .meeting-link { color: #0066ff; text-decoration: none; font-weight: 600; padding: 4px 12px; background: #eff6ff; border-radius: 6px; display: inline-block; }
+    .meeting-link:hover { background: #dbeafe; text-decoration: none; }
+    .interview-actions { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e2e8f0; display: flex; gap: 0.5rem; }
+    .modal-body p { color: #475569; line-height: 1.6; margin-bottom: 1rem; }
+    .modal-body p.warning { color: #dc2626; font-size: 0.875rem; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1.5rem; border-top: 1px solid #e2e8f0; }
   `]
 })
 export class CandidateApplicationsComponent implements OnInit {
@@ -95,10 +227,15 @@ export class CandidateApplicationsComponent implements OnInit {
   error = '';
   totalApplications = 0;
   totalPages = 0;
+  selectedApp: JobApplication | null = null;
+  showWithdrawConfirm = false;
+  appToWithdraw: JobApplication | null = null;
+  interviews: Interview[] = [];
+  loadingInterviews = false;
 
   constructor(
     private applicationService: ApplicationService,
-    private authService: AuthService
+    private interviewService: InterviewService
   ) {}
 
   ngOnInit() {
@@ -109,32 +246,17 @@ export class CandidateApplicationsComponent implements OnInit {
     this.loading = true;
     this.error = '';
     
-    this.authService.getCurrentUser().subscribe({
-      next: (user) => {
-        if (!user?.id) {
-          this.error = 'User not authenticated';
-          this.loading = false;
-          return;
-        }
-
-        const page = this.currentPage - 1;
-        this.applicationService.getApplicationsByCandidate(user.id, page, this.itemsPerPage).subscribe({
-          next: (data: ApplicationPage) => {
-            this.applications = data.content;
-            this.totalApplications = data.totalElements;
-            this.totalPages = data.totalPages;
-            this.loading = false;
-          },
-          error: (err) => {
-            console.error('Error loading applications:', err);
-            this.error = 'Failed to load applications';
-            this.loading = false;
-          }
-        });
+    const page = this.currentPage - 1;
+    this.applicationService.getMyApplications(page, this.itemsPerPage).subscribe({
+      next: (data: ApplicationPage) => {
+        this.applications = data.content;
+        this.totalApplications = data.totalElements;
+        this.totalPages = data.totalPages;
+        this.loading = false;
       },
       error: (err) => {
-        console.error('Error getting current user:', err);
-        this.error = 'Authentication error';
+        console.error('Error loading applications:', err);
+        this.error = 'Failed to load applications';
         this.loading = false;
       }
     });
@@ -149,4 +271,58 @@ export class CandidateApplicationsComponent implements OnInit {
   nextPage() { if (this.currentPage < this.totalPages) { this.currentPage++; this.loadApplications(); } }
   goToPage(page: number) { this.currentPage = page; this.loadApplications(); }
   onItemsPerPageChange() { this.currentPage = 1; this.loadApplications(); }
+
+  viewDetails(app: JobApplication) {
+    this.selectedApp = app;
+    this.loadInterviews(app.id);
+  }
+
+  loadInterviews(applicationId: string) {
+    this.loadingInterviews = true;
+    this.interviews = [];
+    console.log('Loading interviews for application:', applicationId);
+    this.interviewService.getInterviewsByApplication(applicationId).subscribe({
+      next: (interviews) => {
+        console.log('Interviews loaded:', interviews);
+        this.interviews = interviews;
+        this.loadingInterviews = false;
+      },
+      error: (err) => {
+        console.error('Error loading interviews:', err);
+        this.loadingInterviews = false;
+      }
+    });
+  }
+
+  closeDetails() {
+    this.selectedApp = null;
+    this.interviews = [];
+  }
+
+  withdrawApplication(app: JobApplication) {
+    this.appToWithdraw = app;
+    this.showWithdrawConfirm = true;
+  }
+
+  cancelWithdraw() {
+    this.showWithdrawConfirm = false;
+    this.appToWithdraw = null;
+  }
+
+  confirmWithdraw() {
+    if (this.appToWithdraw) {
+      this.applicationService.withdrawApplication(this.appToWithdraw.id).subscribe({
+        next: () => {
+          this.showWithdrawConfirm = false;
+          this.appToWithdraw = null;
+          this.loadApplications();
+        },
+        error: (err) => {
+          console.error('Error withdrawing application:', err);
+          this.showWithdrawConfirm = false;
+          this.appToWithdraw = null;
+        }
+      });
+    }
+  }
 }

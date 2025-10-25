@@ -174,18 +174,27 @@
   }
 }
 
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
 .btn-action {
-  background: #0066ff;
-  color: white;
-  border: none;
-  padding: 6px 12px;
+  background: white;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
+  transition: all 0.2s;
 
   &:hover {
-    background: #0052cc;
+    background: #0066ff;
+    color: white;
+    border-color: #0066ff;
+    transform: translateY(-1px);
   }
 }
 

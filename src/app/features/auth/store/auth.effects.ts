@@ -33,33 +33,7 @@ export class AuthEffects {
     )
   );
 
-  loginSuccess$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(AuthActions.loginSuccess),
-      tap(({ response }) => {
-        const role = response.user.role;
-        switch (role) {
-          case 'CANDIDATE':
-            this.router.navigate(['/candidate/dashboard']);
-            break;
-          case 'RECRUITER':
-            this.router.navigate(['/recruiter/dashboard']);
-            break;
-          case 'TENANT_ADMIN':
-          case 'BILLING_MANAGER':
-            this.router.navigate(['/admin/dashboard']);
-            break;
-          case 'PLATFORM_ADMIN':
-          case 'PLATFORM_SUPER_ADMIN':
-            this.router.navigate(['/platform-admin/dashboard']);
-            break;
-          default:
-            this.router.navigate(['/dashboard']);
-        }
-      })
-    ),
-    { dispatch: false }
-  );
+  // Removed automatic redirection - let components handle their own navigation
 
   logout$ = createEffect(() =>
     this.actions$.pipe(
