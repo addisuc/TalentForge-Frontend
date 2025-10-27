@@ -113,6 +113,134 @@
     </div>
   </div>
 
+  <!-- View Candidate Modal -->
+  <div class="modal-overlay" *ngIf="showViewModal" (click)="closeViewModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Candidate Profile</h2>
+        <button class="close-btn" (click)="closeViewModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedCandidate">
+        <div class="profile-section">
+          <div class="avatar-large">{{ selectedCandidate.initials }}</div>
+          <h3>{{ selectedCandidate.name }}</h3>
+          <p class="role">{{ selectedCandidate.role }}</p>
+          <span class="badge" [class]="selectedCandidate.status.toLowerCase()">{{ selectedCandidate.status }}</span>
+        </div>
+        <div class="info-section">
+          <div class="info-row">
+            <span class="label">Location:</span>
+            <span class="value">{{ selectedCandidate.location }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Experience:</span>
+            <span class="value">{{ selectedCandidate.experience }} years</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Salary:</span>
+            <span class="value">{{ selectedCandidate.salary }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Skills:</span>
+            <span class="value">{{ selectedCandidate.skills.join(', ') }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeViewModal()">Close</button>
+        <button class="btn-primary" (click)="contactCandidate(selectedCandidate.id); closeViewModal()">Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Candidate Modal -->
+  <div class="modal-overlay" *ngIf="showContactModal" (click)="closeContactModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Contact Candidate</h2>
+        <button class="close-btn" (click)="closeContactModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedCandidate">
+        <p>Send email to <strong>{{ selectedCandidate.name }}</strong></p>
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" class="form-control" placeholder="Job Opportunity">
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea class="form-control" rows="6" placeholder="Hi {{ selectedCandidate.name }}, I have an exciting opportunity..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeContactModal()">Cancel</button>
+        <button class="btn-primary" (click)="closeContactModal()">Send Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Interview Modal -->
+  <div class="modal-overlay" *ngIf="showScheduleModal" (click)="closeScheduleModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Schedule Interview</h2>
+        <button class="close-btn" (click)="closeScheduleModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedCandidate">
+        <p>Schedule interview with <strong>{{ selectedCandidate.name }}</strong></p>
+        <div class="form-group">
+          <label>Interview Type</label>
+          <select class="form-control">
+            <option>Phone Screen</option>
+            <option>Video Interview</option>
+            <option>On-site Interview</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date & Time</label>
+          <input type="datetime-local" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Meeting Link (Optional)</label>
+          <input type="url" class="form-control" placeholder="https://zoom.us/j/...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeScheduleModal()">Cancel</button>
+        <button class="btn-primary" (click)="closeScheduleModal()">Schedule</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add to Job Modal -->
+  <div class="modal-overlay" *ngIf="showAddToJobModal" (click)="closeAddToJobModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Add to Job</h2>
+        <button class="close-btn" (click)="closeAddToJobModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedCandidate">
+        <p>Add <strong>{{ selectedCandidate.name }}</strong> to a job opening</p>
+        <div class="form-group">
+          <label>Select Job</label>
+          <select class="form-control">
+            <option>Senior Full Stack Developer - TechCorp</option>
+            <option>DevOps Engineer - StartupXYZ</option>
+            <option>Product Manager - FinanceInc</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notes (Optional)</label>
+          <textarea class="form-control" rows="3" placeholder="Add any notes about this candidate..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeAddToJobModal()">Cancel</button>
+        <button class="btn-primary" (click)="closeAddToJobModal()">Add to Job</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Candidate Modal -->
   <div class="modal-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">

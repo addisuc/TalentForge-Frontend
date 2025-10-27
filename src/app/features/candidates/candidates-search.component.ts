@@ -153,38 +153,64 @@ export class CandidatesSearchComponent {
     this.currentPage = 1;
   }
 
+  showViewModal = false;
+  showContactModal = false;
+  showScheduleModal = false;
+  showAddToJobModal = false;
+  selectedCandidate: any = null;
+
   viewCandidate(id: number) {
-    const candidate = this.candidates.find(c => c.id === id);
-    if (candidate) {
-      alert(`Candidate Profile\n\nName: ${candidate.name}\nRole: ${candidate.role}\nLocation: ${candidate.location}\nExperience: ${candidate.experience} years\nSalary: ${candidate.salary}\nStatus: ${candidate.status}\nSkills: ${candidate.skills.join(', ')}`);
+    this.selectedCandidate = this.candidates.find(c => c.id === id);
+    if (this.selectedCandidate) {
+      this.showViewModal = true;
     }
+  }
+
+  closeViewModal() {
+    this.showViewModal = false;
+    this.selectedCandidate = null;
   }
 
   contactCandidate(id: number) {
-    const candidate = this.candidates.find(c => c.id === id);
-    if (candidate) {
-      alert(`Opening email client to contact ${candidate.name}...`);
+    this.selectedCandidate = this.candidates.find(c => c.id === id);
+    if (this.selectedCandidate) {
+      this.showContactModal = true;
     }
+  }
+
+  closeContactModal() {
+    this.showContactModal = false;
+    this.selectedCandidate = null;
   }
 
   scheduleInterview(id: number) {
-    const candidate = this.candidates.find(c => c.id === id);
-    if (candidate) {
-      alert(`Schedule interview with ${candidate.name}\n\nThis would open the interview scheduling modal.`);
+    this.selectedCandidate = this.candidates.find(c => c.id === id);
+    if (this.selectedCandidate) {
+      this.showScheduleModal = true;
     }
   }
 
+  closeScheduleModal() {
+    this.showScheduleModal = false;
+    this.selectedCandidate = null;
+  }
+
   addToJob(id: number) {
-    const candidate = this.candidates.find(c => c.id === id);
-    if (candidate) {
-      alert(`Add ${candidate.name} to a job opening\n\nThis would show a list of open positions to add the candidate to.`);
+    this.selectedCandidate = this.candidates.find(c => c.id === id);
+    if (this.selectedCandidate) {
+      this.showAddToJobModal = true;
     }
+  }
+
+  closeAddToJobModal() {
+    this.showAddToJobModal = false;
+    this.selectedCandidate = null;
   }
 
   downloadResume(id: number) {
     const candidate = this.candidates.find(c => c.id === id);
     if (candidate) {
-      alert(`Downloading resume for ${candidate.name}...`);
+      console.log(`Downloading resume for ${candidate.name}...`);
     }
   }
 

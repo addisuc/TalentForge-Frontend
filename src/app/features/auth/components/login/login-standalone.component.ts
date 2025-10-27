@@ -44,6 +44,15 @@ import { NavigationService } from '../../../../core/services/navigation.service'
           </div>
         </div>
 
+        <!-- Captcha Active Notice -->
+        <div *ngIf="showCaptcha && !isLocked" class="captcha-notice">
+          <span class="shield-icon">🛡️</span>
+          <div>
+            <strong>Security verification enabled</strong>
+            <p>Your login attempts are being verified by reCAPTCHA to protect your account.</p>
+          </div>
+        </div>
+
         <div *ngIf="errorMessage" class="error-message">
           {{ errorMessage }}
         </div>
@@ -148,6 +157,10 @@ import { NavigationService } from '../../../../core/services/navigation.service'
     .attempts-warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 12px; font-size: 0.875rem; color: #92400e; line-height: 1.5; }
     .warning-icon { font-size: 1.25rem; flex-shrink: 0; }
     .final-warning { font-weight: 600; color: #dc2626; }
+    .captcha-notice { background: #dbeafe; border-left: 4px solid #0066ff; padding: 12px 16px; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 12px; font-size: 0.875rem; color: #1e40af; line-height: 1.5; }
+    .shield-icon { font-size: 1.25rem; flex-shrink: 0; }
+    .captcha-notice strong { display: block; margin-bottom: 4px; }
+    .captcha-notice p { margin: 0; font-size: 0.8125rem; color: #1e3a8a; }
     @media (max-width: 768px) {
       .auth-container { padding: 1rem; }
       .auth-card { padding: 2rem 1.5rem; }
@@ -165,7 +178,9 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
   
   failedAttempts = 0;
   maxAttempts = 5;
+  captchaThreshold = 3;
   isLocked = false;
+  showCaptcha = false;
   lockoutEndTime: Date | null = null;
   remainingLockoutTime = '';
   private lockoutSubscription?: Subscription;
@@ -185,6 +200,7 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.checkExistingLockout();
+    this.loadRecaptchaScript();
   }
 
   ngOnDestroy(): void {
@@ -194,44 +210,58 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
   get email() { return this.loginForm.get('email'); }
   get password() { return this.loginForm.get('password'); }
   get remainingAttempts() { return Math.max(0, this.maxAttempts - this.failedAttempts); }
-  get showAttemptsWarning() { return this.failedAttempts > 0 && !this.isLocked; }
+  get showAttemptsWarning() { return this.failedAttempts > 0 && !this.isLocked && !this.showCaptcha; }
 
   private checkExistingLockout(): void {
     const lockoutData = localStorage.getItem('loginLockout');
     if (lockoutData) {
       const { endTime, attempts } = JSON.parse(lockoutData);
-      this.lockoutEndTime = new Date(endTime);
-      this.failedAttempts = attempts;
+      this.failedAttempts = attempts || 0;
       
-      if (this.lockoutEndTime > new Date()) {
+      if (endTime && endTime > Date.now()) {
+        this.lockoutEndTime = new Date(endTime);
         this.isLocked = true;
         this.startLockoutTimer();
       } else {
         this.clearLockout();
       }
+      
+      // Restore captcha state
+      if (this.failedAttempts >= this.captchaThreshold) {
+        this.showCaptcha = true;
+      }
     }
   }
 
   private startLockoutTimer(): void {
+    // Set initial time immediately
+    this.updateLockoutTime();
+    
+    // Then update every second
     this.lockoutSubscription = interval(1000).subscribe(() => {
-      if (this.lockoutEndTime) {
-        const now = new Date();
-        const diff = this.lockoutEndTime.getTime() - now.getTime();
-        
-        if (diff <= 0) {
-          this.clearLockout();
-        } else {
-          const minutes = Math.floor(diff / 60000);
-          const seconds = Math.floor((diff % 60000) / 1000);
-          this.remainingLockoutTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        }
-      }
+      this.updateLockoutTime();
     });
+  }
+
+  private updateLockoutTime(): void {
+    if (this.lockoutEndTime) {
+      const now = Date.now();
+      const diff = this.lockoutEndTime.getTime() - now;
+      
+      if (diff <= 0) {
+        this.clearLockout();
+      } else {
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        this.remainingLockoutTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }
+    }
   }
 
   private clearLockout(): void {
     this.isLocked = false;
     this.failedAttempts = 0;
+    this.showCaptcha = false;
     this.lockoutEndTime = null;
     this.remainingLockoutTime = '';
     localStorage.removeItem('loginLockout');
@@ -240,6 +270,10 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
 
   private handleFailedLogin(): void {
     this.failedAttempts++;
+    
+    if (this.failedAttempts >= this.captchaThreshold) {
+      this.showCaptcha = true;
+    }
     
     if (this.failedAttempts >= this.maxAttempts) {
       this.lockAccount();
@@ -264,10 +298,24 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
     this.startLockoutTimer();
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.loginForm.valid && !this.isLocked) {
       this.loading = true;
       this.errorMessage = '';
+      
+      // Execute reCAPTCHA if needed
+      if (this.showCaptcha) {
+        try {
+          const token = await this.executeRecaptcha();
+          console.log('reCAPTCHA token:', token);
+          // In production, send token to backend for verification
+        } catch (error) {
+          this.errorMessage = 'reCAPTCHA verification failed. Please try again.';
+          this.loading = false;
+          return;
+        }
+      }
+      
       this.authFacade.login(this.loginForm.value);
       
       // Subscribe to auth state changes with proper cleanup
@@ -278,6 +326,16 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
             if (user) {
               this.loading = false;
               this.clearLockout();
+              
+              // Handle remember me
+              const rememberMe = this.loginForm.get('rememberMe')?.value;
+              if (rememberMe) {
+                localStorage.setItem('rememberMe', 'true');
+                localStorage.setItem('rememberMeExpiry', (Date.now() + 30 * 24 * 60 * 60 * 1000).toString()); // 30 days
+              } else {
+                localStorage.removeItem('rememberMe');
+                localStorage.removeItem('rememberMeExpiry');
+              }
               
               // Redirect to role-specific dashboard
               const dashboardRoute = this.navigationService.getDashboardRoute(user.role);
@@ -299,5 +357,36 @@ export class LoginStandaloneComponent implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  private loadRecaptchaScript(): void {
+    if (document.getElementById('recaptcha-script')) {
+      return;
+    }
+    
+    const script = document.createElement('script');
+    script.id = 'recaptcha-script';
+    script.src = 'https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+
+  private executeRecaptcha(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const checkRecaptcha = () => {
+        if ((window as any).grecaptcha && (window as any).grecaptcha.ready) {
+          (window as any).grecaptcha.ready(() => {
+            (window as any).grecaptcha
+              .execute('6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', { action: 'login' })
+              .then((token: string) => resolve(token))
+              .catch((error: any) => reject(error));
+          });
+        } else {
+          setTimeout(checkRecaptcha, 100);
+        }
+      };
+      checkRecaptcha();
+    });
   }
 }

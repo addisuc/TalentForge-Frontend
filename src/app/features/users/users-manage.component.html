@@ -4,7 +4,7 @@
       <h1>Team Members</h1>
       <p>Manage your recruiting team and permissions</p>
     </div>
-    <button class="btn-primary" (click)="openInviteModal()">
+    <button class="btn-primary" *ngIf="canInviteUsers()" (click)="openInviteModal()">
       <span>➕</span> Invite User
     </button>
   </div>
@@ -58,11 +58,252 @@
 
       <div class="footer">
         <span class="last-active">Last active {{ user.lastActive | date:'MMM d, h:mm a' }}</span>
-        <button class="btn-link">View Profile →</button>
+        <div class="actions">
+          <button class="btn-link" (click)="viewProfile(user)">View Profile</button>
+          <button class="action-menu-btn" (click)="toggleActionMenu(user.id, $event)">⋮</button>
+          
+          <!-- Action Menu Dropdown -->
+          <div class="action-menu" *ngIf="showActionMenu === user.id" (clickOutside)="closeActionMenu()">
+            <button class="menu-item" (click)="viewProfile(user)">
+              <span class="icon">👤</span> View Profile
+            </button>
+            <button class="menu-item" *ngIf="canSendMessage()" (click)="sendMessage(user)">
+              <span class="icon">✉️</span> Send Message
+            </button>
+            <button class="menu-item" *ngIf="canViewPerformance(user)" (click)="viewPerformance(user)">
+              <span class="icon">📊</span> View Performance
+            </button>
+            <div class="divider" *ngIf="isTenantAdmin"></div>
+            <button class="menu-item" *ngIf="canEditRole(user)" (click)="openEditRoleModal(user)">
+              <span class="icon">🎯</span> Change Role
+            </button>
+            <button class="menu-item" *ngIf="canResetPassword(user)" (click)="resetPassword(user)">
+              <span class="icon">🔑</span> Reset Password
+            </button>
+            <button class="menu-item" *ngIf="user.status === 'Inactive' && isTenantAdmin" (click)="reactivateUser(user)">
+              <span class="icon">✅</span> Reactivate
+            </button>
+            <button class="menu-item danger" *ngIf="canDeactivateUser(user) && user.status === 'Active'" (click)="openDeactivateModal(user)">
+              <span class="icon">🚫</span> Deactivate
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- View Profile Modal -->
+  <div class="modal-overlay" *ngIf="showProfileModal" (click)="closeProfileModal()">
+    <div class="modal profile-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Team Member Profile</h2>
+        <button class="close-btn" (click)="closeProfileModal()">✕</button>
+      </div>
+      <div class="modal-body profile-body">
+        <div class="profile-header">
+          <div class="avatar-large">{{ selectedUser?.avatar }}</div>
+          <div class="profile-info">
+            <h3>{{ selectedUser?.name }}</h3>
+            <p class="email">{{ selectedUser?.email }}</p>
+            <span class="role-badge">{{ getRoleLabel(selectedUser?.role) }}</span>
+            <span class="status-badge" [class.active]="selectedUser?.status === 'Active'" [class.inactive]="selectedUser?.status === 'Inactive'">
+              {{ selectedUser?.status }}
+            </span>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <h4>Performance Metrics</h4>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span class="metric-value">{{ selectedUser?.activeJobs }}</span>
+              <span class="metric-label">Active Jobs</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value">{{ selectedUser?.placements }}</span>
+              <span class="metric-label">Total Placements</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <h4>Activity</h4>
+          <div class="info-row">
+            <span class="label">Last Active:</span>
+            <span class="value">{{ selectedUser?.lastActive | date:'MMM d, yyyy h:mm a' }}</span>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <h4>Contact Information</h4>
+          <div class="info-row">
+            <span class="label">Email:</span>
+            <span class="value">{{ selectedUser?.email }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeProfileModal()">Close</button>
+        <button class="btn-primary" *ngIf="canSendMessage()" (click)="sendMessage(selectedUser); closeProfileModal()">Send Message</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Message Modal -->
+  <div class="modal-overlay" *ngIf="showMessageModal" (click)="closeMessageModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Send Message</h2>
+        <button class="close-btn" (click)="closeMessageModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="recipient-info">
+          <span class="icon">📧</span>
+          <span>To: <strong>{{ selectedUser?.name }}</strong> ({{ selectedUser?.email }})</span>
+        </div>
+        <div class="form-group">
+          <label>Subject (Optional)</label>
+          <input type="text" [(ngModel)]="messageSubject" class="form-control" placeholder="Enter subject">
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea [(ngModel)]="messageBody" class="form-control" rows="6" placeholder="Type your message here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeMessageModal()">Cancel</button>
+        <button class="btn-primary" [disabled]="!messageBody.trim()" (click)="sendMessageSubmit()">Send Message</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Performance Modal -->
+  <div class="modal-overlay" *ngIf="showPerformanceModal" (click)="closePerformanceModal()">
+    <div class="modal performance-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Performance Report</h2>
+        <button class="close-btn" (click)="closePerformanceModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="performance-header">
+          <div class="avatar">{{ selectedUser?.avatar }}</div>
+          <div>
+            <h3>{{ selectedUser?.name }}</h3>
+            <p class="role">{{ getRoleLabel(selectedUser?.role) }}</p>
+          </div>
+        </div>
+
+        <div class="performance-section">
+          <h4>Current Period (This Month)</h4>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span class="metric-value">{{ selectedUser?.activeJobs }}</span>
+              <span class="metric-label">Active Jobs</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value">{{ selectedUser?.placements }}</span>
+              <span class="metric-label">Total Placements</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value">{{ (selectedUser?.placements || 0) * 0.85 | number:'1.0-0' }}</span>
+              <span class="metric-label">Interviews Scheduled</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value">{{ (selectedUser?.placements || 0) * 2.5 | number:'1.0-0' }}</span>
+              <span class="metric-label">Candidates Sourced</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="performance-section">
+          <h4>Key Metrics</h4>
+          <div class="metric-row">
+            <span class="label">Success Rate:</span>
+            <span class="value success">{{ selectedUser?.placements ? 72 : 0 }}%</span>
+          </div>
+          <div class="metric-row">
+            <span class="label">Avg. Time to Fill:</span>
+            <span class="value">18 days</span>
+          </div>
+          <div class="metric-row">
+            <span class="label">Client Satisfaction:</span>
+            <span class="value success">4.8/5.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closePerformanceModal()">Close</button>
+        <button class="btn-primary">Export Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div class="modal-overlay" *ngIf="showResetPasswordModal" (click)="closeResetPasswordModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Reset Password</h2>
+        <button class="close-btn" (click)="closeResetPasswordModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="warning-box">
+          <span class="icon">🔑</span>
+          <div>
+            <p class="warning-title">Send Password Reset Email</p>
+            <p class="warning-text">A password reset link will be sent to <strong>{{ selectedUser?.email }}</strong>. The link will expire in 24 hours.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeResetPasswordModal()">Cancel</button>
+        <button class="btn-primary" (click)="confirmResetPassword()">Send Reset Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Role Modal -->
+  <div class="modal-overlay" *ngIf="showEditRoleModal" (click)="closeEditRoleModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Change Role</h2>
+        <button class="close-btn" (click)="closeEditRoleModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="user-info">{{ selectedUser?.name }} ({{ selectedUser?.email }})</p>
+        <div class="form-group">
+          <label>New Role</label>
+          <select [(ngModel)]="newRole" class="form-control">
+            <option value="RECRUITER">Recruiter</option>
+            <option value="RECRUITING_MANAGER">Recruiting Manager</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeEditRoleModal()">Cancel</button>
+        <button class="btn-primary" (click)="saveRole()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deactivate User Modal -->
+  <div class="modal-overlay" *ngIf="showDeactivateModal" (click)="closeDeactivateModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Deactivate User</h2>
+        <button class="close-btn" (click)="closeDeactivateModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="warning-text">⚠️ Are you sure you want to deactivate <strong>{{ selectedUser?.name }}</strong>?</p>
+        <p class="help-text">They will lose access to the system but their data will be preserved. You can reactivate them later.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeDeactivateModal()">Cancel</button>
+        <button class="btn-danger" (click)="confirmDeactivate()">Deactivate User</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invite User Modal -->
   <div class="modal-overlay" *ngIf="showInviteModal" (click)="closeInviteModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { SessionTimeoutComponent } from '../../shared/components/session-timeout/session-timeout.component';
+import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { NavigationService, NavigationItem } from '../../core/services/navigation.service';
 import { User } from '../../core/models/user.model';
@@ -10,7 +11,7 @@ import { User } from '../../core/models/user.model';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, SessionTimeoutComponent],
+  imports: [CommonModule, RouterModule, SessionTimeoutComponent, ToastComponent],
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.scss']
 })

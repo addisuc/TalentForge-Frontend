@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-session-timeout',
@@ -151,16 +152,36 @@ export class SessionTimeoutComponent implements OnInit, OnDestroy {
   showWarning = false;
   remainingTime = '';
   private warningTime = 5 * 60 * 1000; // Show warning 5 minutes before expiry
-  private sessionDuration = 30 * 60 * 1000; // 30 minutes total session
+  private sessionDuration = 30 * 60 * 1000; // 30 minutes default
+  private extendedSessionDuration = 30 * 24 * 60 * 60 * 1000; // 30 days for remember me
   private lastActivityTime = Date.now();
   private checkInterval?: Subscription;
   private countdownInterval?: Subscription;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
+    this.checkRememberMe();
     this.startActivityTracking();
     this.startSessionCheck();
+  }
+
+  private checkRememberMe() {
+    const rememberMe = localStorage.getItem('rememberMe');
+    const expiry = localStorage.getItem('rememberMeExpiry');
+    
+    if (rememberMe === 'true' && expiry) {
+      const expiryTime = parseInt(expiry);
+      if (Date.now() < expiryTime) {
+        this.sessionDuration = this.extendedSessionDuration;
+      } else {
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('rememberMeExpiry');
+      }
+    }
   }
 
   ngOnDestroy() {
@@ -216,14 +237,16 @@ export class SessionTimeoutComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    this.forceLogout();
+    this.checkInterval?.unsubscribe();
+    this.countdownInterval?.unsubscribe();
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
   }
 
   private forceLogout() {
     this.checkInterval?.unsubscribe();
     this.countdownInterval?.unsubscribe();
-    localStorage.clear();
-    sessionStorage.clear();
+    this.authService.logout();
     this.router.navigate(['/auth/login'], { 
       queryParams: { reason: 'session-expired' } 
     });
