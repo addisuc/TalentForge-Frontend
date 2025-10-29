@@ -20,9 +20,9 @@ import { NavigationService } from '../../../../core/services/navigation.service'
         </div>
 
         <!-- Account Locked Warning -->
-        <div *ngIf="isLocked" class="lockout-warning">
-          <div class="lockout-icon">🔒</div>
-          <h3>Account Temporarily Locked</h3>
+        <div *ngIf="isLocked" class="lockout-warning" role="alert" aria-live="assertive">
+          <div class="lockout-icon" aria-hidden="true">🔒</div>
+          <h3 id="lockout-heading">Account Temporarily Locked</h3>
           <p>Too many failed login attempts.</p>
           <div class="countdown">
             <span class="time">{{ remainingLockoutTime }}</span>
@@ -32,8 +32,8 @@ import { NavigationService } from '../../../../core/services/navigation.service'
         </div>
 
         <!-- Attempts Warning -->
-        <div *ngIf="showAttemptsWarning && !isLocked" class="attempts-warning">
-          <span class="warning-icon">⚠️</span>
+        <div *ngIf="showAttemptsWarning && !isLocked" class="attempts-warning" role="alert" aria-live="polite">
+          <span class="warning-icon" aria-hidden="true">⚠️</span>
           <div>
             <span *ngIf="remainingAttempts > 1">
               Invalid credentials. {{ remainingAttempts }} attempts remaining before account lockout.
@@ -45,15 +45,15 @@ import { NavigationService } from '../../../../core/services/navigation.service'
         </div>
 
         <!-- Captcha Active Notice -->
-        <div *ngIf="showCaptcha && !isLocked" class="captcha-notice">
-          <span class="shield-icon">🛡️</span>
+        <div *ngIf="showCaptcha && !isLocked" class="captcha-notice" role="status" aria-live="polite">
+          <span class="shield-icon" aria-hidden="true">🛡️</span>
           <div>
             <strong>Security verification enabled</strong>
             <p>Your login attempts are being verified by reCAPTCHA to protect your account.</p>
           </div>
         </div>
 
-        <div *ngIf="errorMessage" class="error-message">
+        <div *ngIf="errorMessage" class="error-message" role="alert" aria-live="assertive">
           {{ errorMessage }}
         </div>
 
@@ -68,10 +68,13 @@ import { NavigationService } from '../../../../core/services/navigation.service'
               [class.error]="email?.invalid && email?.touched"
               placeholder="Enter your email"
               autocomplete="email"
+              [attr.aria-invalid]="email?.invalid && email?.touched"
+              [attr.aria-describedby]="email?.invalid && email?.touched ? 'email-error' : null"
+              aria-required="true"
             />
-            <div class="error-text" *ngIf="email?.invalid && email?.touched">
-              <span *ngIf="email?.errors?.['required']">Email is required</span>
-              <span *ngIf="email?.errors?.['email']">Please enter a valid email</span>
+            <div class="error-text" *ngIf="email?.invalid && email?.touched" role="alert">
+              <span *ngIf="email?.errors?.['required']" id="email-error">Email is required</span>
+              <span *ngIf="email?.errors?.['email']" id="email-error">Please enter a valid email</span>
             </div>
           </div>
 
@@ -86,14 +89,17 @@ import { NavigationService } from '../../../../core/services/navigation.service'
                 [class.error]="password?.invalid && password?.touched"
                 placeholder="Enter your password"
                 autocomplete="current-password"
+                [attr.aria-invalid]="password?.invalid && password?.touched"
+                [attr.aria-describedby]="password?.invalid && password?.touched ? 'password-error' : null"
+                aria-required="true"
               />
-              <button type="button" class="toggle-password" (click)="hidePassword = !hidePassword">
-                {{ hidePassword ? '👁️' : '🙈' }}
+              <button type="button" class="toggle-password" (click)="hidePassword = !hidePassword" [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'">
+                <span aria-hidden="true">{{ hidePassword ? '👁️' : '🙈' }}</span>
               </button>
             </div>
-            <div class="error-text" *ngIf="password?.invalid && password?.touched">
-              <span *ngIf="password?.errors?.['required']">Password is required</span>
-              <span *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</span>
+            <div class="error-text" *ngIf="password?.invalid && password?.touched" role="alert">
+              <span *ngIf="password?.errors?.['required']" id="password-error">Password is required</span>
+              <span *ngIf="password?.errors?.['minlength']" id="password-error">Password must be at least 6 characters</span>
             </div>
           </div>
 

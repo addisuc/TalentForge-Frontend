@@ -1,25 +1,299 @@
-<div class="settings-page">
-  <div class="page-header">
+<div class="settings-container">
+  <div class="settings-header">
     <h1>Settings</h1>
-    <p>Manage your account and preferences</p>
+    <p>Manage your account preferences and organization settings</p>
   </div>
 
-  <div class="settings-grid">
-    <div class="settings-card">
-      <h3>👤 Profile Settings</h3>
-      <p>Update your personal information</p>
-    </div>
-    <div class="settings-card">
-      <h3>🏢 Organization</h3>
-      <p>Manage company settings</p>
-    </div>
-    <div class="settings-card">
-      <h3>💳 Billing</h3>
-      <p>Subscription and payment details</p>
-    </div>
-    <div class="settings-card">
-      <h3>🔗 Integrations</h3>
-      <p>Connect third-party services</p>
+  <div class="settings-layout">
+    <!-- Sidebar Navigation -->
+    <nav class="settings-nav" role="navigation" aria-label="Settings navigation">
+      <button 
+        class="nav-item" 
+        [class.active]="activeTab === 'profile'"
+        (click)="setActiveTab('profile')"
+        type="button">
+        <span class="icon">👤</span>
+        <span>Profile & Preferences</span>
+      </button>
+      <button 
+        class="nav-item" 
+        [class.active]="activeTab === 'notifications'"
+        (click)="setActiveTab('notifications')"
+        type="button">
+        <span class="icon">🔔</span>
+        <span>Notifications</span>
+      </button>
+      <button 
+        class="nav-item" 
+        [class.active]="activeTab === 'security'"
+        (click)="setActiveTab('security')"
+        type="button">
+        <span class="icon">🔒</span>
+        <span>Security</span>
+      </button>
+      <button 
+        *ngIf="isAdmin"
+        class="nav-item" 
+        [class.active]="activeTab === 'organization'"
+        (click)="setActiveTab('organization')"
+        type="button">
+        <span class="icon">🏢</span>
+        <span>Organization</span>
+      </button>
+    </nav>
+
+    <!-- Content Area -->
+    <div class="settings-content">
+      <div *ngIf="saveMessage" class="save-message" role="alert">
+        {{ saveMessage }}
+      </div>
+
+      <!-- Profile & Preferences Tab -->
+      <div *ngIf="activeTab === 'profile'" class="tab-content">
+        <h2>Profile & Preferences</h2>
+        <form [formGroup]="userSettingsForm" (ngSubmit)="saveUserSettings()">
+          
+          <div class="form-section">
+            <h3>Appearance</h3>
+            <div class="form-group">
+              <label for="theme">Theme</label>
+              <select id="theme" formControlName="theme" class="form-control">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="auto">Auto (System)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Localization</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="language">Language</label>
+                <select id="language" formControlName="language" class="form-control">
+                  <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.name }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="timezone">Timezone</label>
+                <select id="timezone" formControlName="timezone" class="form-control">
+                  <option *ngFor="let tz of timezones" [value]="tz">{{ tz }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dateFormat">Date Format</label>
+                <select id="dateFormat" formControlName="dateFormat" class="form-control">
+                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="timeFormat">Time Format</label>
+                <select id="timeFormat" formControlName="timeFormat" class="form-control">
+                  <option value="12h">12-hour</option>
+                  <option value="24h">24-hour</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" [disabled]="loading || userSettingsForm.invalid">
+            {{ loading ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- Notifications Tab -->
+      <div *ngIf="activeTab === 'notifications'" class="tab-content">
+        <h2>Notification Preferences</h2>
+        <form [formGroup]="userSettingsForm" (ngSubmit)="saveUserSettings()">
+          
+          <div class="form-section">
+            <h3>Communication Channels</h3>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="emailNotifications">
+                <span>Email Notifications</span>
+                <small>Receive updates via email</small>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="pushNotifications">
+                <span>Push Notifications</span>
+                <small>Browser notifications for important updates</small>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="smsNotifications">
+                <span>SMS Notifications</span>
+                <small>Text messages for urgent alerts</small>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" [disabled]="loading">
+            {{ loading ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- Security Tab -->
+      <div *ngIf="activeTab === 'security'" class="tab-content">
+        <h2>Security Settings</h2>
+        
+        <div class="form-section">
+          <h3>Change Password</h3>
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <input 
+                id="currentPassword" 
+                type="password" 
+                formControlName="currentPassword" 
+                class="form-control"
+                autocomplete="current-password">
+            </div>
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <input 
+                id="newPassword" 
+                type="password" 
+                formControlName="newPassword" 
+                class="form-control"
+                autocomplete="new-password">
+              <small>Minimum 8 characters</small>
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">Confirm New Password</label>
+              <input 
+                id="confirmPassword" 
+                type="password" 
+                formControlName="confirmPassword" 
+                class="form-control"
+                autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn-primary" [disabled]="loading || passwordForm.invalid">
+              {{ loading ? 'Changing...' : 'Change Password' }}
+            </button>
+          </form>
+        </div>
+
+        <div class="form-section">
+          <h3>Session Management</h3>
+          <p>Active session timeout: 30 minutes</p>
+          <p class="text-muted">You'll be automatically logged out after 30 minutes of inactivity</p>
+        </div>
+      </div>
+
+      <!-- Organization Tab (Admin Only) -->
+      <div *ngIf="activeTab === 'organization' && isAdmin" class="tab-content">
+        <h2>Organization Settings</h2>
+        <form [formGroup]="organizationForm" (ngSubmit)="saveOrganizationSettings()">
+          
+          <div class="form-section">
+            <h3>Company Information</h3>
+            <div class="form-group">
+              <label for="companyName">Company Name *</label>
+              <input 
+                id="companyName" 
+                type="text" 
+                formControlName="companyName" 
+                class="form-control">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="companyEmail">Company Email *</label>
+                <input 
+                  id="companyEmail" 
+                  type="email" 
+                  formControlName="companyEmail" 
+                  class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="companyPhone">Phone</label>
+                <input 
+                  id="companyPhone" 
+                  type="tel" 
+                  formControlName="companyPhone" 
+                  class="form-control">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="companyWebsite">Website</label>
+              <input 
+                id="companyWebsite" 
+                type="url" 
+                formControlName="companyWebsite" 
+                class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="companyAddress">Address</label>
+              <textarea 
+                id="companyAddress" 
+                formControlName="companyAddress" 
+                class="form-control" 
+                rows="3"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="industry">Industry</label>
+                <select id="industry" formControlName="industry" class="form-control">
+                  <option value="">Select Industry</option>
+                  <option value="technology">Technology</option>
+                  <option value="healthcare">Healthcare</option>
+                  <option value="finance">Finance</option>
+                  <option value="education">Education</option>
+                  <option value="retail">Retail</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="companySize">Company Size</label>
+                <select id="companySize" formControlName="companySize" class="form-control">
+                  <option value="">Select Size</option>
+                  <option value="1-10">1-10 employees</option>
+                  <option value="11-50">11-50 employees</option>
+                  <option value="51-200">51-200 employees</option>
+                  <option value="201-500">201-500 employees</option>
+                  <option value="500+">500+ employees</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Job Posting Settings</h3>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="allowPublicJobPostings">
+                <span>Allow Public Job Postings</span>
+                <small>Jobs visible to all candidates</small>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="requireApprovalForJobPostings">
+                <span>Require Approval for Job Postings</span>
+                <small>Admin must approve before publishing</small>
+              </label>
+            </div>
+            <div class="form-group">
+              <label for="autoArchiveJobsAfterDays">Auto-archive Jobs After (days)</label>
+              <input 
+                id="autoArchiveJobsAfterDays" 
+                type="number" 
+                formControlName="autoArchiveJobsAfterDays" 
+                class="form-control"
+                min="1"
+                max="365">
+              <small>Jobs will be automatically archived after this many days</small>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" [disabled]="loading || organizationForm.invalid">
+            {{ loading ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </div>

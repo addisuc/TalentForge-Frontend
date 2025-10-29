@@ -4,7 +4,7 @@
       <h1>Tenant Management</h1>
       <p>Manage all platform tenants and subscriptions</p>
     </div>
-    <button class="btn-primary">+ Add Tenant</button>
+    <button class="btn-primary" (click)="openAddModal()">+ Add Tenant</button>
   </div>
 
   <div class="filters-section">
@@ -29,7 +29,7 @@
   </div>
 
   <div class="table-container">
-    <table class="data-table">
+    <table class="data-table" role="table">
       <thead>
         <tr>
           <th>Tenant Name</th>
@@ -44,7 +44,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let tenant of paginatedTenants">
+        <tr *ngFor="let tenant of tenants">
           <td><strong>{{ tenant.name }}</strong></td>
           <td>{{ tenant.subdomain }}.talentforge.com</td>
           <td>{{ tenant.plan }}</td>
@@ -52,13 +52,14 @@
           <td>{{ tenant.jobs }}</td>
           <td>${{ tenant.mrr }}</td>
           <td><span class="badge" [class]="tenant.status.toLowerCase()">{{ tenant.status }}</span></td>
-          <td>{{ tenant.created | date:'MMM d, yyyy' }}</td>
+          <td>{{ tenant.createdAt | date:'MMM d, yyyy' }}</td>
           <td>
             <div class="action-buttons">
-              <button class="btn-action">View</button>
-              <button class="btn-action secondary">Message</button>
-              <button class="btn-action secondary">Suspend</button>
-              <button class="btn-action secondary">Invoice</button>
+              <button class="btn-action" (click)="viewDetails(tenant)">View</button>
+              <button class="btn-action" (click)="openEditModal(tenant)">Edit</button>
+              <button class="btn-action secondary" *ngIf="tenant.status === 'Active'" (click)="suspendTenant(tenant)">Suspend</button>
+              <button class="btn-action secondary" *ngIf="tenant.status === 'Suspended'" (click)="activateTenant(tenant)">Activate</button>
+              <button class="btn-action danger" (click)="deleteTenant(tenant)">Delete</button>
             </div>
           </td>
         </tr>
@@ -68,7 +69,7 @@
 
   <div class="pagination">
     <div class="pagination-info">
-      Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalTenants }} tenants
+      Showing {{ currentPage * itemsPerPage + 1 }} to {{ Math.min((currentPage + 1) * itemsPerPage, totalElements) }} of {{ totalElements }} tenants
     </div>
     <div class="pagination-controls">
       <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
@@ -76,13 +77,175 @@
         <option [value]="50">50 per page</option>
         <option [value]="100">100 per page</option>
       </select>
-      <button [disabled]="currentPage === 1" (click)="previousPage()">Previous</button>
-      <span class="page-numbers">
-        <button *ngFor="let page of pageNumbers" 
-                [class.active]="page === currentPage" 
-                (click)="goToPage(page)">{{ page }}</button>
-      </span>
-      <button [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+      <button [disabled]="currentPage === 0" (click)="previousPage()">Previous</button>
+      <span class="page-info">Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+      <button [disabled]="currentPage >= totalPages - 1" (click)="nextPage()">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Tenant Modal -->
+<div class="modal-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="add-tenant-title">
+    <div class="modal-header">
+      <h2 id="add-tenant-title">Add New Tenant</h2>
+      <button class="close-btn" (click)="closeAddModal()" aria-label="Close">&times;</button>
+    </div>
+    <form [formGroup]="addTenantForm" (ngSubmit)="addTenant()">
+      <div class="modal-body">
+        <div class="form-section">
+          <h3>Company Information</h3>
+          <div class="form-group">
+            <label for="name">Company Name *</label>
+            <input id="name" type="text" formControlName="name" class="form-control" placeholder="e.g., TechCorp Recruiting">
+          </div>
+          <div class="form-group">
+            <label for="subdomain">Subdomain *</label>
+            <div class="input-group">
+              <input id="subdomain" type="text" formControlName="subdomain" class="form-control" placeholder="techcorp">
+              <span class="input-suffix">.talentforge.com</span>
+            </div>
+            <small>Only lowercase letters, numbers, and hyphens</small>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Subscription Plan</h3>
+          <div class="plan-options">
+            <label *ngFor="let plan of plans" class="plan-option">
+              <input type="radio" formControlName="plan" [value]="plan.value">
+              <div class="plan-card">
+                <strong>{{ plan.value }}</strong>
+                <span class="price">${{ plan.price }}/month</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Admin User</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="adminFirstName">First Name *</label>
+              <input id="adminFirstName" type="text" formControlName="adminFirstName" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="adminLastName">Last Name *</label>
+              <input id="adminLastName" type="text" formControlName="adminLastName" class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="adminEmail">Email *</label>
+            <input id="adminEmail" type="email" formControlName="adminEmail" class="form-control" placeholder="admin@company.com">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeAddModal()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="addTenantForm.invalid || loading">
+          {{ loading ? 'Creating...' : 'Create Tenant' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tenant Details Modal -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-content large" (click)="$event.stopPropagation()" role="dialog">
+    <div class="modal-header">
+      <h2>{{ selectedTenant?.name }}</h2>
+      <button class="close-btn" (click)="closeDetailsModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" *ngIf="selectedTenant">
+      <div class="details-grid">
+        <div class="detail-item">
+          <label>Subdomain</label>
+          <span>{{ selectedTenant.subdomain }}.talentforge.com</span>
+        </div>
+        <div class="detail-item">
+          <label>Plan</label>
+          <span>{{ selectedTenant.plan }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Status</label>
+          <span class="badge" [class]="selectedTenant.status.toLowerCase()">{{ selectedTenant.status }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Users</label>
+          <span>{{ selectedTenant.users }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Active Jobs</label>
+          <span>{{ selectedTenant.jobs }}</span>
+        </div>
+        <div class="detail-item">
+          <label>MRR</label>
+          <span>${{ selectedTenant.mrr }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Created</label>
+          <span>{{ selectedTenant.createdAt | date:'MMM d, yyyy' }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeDetailsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Tenant Modal -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="edit-tenant-title">
+    <div class="modal-header">
+      <h2 id="edit-tenant-title">Edit Tenant</h2>
+      <button class="close-btn" (click)="closeEditModal()" aria-label="Close">&times;</button>
+    </div>
+    <form [formGroup]="editTenantForm" (ngSubmit)="updateTenant()">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="edit-name">Company Name *</label>
+          <input id="edit-name" type="text" formControlName="name" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="edit-subdomain">Subdomain *</label>
+          <div class="input-group">
+            <input id="edit-subdomain" type="text" formControlName="subdomain" class="form-control">
+            <span class="input-suffix">.talentforge.com</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="edit-plan">Subscription Plan *</label>
+          <select id="edit-plan" formControlName="plan" class="form-control">
+            <option *ngFor="let plan of plans" [value]="plan.value">{{ plan.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeEditModal()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="editTenantForm.invalid || loading">
+          {{ loading ? 'Updating...' : 'Update Tenant' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="delete-tenant-title">
+    <div class="modal-header">
+      <h2 id="delete-tenant-title">Delete Tenant</h2>
+      <button class="close-btn" (click)="closeDeleteModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" *ngIf="tenantToDelete">
+      <p>Are you sure you want to delete <strong>{{ tenantToDelete.name }}</strong>?</p>
+      <p>This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+      <button type="button" class="btn-primary danger" (click)="confirmDelete()">Delete</button>
     </div>
   </div>
 </div>

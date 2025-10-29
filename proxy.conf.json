@@ -9,6 +9,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/tenants": {
+    "target": "http://localhost:8082",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api/jobs": {
     "target": "http://localhost:8083",
     "secure": false,
@@ -21,6 +26,11 @@
   },
   "/api/interviews": {
     "target": "http://localhost:8084",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/billing": {
+    "target": "http://localhost:8085",
     "secure": false,
     "changeOrigin": true
   }

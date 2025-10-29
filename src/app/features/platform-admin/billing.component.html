@@ -2,98 +2,97 @@
   <div class="page-header">
     <div>
       <h1>Billing & Revenue</h1>
-      <p>Monitor platform revenue and subscription metrics</p>
+      <p>Manage subscriptions, invoices, and payments</p>
     </div>
     <div class="header-actions">
-      <button class="btn-primary">Export Report</button>
+      <button class="btn-secondary" (click)="createManualInvoice()">+ Manual Invoice</button>
+      <button class="btn-primary" (click)="exportReport()">📊 Export Report</button>
     </div>
   </div>
 
+  <!-- Stats Cards -->
   <div class="stats-grid">
-    <div class="stat-card" *ngFor="let stat of stats">
-      <span class="icon">{{ stat.icon }}</span>
+    <div class="stat-card" *ngFor="let stat of stats" [class]="stat.color">
+      <div class="stat-icon">{{ stat.icon }}</div>
       <div class="stat-content">
-        <div class="value">{{ stat.value }}</div>
-        <div class="label">{{ stat.label }}</div>
-        <div class="trend positive">{{ stat.trend }}</div>
+        <div class="stat-label">{{ stat.label }}</div>
+        <div class="stat-value">{{ stat.value }}</div>
+        <div class="stat-trend" [class.positive]="stat.trend.startsWith('+')">{{ stat.trend }}</div>
       </div>
     </div>
   </div>
 
-  <div class="summary-cards">
-    <div class="summary-card">
-      <div class="summary-label">Total Invoiced</div>
-      <div class="summary-value">${{ totalInvoiced }}</div>
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-bar">
+      <span class="icon">🔍</span>
+      <input type="text" placeholder="Search by tenant..." [(ngModel)]="searchTenant">
     </div>
-    <div class="summary-card">
-      <div class="summary-label">Total Paid</div>
-      <div class="summary-value paid">${{ totalPaid }}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">Total Pending</div>
-      <div class="summary-value pending">${{ totalPending }}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">Total Failed</div>
-      <div class="summary-value failed">${{ totalFailed }}</div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-header">
-      <h2>Invoices</h2>
-      <div class="filters">
-        <input type="text" class="filter-input" placeholder="Search tenant..." [(ngModel)]="searchTenant">
-        <select class="filter-select" [(ngModel)]="selectedPeriod">
-          <option value="30">Last 30 Days</option>
-          <option value="90">Last 3 Months</option>
-          <option value="180">Last 6 Months</option>
-          <option value="365">One Year</option>
-          <option value="all">All Time</option>
-        </select>
-        <select class="filter-select" [(ngModel)]="selectedStatus">
-          <option value="all">All Status</option>
-          <option value="Paid">Paid</option>
-          <option value="Pending">Pending</option>
-          <option value="Failed">Failed</option>
-        </select>
-      </div>
-    </div>
-    <div class="table-container">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Tenant</th>
-            <th>Plan</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let transaction of paginatedTransactions">
-            <td><strong>{{ transaction.tenant }}</strong></td>
-            <td>{{ transaction.plan }}</td>
-            <td>${{ transaction.amount }}</td>
-            <td>{{ transaction.date | date:'MMM d, yyyy' }}</td>
-            <td><span class="badge" [class]="transaction.status.toLowerCase()">{{ transaction.status }}</span></td>
-            <td>
-              <div class="action-buttons">
-                <button class="btn-action" *ngIf="transaction.status === 'Paid'">View</button>
-                <button class="btn-action" *ngIf="transaction.status === 'Pending'">Send Invoice</button>
-                <button class="btn-action secondary">Download</button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="filters">
+      <select class="filter-select" [(ngModel)]="selectedPeriod">
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="Q1">Q1 (Jan-Mar)</option>
+        <option value="Q2">Q2 (Apr-Jun)</option>
+        <option value="Q3">Q3 (Jul-Sep)</option>
+        <option value="Q4">Q4 (Oct-Dec)</option>
+        <option value="365">This Year</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="selectedStatus">
+        <option value="all">All Status</option>
+        <option value="paid">Paid</option>
+        <option value="pending">Pending</option>
+        <option value="failed">Failed</option>
+        <option value="refunded">Refunded</option>
+      </select>
     </div>
   </div>
 
+  <!-- Invoices Table -->
+  <div class="table-container">
+    <table class="data-table" role="table">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Tenant</th>
+          <th>Amount</th>
+          <th>Due Date</th>
+          <th>Paid Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let invoice of invoices">
+          <td><strong>{{ invoice.invoiceNumber }}</strong></td>
+          <td>{{ invoice.tenantName }}</td>
+          <td>${{ invoice.amount }}</td>
+          <td>{{ invoice.dueDate | date:'MMM d, yyyy' }}</td>
+          <td>{{ invoice.paidDate ? (invoice.paidDate | date:'MMM d, yyyy') : '-' }}</td>
+          <td><span class="badge" [class]="invoice.status">{{ invoice.status | uppercase }}</span></td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-action" (click)="viewInvoice(invoice)">View</button>
+              <button class="btn-action" (click)="editInvoice(invoice)" *ngIf="invoice.status === 'DRAFT'">Edit</button>
+              <button class="btn-action" (click)="downloadInvoice(invoice)">Download</button>
+              <button class="btn-action" *ngIf="invoice.status === 'DRAFT' || invoice.status === 'SENT'" (click)="sendInvoice(invoice)">{{ invoice.status === 'SENT' ? 'Resend' : 'Send' }}</button>
+              <button class="btn-action" *ngIf="invoice.status === 'FAILED'" (click)="retryPayment(invoice)">Retry</button>
+              <button class="btn-action" *ngIf="invoice.status === 'SENT'" (click)="markAsPaid(invoice)">Mark Paid</button>
+              <button class="btn-action danger" *ngIf="invoice.status === 'PAID'" (click)="refundPayment(invoice)">Refund</button>
+              <button class="btn-action danger" *ngIf="invoice.status === 'DRAFT'" (click)="voidInvoice(invoice)">Void</button>
+              <button class="btn-action danger" *ngIf="invoice.status === 'SENT'" (click)="voidInvoice(invoice)">Cancel</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
   <div class="pagination">
     <div class="pagination-info">
-      Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalTransactions }} invoices
+      Showing {{ currentPage * itemsPerPage + 1 }} to {{ Math.min((currentPage + 1) * itemsPerPage, totalElements) }} of {{ totalElements }} invoices
     </div>
     <div class="pagination-controls">
       <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
@@ -101,13 +100,124 @@
         <option [value]="50">50 per page</option>
         <option [value]="100">100 per page</option>
       </select>
-      <button [disabled]="currentPage === 1" (click)="previousPage()">Previous</button>
-      <span class="page-numbers">
-        <button *ngFor="let page of pageNumbers" 
-                [class.active]="page === currentPage" 
-                (click)="goToPage(page)">{{ page }}</button>
-      </span>
-      <button [disabled]="currentPage === totalPages" (click)="nextPage()">Next</button>
+      <button [disabled]="currentPage === 0" (click)="previousPage()">Previous</button>
+      <span class="page-info">Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+      <button [disabled]="currentPage >= totalPages - 1" (click)="nextPage()">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice Details/Create Modal -->
+<div class="modal-overlay" *ngIf="showInvoiceModal" (click)="closeInvoiceModal()">
+  <div class="modal-content large" (click)="$event.stopPropagation()" role="dialog">
+    <div class="modal-header">
+      <h2>{{ selectedInvoice ? 'Invoice Details' : 'Create Manual Invoice' }}</h2>
+      <button class="close-btn" (click)="closeInvoiceModal()" aria-label="Close">&times;</button>
+    </div>
+    
+    <!-- Create Invoice Form -->
+    <div class="modal-body" *ngIf="!selectedInvoice">
+      <div class="form-group">
+        <label>Organization *</label>
+        <select class="form-control" [(ngModel)]="newInvoice.tenantId">
+          <option value="">Select organization...</option>
+          <option *ngFor="let tenant of tenants" [value]="tenant.id">{{ tenant.name }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Amount *</label>
+        <input type="number" class="form-control" [(ngModel)]="newInvoice.amount" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Currency</label>
+        <select class="form-control" [(ngModel)]="newInvoice.currency">
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Due Date *</label>
+        <input type="date" class="form-control" [(ngModel)]="newInvoice.dueDate">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="newInvoice.description" placeholder="Invoice description..."></textarea>
+      </div>
+    </div>
+    
+    <!-- View Invoice Details -->
+    <div class="modal-body" *ngIf="selectedInvoice">
+      <div class="invoice-header">
+        <div>
+          <h3>{{ selectedInvoice.invoiceNumber }}</h3>
+          <p>{{ selectedInvoice.tenantName }}</p>
+        </div>
+        <div class="invoice-amount">
+          <div class="amount-label">Amount Due</div>
+          <div class="amount-value">${{ selectedInvoice.amount }}</div>
+        </div>
+      </div>
+      
+      <div class="details-grid">
+        <div class="detail-item">
+          <label>Status</label>
+          <span class="badge" [class]="selectedInvoice.status">{{ selectedInvoice.status | uppercase }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Due Date</label>
+          <span>{{ selectedInvoice.dueDate | date:'MMM d, yyyy' }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Paid Date</label>
+          <span>{{ selectedInvoice.paidDate ? (selectedInvoice.paidDate | date:'MMM d, yyyy') : 'Not paid' }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Invoice Number</label>
+          <span>{{ selectedInvoice.invoiceNumber }}</span>
+        </div>
+      </div>
+
+      <div class="invoice-actions">
+        <button class="btn-secondary" (click)="downloadInvoice(selectedInvoice)">📥 Download PDF</button>
+        <button class="btn-secondary" (click)="sendInvoice(selectedInvoice)">📧 Send Email</button>
+        <button class="btn-secondary" *ngIf="selectedInvoice.status === 'FAILED'" (click)="retryPayment(selectedInvoice)">🔄 Retry Payment</button>
+        <button class="btn-danger" *ngIf="selectedInvoice.status === 'PAID'" (click)="refundPayment(selectedInvoice)">💸 Issue Refund</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeInvoiceModal()">{{ selectedInvoice ? 'Close' : 'Cancel' }}</button>
+      <button class="btn-primary" *ngIf="!selectedInvoice" (click)="submitManualInvoice()">Create Invoice</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Notification -->
+<div class="notification-overlay" *ngIf="notification.show">
+  <div class="notification-card" [class.success]="notification.type === 'success'" [class.error]="notification.type === 'error'">
+    <div class="notification-icon">
+      <span *ngIf="notification.type === 'success'">✓</span>
+      <span *ngIf="notification.type === 'error'">✕</span>
+    </div>
+    <div class="notification-content">
+      <h3>{{ notification.title }}</h3>
+      <p>{{ notification.message }}</p>
+    </div>
+    <button class="notification-close" (click)="notification.show = false">✕</button>
+  </div>
+</div>
+
+<!-- Custom Confirmation -->
+<div class="notification-overlay" *ngIf="confirmation.show">
+  <div class="confirmation-card">
+    <div class="confirmation-icon">⚠</div>
+    <div class="confirmation-content">
+      <h3>{{ confirmation.title }}</h3>
+      <p>{{ confirmation.message }}</p>
+    </div>
+    <div class="confirmation-actions">
+      <button class="btn-secondary" (click)="cancelConfirmation()">Cancel</button>
+      <button class="btn-primary" (click)="confirmAction()">Confirm</button>
     </div>
   </div>
 </div>
