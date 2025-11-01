@@ -6,6 +6,11 @@
     </div>
     <div class="header-actions">
       <button class="btn-secondary" (click)="createManualInvoice()">+ Manual Invoice</button>
+      <button class="btn-secondary" (click)="viewPendingRefunds()">
+        ⚠️ Pending Refunds
+        <span class="badge-count" *ngIf="pendingRefundsCount > 0">{{ pendingRefundsCount }}</span>
+        <span *ngIf="pendingRefundsCount === 0" style="opacity: 0.5;">(0)</span>
+      </button>
       <button class="btn-primary" (click)="exportReport()">📊 Export Report</button>
     </div>
   </div>
@@ -26,10 +31,11 @@
   <div class="filters-section">
     <div class="search-bar">
       <span class="icon">🔍</span>
-      <input type="text" placeholder="Search by tenant..." [(ngModel)]="searchTenant">
+      <input type="text" placeholder="Search by tenant or invoice #..." [(ngModel)]="searchTenant" (ngModelChange)="onFilterChange()">
     </div>
     <div class="filters">
-      <select class="filter-select" [(ngModel)]="selectedPeriod">
+      <select class="filter-select" [(ngModel)]="selectedPeriod" (ngModelChange)="onFilterChange()">
+        <option value="all">All Time</option>
         <option value="7">Last 7 days</option>
         <option value="30">Last 30 days</option>
         <option value="90">Last 90 days</option>
@@ -39,11 +45,12 @@
         <option value="Q4">Q4 (Oct-Dec)</option>
         <option value="365">This Year</option>
       </select>
-      <select class="filter-select" [(ngModel)]="selectedStatus">
+      <select class="filter-select" [(ngModel)]="selectedStatus" (ngModelChange)="onFilterChange()">
         <option value="all">All Status</option>
+        <option value="draft">Draft</option>
+        <option value="sent">Sent</option>
         <option value="paid">Paid</option>
-        <option value="pending">Pending</option>
-        <option value="failed">Failed</option>
+        <option value="cancelled">Cancelled</option>
         <option value="refunded">Refunded</option>
       </select>
     </div>
@@ -54,12 +61,30 @@
     <table class="data-table" role="table">
       <thead>
         <tr>
-          <th>Invoice #</th>
-          <th>Tenant</th>
-          <th>Amount</th>
-          <th>Due Date</th>
-          <th>Paid Date</th>
-          <th>Status</th>
+          <th (click)="sortBy('invoiceNumber')" class="sortable">
+            Invoice #
+            <span class="sort-icon" *ngIf="sortField === 'invoiceNumber'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+          </th>
+          <th (click)="sortBy('tenantName')" class="sortable">
+            Tenant
+            <span class="sort-icon" *ngIf="sortField === 'tenantName'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+          </th>
+          <th (click)="sortBy('amount')" class="sortable">
+            Amount
+            <span class="sort-icon" *ngIf="sortField === 'amount'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+          </th>
+          <th (click)="sortBy('dueDate')" class="sortable">
+            Due Date
+            <span class="sort-icon" *ngIf="sortField === 'dueDate'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+          </th>
+          <th (click)="sortBy('paidDate')" class="sortable">
+            Paid Date
+            <span class="sort-icon" *ngIf="sortField === 'paidDate'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+          </th>
+          <th (click)="sortBy('status')" class="sortable">
+            Status
+            <span class="sort-icon" *ngIf="sortField === 'status'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+          </th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -218,6 +243,79 @@
     <div class="confirmation-actions">
       <button class="btn-secondary" (click)="cancelConfirmation()">Cancel</button>
       <button class="btn-primary" (click)="confirmAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Pending Refunds Modal -->
+<div class="modal-overlay" *ngIf="showRefundsModal" (click)="closeRefundsModal()">
+  <div class="modal-content large" (click)="$event.stopPropagation()" role="dialog">
+    <div class="modal-header">
+      <h2>Pending Refund Approvals</h2>
+      <button class="close-btn" (click)="closeRefundsModal()" aria-label="Close">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div *ngIf="pendingRefunds.length === 0" class="empty-state">
+        <p>No pending refunds</p>
+      </div>
+
+      <div *ngFor="let refund of pendingRefunds" class="refund-card">
+        <div class="refund-header">
+          <div>
+            <h3>{{ refund.creditNoteNumber }}</h3>
+            <p>Invoice: {{ refund.invoiceId }}</p>
+          </div>
+          <div class="refund-amount-display">
+            <div class="amount-label">Refund Amount</div>
+            <div class="amount-value">${{ refund.amount }}</div>
+          </div>
+        </div>
+
+        <div class="refund-details">
+          <div class="detail-row">
+            <span class="detail-label">Reason:</span>
+            <span>{{ refund.reason }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Requested:</span>
+            <span>{{ refund.createdAt | date:'MMM d, yyyy h:mm a' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Method:</span>
+            <span>{{ refund.refundMethod }}</span>
+          </div>
+        </div>
+
+        <div class="refund-actions">
+          <button class="btn-danger" (click)="rejectRefund(refund)">Reject</button>
+          <button class="btn-primary" (click)="approveRefund(refund)">Approve Refund</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Refund Modal -->
+<div class="modal-overlay" *ngIf="showRejectModal" (click)="closeRejectModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()" role="dialog">
+    <div class="modal-header">
+      <h2>Reject Refund</h2>
+      <button class="close-btn" (click)="closeRejectModal()" aria-label="Close">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <p>Please provide a reason for rejecting this refund:</p>
+      <div class="form-group">
+        <label>Rejection Reason *</label>
+        <textarea class="form-control" rows="4" [(ngModel)]="rejectionReason" placeholder="Enter reason..."></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeRejectModal()">Cancel</button>
+      <button class="btn-danger" (click)="confirmRejectRefund()">Reject Refund</button>
     </div>
   </div>
 </div>

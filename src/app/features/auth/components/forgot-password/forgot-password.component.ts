@@ -120,23 +120,22 @@ export class ForgotPasswordComponent {
       this.errorMessage = '';
       this.submittedEmail = this.email?.value;
 
-      // TODO: Integrate with backend API
-      setTimeout(() => {
-        this.loading = false;
-        this.emailSent = true;
-      }, 1500);
-
-      // Uncomment when backend is ready:
-      // this.authFacade.forgotPassword(this.email?.value).subscribe({
-      //   next: () => {
-      //     this.loading = false;
-      //     this.emailSent = true;
-      //   },
-      //   error: (error) => {
-      //     this.loading = false;
-      //     this.errorMessage = error.message || 'Failed to send reset email. Please try again.';
-      //   }
-      // });
+      this.authFacade.forgotPassword(this.email?.value).subscribe({
+        next: () => {
+          this.loading = false;
+          this.emailSent = true;
+        },
+        error: (error) => {
+          this.loading = false;
+          if (error.status === 404 || error.error?.errorCode === 'USER_NOT_FOUND') {
+            this.errorMessage = 'No account found with this email address.';
+          } else if (error.status === 401) {
+            this.errorMessage = 'Unable to process request. Please try again.';
+          } else {
+            this.errorMessage = 'Failed to send reset email. Please try again later.';
+          }
+        }
+      });
     }
   }
 
@@ -149,7 +148,6 @@ export class ForgotPasswordComponent {
       }
     }, 1000);
 
-    // TODO: Integrate with backend API
-    // this.authFacade.forgotPassword(this.submittedEmail).subscribe();
+    this.authFacade.forgotPassword(this.submittedEmail).subscribe();
   }
 }

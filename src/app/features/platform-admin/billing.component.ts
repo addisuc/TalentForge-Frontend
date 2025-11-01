@@ -19,6 +19,12 @@ export class BillingComponent implements OnInit {
   loading = false;
   showInvoiceModal = false;
   selectedInvoice: Invoice | null = null;
+  showRefundsModal = false;
+  showRejectModal = false;
+  pendingRefunds: any[] = [];
+  pendingRefundsCount = 0;
+  selectedRefund: any = null;
+  rejectionReason = '';
   Math = Math;
   
   notification = {
@@ -52,6 +58,8 @@ export class BillingComponent implements OnInit {
   currentPage = 0;
   itemsPerPage = 25;
   totalElements = 0;
+  sortField = 'invoiceNumber';
+  sortDirection: 'asc' | 'desc' = 'desc';
 
   stats: any[] = [];
 
@@ -65,6 +73,7 @@ export class BillingComponent implements OnInit {
     this.loadInvoices();
     this.loadTenants();
     this.loadCurrentTenant();
+    this.loadPendingRefunds(); // Always load for testing
   }
 
   loadCurrentTenant(): void {
@@ -81,17 +90,132 @@ export class BillingComponent implements OnInit {
 
   loadInvoices(): void {
     this.loading = true;
-    this.tenantService.getInvoices(undefined, this.currentPage, this.itemsPerPage).subscribe({
+    let invoices$ = this.tenantService.getInvoices(undefined, this.currentPage, this.itemsPerPage);
+    
+    invoices$.subscribe({
       next: (response) => {
-        this.invoices = response.content || response;
-        this.totalElements = response.totalElements || this.invoices.length;
+        let invoices = response.content || response;
+        
+        // Apply filters
+        invoices = this.applyFilters(invoices);
+        
+        // Apply sorting
+        invoices = this.applySorting(invoices);
+        
+        this.invoices = invoices;
+        this.totalElements = invoices.length;
         this.calculateStats();
         this.loading = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Failed to load invoices:', err);
         this.loading = false;
       }
     });
+  }
+
+  applyFilters(invoices: Invoice[]): Invoice[] {
+    let filtered = [...invoices];
+    
+    // Search filter
+    if (this.searchTenant) {
+      const search = this.searchTenant.toLowerCase();
+      filtered = filtered.filter(inv => 
+        inv.tenantName?.toLowerCase().includes(search) ||
+        inv.invoiceNumber?.toLowerCase().includes(search) ||
+        inv.status?.toLowerCase().includes(search)
+      );
+    }
+    
+    // Status filter
+    if (this.selectedStatus !== 'all') {
+      filtered = filtered.filter(inv => inv.status === this.selectedStatus.toUpperCase());
+    }
+    
+    // Period filter
+    if (this.selectedPeriod !== 'all') {
+      const now = new Date();
+      let startDate: Date;
+      let endDate: Date | null = null;
+      
+      if (this.selectedPeriod === '7') {
+        startDate = new Date();
+        startDate.setDate(now.getDate() - 7);
+      } else if (this.selectedPeriod === '30') {
+        startDate = new Date();
+        startDate.setDate(now.getDate() - 30);
+      } else if (this.selectedPeriod === '90') {
+        startDate = new Date();
+        startDate.setDate(now.getDate() - 90);
+      } else if (this.selectedPeriod === '365') {
+        startDate = new Date();
+        startDate.setFullYear(now.getFullYear() - 1);
+      } else if (this.selectedPeriod.startsWith('Q')) {
+        const quarter = parseInt(this.selectedPeriod.substring(1));
+        const year = now.getFullYear();
+        const startMonth = (quarter - 1) * 3;
+        const endMonth = startMonth + 3;
+        
+        startDate = new Date(year, startMonth, 1);
+        endDate = new Date(year, endMonth, 0, 23, 59, 59);
+      } else {
+        return filtered;
+      }
+      
+      filtered = filtered.filter(inv => {
+        const createdDate = new Date(inv.createdAt);
+        if (endDate) {
+          return createdDate >= startDate && createdDate <= endDate;
+        }
+        return createdDate >= startDate;
+      });
+    }
+    
+    return filtered;
+  }
+
+  applySorting(invoices: Invoice[]): Invoice[] {
+    return invoices.sort((a, b) => {
+      let aValue: any = a[this.sortField as keyof Invoice];
+      let bValue: any = b[this.sortField as keyof Invoice];
+      
+      // Handle dates
+      if (this.sortField === 'dueDate' || this.sortField === 'paidDate' || this.sortField === 'createdAt') {
+        aValue = aValue ? new Date(aValue).getTime() : 0;
+        bValue = bValue ? new Date(bValue).getTime() : 0;
+      }
+      
+      // Handle numbers
+      if (this.sortField === 'amount') {
+        aValue = parseFloat(aValue) || 0;
+        bValue = parseFloat(bValue) || 0;
+      }
+      
+      // Handle strings
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue?.toLowerCase() || '';
+      }
+      
+      if (aValue < bValue) return this.sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return this.sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  sortBy(field: string): void {
+    if (this.sortField === field) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDirection = 'asc';
+    }
+    this.loadInvoices();
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 0;
+    this.loadInvoices();
   }
 
   calculateStats(): void {
@@ -165,6 +289,7 @@ export class BillingComponent implements OnInit {
           next: () => {
             this.showNotification('Refund processed successfully', 'success');
             this.loadInvoices();
+            this.loadPendingRefunds();
           },
           error: () => this.showNotification('Failed to process refund', 'error')
         });
@@ -173,16 +298,22 @@ export class BillingComponent implements OnInit {
   }
 
   downloadInvoice(invoice: Invoice): void {
-    this.showNotification('Download feature coming soon', 'error');
+    this.showNotification('PDF generation coming soon', 'error');
   }
 
   sendInvoice(invoice: Invoice): void {
+    this.closeInvoiceModal();
     this.showConfirmation(
       invoice.status === 'SENT' ? 'Resend Invoice' : 'Send Invoice',
       `Send invoice to ${invoice.tenantName}?`,
       () => {
-        this.showNotification('Invoice sent successfully', 'success');
-        this.loadInvoices();
+        this.tenantService.sendInvoice(invoice.id).subscribe({
+          next: () => {
+            this.showNotification('Invoice sent successfully', 'success');
+            this.loadInvoices();
+          },
+          error: () => this.showNotification('Failed to send invoice', 'error')
+        });
       }
     );
   }
@@ -209,14 +340,27 @@ export class BillingComponent implements OnInit {
       return;
     }
     
-    this.tenantService.createManualInvoice(this.newInvoice).subscribe({
-      next: () => {
-        this.showNotification('Invoice created successfully', 'success');
-        this.closeInvoiceModal();
-        this.loadInvoices();
-      },
-      error: () => this.showNotification('Failed to create invoice', 'error')
-    });
+    if (this.selectedInvoice) {
+      // Update existing invoice
+      this.tenantService.updateInvoice(this.selectedInvoice.id, { amount: this.newInvoice.amount }).subscribe({
+        next: () => {
+          this.showNotification('Invoice updated successfully', 'success');
+          this.closeInvoiceModal();
+          this.loadInvoices();
+        },
+        error: () => this.showNotification('Failed to update invoice', 'error')
+      });
+    } else {
+      // Create new invoice
+      this.tenantService.createManualInvoice(this.newInvoice).subscribe({
+        next: () => {
+          this.showNotification('Invoice created successfully', 'success');
+          this.closeInvoiceModal();
+          this.loadInvoices();
+        },
+        error: () => this.showNotification('Failed to create invoice', 'error')
+      });
+    }
   }
 
   showNotification(message: string, type: 'success' | 'error'): void {
@@ -264,10 +408,23 @@ export class BillingComponent implements OnInit {
   }
 
   editInvoice(invoice: Invoice): void {
-    this.showNotification('Edit feature coming soon', 'error');
+    if (invoice.status !== 'DRAFT') {
+      this.showNotification('Only DRAFT invoices can be edited', 'error');
+      return;
+    }
+    this.selectedInvoice = invoice;
+    this.newInvoice = {
+      tenantId: invoice.tenantId,
+      amount: invoice.amount,
+      currency: invoice.currency,
+      dueDate: invoice.dueDate,
+      description: ''
+    };
+    this.showInvoiceModal = true;
   }
 
   markAsPaid(invoice: Invoice): void {
+    this.closeInvoiceModal();
     this.showConfirmation(
       'Mark as Paid',
       `Mark invoice ${invoice.invoiceNumber} as paid?`,
@@ -333,5 +490,74 @@ export class BillingComponent implements OnInit {
   onItemsPerPageChange(): void {
     this.currentPage = 0;
     this.loadInvoices();
+  }
+
+  loadPendingRefunds(): void {
+    this.tenantService.getPendingRefunds().subscribe({
+      next: (refunds) => {
+        console.log('Pending refunds loaded:', refunds);
+        this.pendingRefunds = refunds;
+        this.pendingRefundsCount = refunds.length;
+        console.log('Pending refunds count:', this.pendingRefundsCount);
+      },
+      error: (err) => {
+        console.error('Failed to load pending refunds:', err);
+        this.showNotification('Failed to load pending refunds', 'error');
+      }
+    });
+  }
+
+  viewPendingRefunds(): void {
+    this.loadPendingRefunds();
+    this.showRefundsModal = true;
+  }
+
+  closeRefundsModal(): void {
+    this.showRefundsModal = false;
+  }
+
+  approveRefund(refund: any): void {
+    this.showConfirmation(
+      'Approve Refund',
+      `Approve refund of $${refund.amount} for ${refund.creditNoteNumber}? This will process the refund immediately.`,
+      () => {
+        this.tenantService.approveRefund(refund.id).subscribe({
+          next: () => {
+            this.showNotification('Refund approved and processed', 'success');
+            this.loadPendingRefunds();
+            this.loadInvoices();
+          },
+          error: () => this.showNotification('Failed to approve refund', 'error')
+        });
+      }
+    );
+  }
+
+  rejectRefund(refund: any): void {
+    this.selectedRefund = refund;
+    this.rejectionReason = '';
+    this.showRejectModal = true;
+  }
+
+  closeRejectModal(): void {
+    this.showRejectModal = false;
+    this.selectedRefund = null;
+    this.rejectionReason = '';
+  }
+
+  confirmRejectRefund(): void {
+    if (!this.rejectionReason) {
+      this.showNotification('Please provide a rejection reason', 'error');
+      return;
+    }
+
+    this.tenantService.rejectRefund(this.selectedRefund.id, this.rejectionReason).subscribe({
+      next: () => {
+        this.showNotification('Refund rejected', 'success');
+        this.closeRejectModal();
+        this.loadPendingRefunds();
+      },
+      error: () => this.showNotification('Failed to reject refund', 'error')
+    });
   }
 }

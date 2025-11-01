@@ -150,6 +150,25 @@
       color: #64748b;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+
+      &.sortable {
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.2s;
+
+        &:hover {
+          background: #f1f5f9;
+          color: #0066ff;
+        }
+      }
+    }
+
+    .sort-icon {
+      display: inline-block;
+      margin-left: 0.5rem;
+      font-size: 1.2rem;
+      color: #0066ff;
+      font-weight: bold;
     }
   }
 
@@ -176,22 +195,27 @@
   font-size: 0.75rem;
   font-weight: 500;
 
-  &.paid {
+  &.PAID {
     background: #d1fae5;
     color: #065f46;
   }
 
-  &.pending {
-    background: #fef3c7;
-    color: #92400e;
+  &.SENT {
+    background: #dbeafe;
+    color: #1e40af;
   }
 
-  &.failed {
+  &.DRAFT {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  &.CANCELLED {
     background: #fee2e2;
     color: #991b1b;
   }
 
-  &.refunded {
+  &.REFUNDED {
     background: #e0e7ff;
     color: #3730a3;
   }
@@ -504,6 +528,7 @@
     }
 
     span {
+      display: block;
       font-size: 0.9375rem;
       color: #1e293b;
     }
@@ -704,4 +729,93 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
+}
+
+.badge-count {
+  display: inline-block;
+  background: #ef4444;
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.refund-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.refund-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+  }
+
+  p {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+.refund-amount-display {
+  text-align: right;
+
+  .amount-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+  }
+
+  .amount-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ef4444;
+  }
+}
+
+.refund-details {
+  margin-bottom: 1.5rem;
+
+  .detail-row {
+    display: flex;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      font-weight: 600;
+      color: #64748b;
+      min-width: 120px;
+    }
+  }
+}
+
+.refund-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
 }

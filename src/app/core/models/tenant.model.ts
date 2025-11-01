@@ -40,6 +40,7 @@ export interface Invoice {
   status: 'DRAFT' | 'SENT' | 'PAID' | 'FAILED' | 'CANCELLED';
   dueDate: string;
   paidDate?: string;
+  createdAt: string;
   invoiceNumber: string;
   currency: string;
 }

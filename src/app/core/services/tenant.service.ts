@@ -86,4 +86,32 @@ export class TenantService {
   createManualInvoice(data: any): Observable<any> {
     return this.http.post<any>('/api/billing/invoices', data);
   }
+
+  sendInvoice(invoiceId: string): Observable<void> {
+    return this.http.post<void>(`/api/billing/invoices/${invoiceId}/send`, {});
+  }
+
+  updateInvoice(invoiceId: string, data: any): Observable<any> {
+    return this.http.put<any>(`/api/billing/invoices/${invoiceId}`, data);
+  }
+
+  getInvoice(invoiceId: string): Observable<Invoice> {
+    return this.http.get<Invoice>(`/api/billing/invoices/${invoiceId}`);
+  }
+
+  downloadInvoice(invoiceId: string): Observable<Blob> {
+    return this.http.get(`/api/billing/invoices/${invoiceId}/download`, { responseType: 'blob' });
+  }
+
+  getPendingRefunds(): Observable<any[]> {
+    return this.http.get<any[]>('/api/billing/invoices/refunds/pending');
+  }
+
+  approveRefund(creditNoteId: string): Observable<void> {
+    return this.http.post<void>(`/api/billing/invoices/refunds/${creditNoteId}/approve`, {});
+  }
+
+  rejectRefund(creditNoteId: string, reason: string): Observable<void> {
+    return this.http.post<void>(`/api/billing/invoices/refunds/${creditNoteId}/reject`, { reason });
+  }
 }
