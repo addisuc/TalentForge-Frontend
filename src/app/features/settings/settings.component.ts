@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SettingsService } from '../../core/services/settings.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { UserSettings, OrganizationSettings } from '../../core/models/settings.model';
 
 @Component({
@@ -37,7 +38,8 @@ export class SettingsComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private settingsService: SettingsService,
-    private authService: AuthService
+    private authService: AuthService,
+    private themeService: ThemeService
   ) {}
 
   ngOnInit(): void {
@@ -82,7 +84,12 @@ export class SettingsComponent implements OnInit {
 
   loadSettings(): void {
     this.settingsService.getUserSettings().subscribe({
-      next: (settings) => this.userSettingsForm.patchValue(settings),
+      next: (settings) => {
+        this.userSettingsForm.patchValue(settings);
+        if (settings.theme) {
+          this.applyTheme(settings.theme);
+        }
+      },
       error: () => {}
     });
 
@@ -97,8 +104,10 @@ export class SettingsComponent implements OnInit {
   saveUserSettings(): void {
     if (this.userSettingsForm.valid) {
       this.loading = true;
-      this.settingsService.updateUserSettings(this.userSettingsForm.value).subscribe({
+      const settings = this.userSettingsForm.value;
+      this.settingsService.updateUserSettings(settings).subscribe({
         next: () => {
+          this.applyTheme(settings.theme);
           this.saveMessage = 'Settings saved successfully';
           this.loading = false;
           setTimeout(() => this.saveMessage = '', 3000);
@@ -109,6 +118,10 @@ export class SettingsComponent implements OnInit {
         }
       });
     }
+  }
+
+  applyTheme(theme: string): void {
+    this.themeService.setTheme(theme);
   }
 
   saveOrganizationSettings(): void {

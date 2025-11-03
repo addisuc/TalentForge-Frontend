@@ -514,3 +514,45 @@
     background: #f8fafc;
   }
 }
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 2000;
+  min-width: 300px;
+  border-left: 4px solid;
+
+  &.show {
+    display: flex;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  &.success {
+    border-left-color: #16a34a;
+    color: #065f46;
+  }
+
+  &.error {
+    border-left-color: #dc2626;
+    color: #991b1b;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

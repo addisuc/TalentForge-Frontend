@@ -64,9 +64,9 @@
               <button class="btn-action" (click)="editClient(client.id); $event.stopPropagation()" title="Edit Client">✏️</button>
               <button class="btn-action" (click)="sendEmail(client.id); $event.stopPropagation()" title="Email Client">✉️</button>
               <button class="btn-action" (click)="viewJobs(client.id); $event.stopPropagation()" title="View Jobs">💼</button>
-              <button class="btn-action" title="Add Note">📝</button>
-              <button class="btn-action" title="View Documents">📄</button>
-              <button class="btn-action" title="View Contracts">📜</button>
+              <button class="btn-action" (click)="addNote(client.id); $event.stopPropagation()" title="Add Note">📝</button>
+              <button class="btn-action" (click)="viewDocuments(client.id); $event.stopPropagation()" title="View Documents">📄</button>
+              <button class="btn-action" (click)="viewContracts(client.id); $event.stopPropagation()" title="View Contracts">📜</button>
               <button class="btn-action danger" (click)="deactivateClient(client.id); $event.stopPropagation()" title="Deactivate" *ngIf="client.status === 'Active'">🚫</button>
               <button class="btn-action success" (click)="activateClient(client.id); $event.stopPropagation()" title="Activate" *ngIf="client.status === 'Inactive'">✅</button>
             </div>
@@ -138,6 +138,96 @@
     </div>
   </div>
 
+  <!-- Edit Client Modal -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Edit Client</h2>
+        <button class="close-btn" (click)="closeEditModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Company Name *</label>
+          <input type="text" [(ngModel)]="newClient.name" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Industry *</label>
+          <select [(ngModel)]="newClient.industry" class="form-control">
+            <option value="Technology">Technology</option>
+            <option value="Finance">Finance</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Retail">Retail</option>
+            <option value="Education">Education</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Contact Person</label>
+          <input type="text" [(ngModel)]="newClient.contact" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" [(ngModel)]="newClient.email" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" [(ngModel)]="newClient.phone" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeEditModal()">Cancel</button>
+        <button class="btn-primary" (click)="updateClient()">Update Client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Note Modal -->
+  <div class="modal-overlay" *ngIf="showNoteModal" (click)="closeNoteModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Add Note for {{ selectedClient?.name }}</h2>
+        <button class="close-btn" (click)="closeNoteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Note</label>
+          <textarea [(ngModel)]="noteText" class="form-control" rows="6" placeholder="Enter your note here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeNoteModal()">Cancel</button>
+        <button class="btn-primary" (click)="saveNote()">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Modal -->
+  <div class="modal-overlay" *ngIf="showEmailModal" (click)="closeEmailModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Send Email to {{ selectedClient?.name }}</h2>
+        <button class="close-btn" (click)="closeEmailModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>To</label>
+          <input type="email" [(ngModel)]="emailData.to" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label>Subject *</label>
+          <input type="text" [(ngModel)]="emailData.subject" class="form-control" placeholder="Email subject">
+        </div>
+        <div class="form-group">
+          <label>Message *</label>
+          <textarea [(ngModel)]="emailData.body" class="form-control" rows="8" placeholder="Enter your message..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeEmailModal()">Cancel</button>
+        <button class="btn-primary" (click)="sendEmailMessage()" [disabled]="sending">{{ sending ? 'Sending...' : 'Send Email' }}</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Add Client Modal -->
   <div class="modal-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
     <div class="modal" (click)="$event.stopPropagation()">
@@ -189,5 +279,74 @@
         <button class="btn-primary" (click)="saveClient()">Add Client</button>
       </div>
     </div>
+  </div>
+
+  <!-- Documents Modal -->
+  <div class="modal-overlay" *ngIf="showDocumentsModal" (click)="closeDocumentsModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Documents for {{ selectedClient?.name }}</h2>
+        <button class="close-btn" (click)="closeDocumentsModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>This feature will show:</p>
+        <ul>
+          <li>Contracts</li>
+          <li>Agreements</li>
+          <li>Invoices</li>
+          <li>Other documents</li>
+        </ul>
+        <p style="color: #64748b; margin-top: 1rem;">Document management coming soon...</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeDocumentsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deactivate Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeactivateModal" (click)="closeDeactivateModal()">
+    <div class="modal" (click)="$event.stopPropagation()" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2>Deactivate Client</h2>
+        <button class="close-btn" (click)="closeDeactivateModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to deactivate <strong>{{ selectedClient?.name }}</strong>?</p>
+        <p style="color: #64748b; font-size: 0.875rem; margin-top: 1rem;">This client will be marked as inactive and won't appear in active client lists.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeDeactivateModal()">Cancel</button>
+        <button class="btn-primary" style="background: #dc2626;" (click)="confirmDeactivate()">Deactivate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contracts Modal -->
+  <div class="modal-overlay" *ngIf="showContractsModal" (click)="closeContractsModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Contracts for {{ selectedClient?.name }}</h2>
+        <button class="close-btn" (click)="closeContractsModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>This feature will show:</p>
+        <ul>
+          <li>Active contracts</li>
+          <li>Contract history</li>
+          <li>Terms & conditions</li>
+          <li>Renewal dates</li>
+        </ul>
+        <p style="color: #64748b; margin-top: 1rem;">Contract management coming soon...</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeContractsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
+    {{ toastMessage }}
   </div>
 </div>

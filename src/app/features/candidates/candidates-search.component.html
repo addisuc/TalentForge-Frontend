@@ -1,4 +1,7 @@
 <div class="candidates-search">
+  <div class="notification" *ngIf="notification.show" [class.success]="notification.type === 'success'" [class.error]="notification.type === 'error'">
+    {{ notification.message }}
+  </div>
   <div class="page-header">
     <div>
       <h1>Candidate Database</h1>
@@ -13,31 +16,26 @@
       <input type="text" [(ngModel)]="searchQuery" placeholder="Search by name, skills, or experience...">
     </div>
     <div class="filters">
-      <select class="filter-select" [(ngModel)]="selectedClient">
-        <option value="all">All Clients</option>
-        <option value="TechCorp">TechCorp Solutions</option>
-        <option value="FinanceInc">Global Finance Inc</option>
-        <option value="HealthPlus">HealthPlus Medical</option>
-      </select>
-      <select class="filter-select" [(ngModel)]="selectedPosition">
+      <select class="filter-select" [(ngModel)]="selectedPosition" (change)="onFilterChange()">
         <option value="all">All Positions</option>
         <option value="Developer">Developer</option>
         <option value="Manager">Manager</option>
         <option value="Designer">Designer</option>
       </select>
-      <select class="filter-select" [(ngModel)]="selectedLocation">
+      <select class="filter-select" [(ngModel)]="selectedLocation" (change)="onFilterChange()">
         <option value="all">All Locations</option>
         <option value="San Francisco">San Francisco</option>
         <option value="New York">New York</option>
         <option value="Remote">Remote</option>
       </select>
-      <select class="filter-select" [(ngModel)]="selectedExperience">
+      <select class="filter-select" [(ngModel)]="selectedExperience" (change)="onFilterChange()">
         <option value="all">All Experience</option>
-        <option value="Entry">Entry Level</option>
-        <option value="Mid">Mid Level</option>
-        <option value="Senior">Senior Level</option>
+        <option value="0-2">0-2 years</option>
+        <option value="3-5">3-5 years</option>
+        <option value="6-10">6-10 years</option>
+        <option value="10+">10+ years</option>
       </select>
-      <select class="filter-select" [(ngModel)]="selectedStatus">
+      <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
         <option value="all">All Status</option>
         <option value="Available">Available</option>
         <option value="Interviewing">Interviewing</option>
@@ -83,7 +81,6 @@
             <div class="action-buttons">
               <button class="btn-action" (click)="viewCandidate(candidate.id); $event.stopPropagation()" title="View Profile">👤</button>
               <button class="btn-action" (click)="contactCandidate(candidate.id); $event.stopPropagation()" title="Send Email">✉️</button>
-              <button class="btn-action" (click)="scheduleInterview(candidate.id); $event.stopPropagation()" title="Schedule Interview">📅</button>
               <button class="btn-action" (click)="addToJob(candidate.id); $event.stopPropagation()" title="Add to Job">➕</button>
               <button class="btn-action" (click)="downloadResume(candidate.id); $event.stopPropagation()" title="Download Resume">📄</button>
             </div>
@@ -126,29 +123,57 @@
           <h3>{{ selectedCandidate.name }}</h3>
           <p class="role">{{ selectedCandidate.role }}</p>
           <span class="badge" [class]="selectedCandidate.status.toLowerCase()">{{ selectedCandidate.status }}</span>
+          <p class="last-active">Last active {{ selectedCandidate.lastActive }} days ago</p>
         </div>
+        
         <div class="info-section">
+          <h4>📍 Contact Information</h4>
+          <div class="info-row">
+            <span class="label">Email:</span>
+            <span class="value">{{ selectedCandidate.name.toLowerCase().split(' ').join('.') }}&#64;example.com</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Phone:</span>
+            <span class="value">+1 (555) 123-4567</span>
+          </div>
           <div class="info-row">
             <span class="label">Location:</span>
             <span class="value">{{ selectedCandidate.location }}</span>
           </div>
+        </div>
+
+        <div class="info-section">
+          <h4>💼 Professional Details</h4>
           <div class="info-row">
             <span class="label">Experience:</span>
             <span class="value">{{ selectedCandidate.experience }} years</span>
           </div>
           <div class="info-row">
-            <span class="label">Salary:</span>
+            <span class="label">Salary Expectation:</span>
             <span class="value">{{ selectedCandidate.salary }}</span>
           </div>
           <div class="info-row">
-            <span class="label">Skills:</span>
-            <span class="value">{{ selectedCandidate.skills.join(', ') }}</span>
+            <span class="label">Availability:</span>
+            <span class="value">Immediate</span>
           </div>
+        </div>
+
+        <div class="info-section">
+          <h4>🛠️ Skills & Expertise</h4>
+          <div class="skills-grid">
+            <span class="skill-tag" *ngFor="let skill of selectedCandidate.skills">{{ skill }}</span>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h4>📄 Resume</h4>
+          <button class="btn-secondary" (click)="downloadResume(selectedCandidate.id)">📥 Download Resume</button>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeViewModal()">Close</button>
-        <button class="btn-primary" (click)="contactCandidate(selectedCandidate.id); closeViewModal()">Contact</button>
+
+        <button class="btn-primary" (click)="closeViewModal(); contactCandidate(selectedCandidate.id)">✉️ Send Email</button>
       </div>
     </div>
   </div>
@@ -164,16 +189,16 @@
         <p>Send email to <strong>{{ selectedCandidate.name }}</strong></p>
         <div class="form-group">
           <label>Subject</label>
-          <input type="text" class="form-control" placeholder="Job Opportunity">
+          <input type="text" [(ngModel)]="emailSubject" class="form-control" placeholder="Job Opportunity">
         </div>
         <div class="form-group">
           <label>Message</label>
-          <textarea class="form-control" rows="6" placeholder="Hi {{ selectedCandidate.name }}, I have an exciting opportunity..."></textarea>
+          <textarea [(ngModel)]="emailMessage" class="form-control" rows="6" placeholder="Hi {{ selectedCandidate.name }}, I have an exciting opportunity..."></textarea>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeContactModal()">Cancel</button>
-        <button class="btn-primary" (click)="closeContactModal()">Send Email</button>
+        <button class="btn-primary" (click)="sendEmail()" type="button">Send Email</button>
       </div>
     </div>
   </div>
@@ -189,24 +214,24 @@
         <p>Schedule interview with <strong>{{ selectedCandidate.name }}</strong></p>
         <div class="form-group">
           <label>Interview Type</label>
-          <select class="form-control">
-            <option>Phone Screen</option>
-            <option>Video Interview</option>
-            <option>On-site Interview</option>
+          <select [(ngModel)]="interviewType" class="form-control">
+            <option value="PHONE">Phone Screen</option>
+            <option value="VIDEO">Video Interview</option>
+            <option value="ONSITE">On-site Interview</option>
           </select>
         </div>
         <div class="form-group">
           <label>Date & Time</label>
-          <input type="datetime-local" class="form-control">
+          <input type="datetime-local" [(ngModel)]="interviewDateTime" class="form-control">
         </div>
         <div class="form-group">
           <label>Meeting Link (Optional)</label>
-          <input type="url" class="form-control" placeholder="https://zoom.us/j/...">
+          <input type="url" [(ngModel)]="interviewMeetingLink" class="form-control" placeholder="https://zoom.us/j/...">
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeScheduleModal()">Cancel</button>
-        <button class="btn-primary" (click)="closeScheduleModal()">Schedule</button>
+        <button class="btn-primary" [disabled]="!interviewDateTime" (click)="createInterview()">Schedule</button>
       </div>
     </div>
   </div>
@@ -222,20 +247,19 @@
         <p>Add <strong>{{ selectedCandidate.name }}</strong> to a job opening</p>
         <div class="form-group">
           <label>Select Job</label>
-          <select class="form-control">
-            <option>Senior Full Stack Developer - TechCorp</option>
-            <option>DevOps Engineer - StartupXYZ</option>
-            <option>Product Manager - FinanceInc</option>
+          <select [(ngModel)]="selectedJobId" class="form-control">
+            <option value="">-- Select a job --</option>
+            <option *ngFor="let job of availableJobs" [value]="job.id">{{ job.title }} - {{ job.clientName || 'Internal' }}</option>
           </select>
         </div>
         <div class="form-group">
           <label>Notes (Optional)</label>
-          <textarea class="form-control" rows="3" placeholder="Add any notes about this candidate..."></textarea>
+          <textarea [(ngModel)]="applicationNotes" class="form-control" rows="3" placeholder="Add any notes about this candidate..."></textarea>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeAddToJobModal()">Cancel</button>
-        <button class="btn-primary" (click)="closeAddToJobModal()">Add to Job</button>
+        <button class="btn-primary" [disabled]="!selectedJobId" (click)="submitApplication()">Add to Job</button>
       </div>
     </div>
   </div>

@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 import { AuthService } from './core/auth/auth.service';
 import { NavigationService } from './core/services/navigation.service';
+import { JobService } from './core/services/job.service';
+import { ApplicationService } from './core/services/application.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -20,7 +23,7 @@ import { NavigationService } from './core/services/navigation.service';
             <button class="btn-primary" (click)="navigateToJobs()">+ Post New Job</button>
           </div>
 
-          <div class="stats-grid">
+          <div class="stats-grid" *ngIf="stats.length > 0">
             <div class="stat-card" *ngFor="let stat of stats">
               <div class="stat-header">
                 <span class="stat-icon">{{ stat.icon }}</span>
@@ -33,13 +36,17 @@ import { NavigationService } from './core/services/navigation.service';
             </div>
           </div>
 
+          <div class="empty-state" *ngIf="stats.length === 0">
+            <p>📊 Dashboard analytics coming soon</p>
+          </div>
+
           <div class="dashboard-grid">
             <div class="card recent-candidates">
               <div class="card-header">
                 <h3>Recent Candidates</h3>
                 <a routerLink="/candidates">View All</a>
               </div>
-              <div class="candidate-list">
+              <div class="candidate-list" *ngIf="recentCandidates.length > 0">
                 <div class="candidate-item" *ngFor="let candidate of recentCandidates">
                   <div class="candidate-avatar">{{ candidate.initials }}</div>
                   <div class="candidate-info">
@@ -51,6 +58,9 @@ import { NavigationService } from './core/services/navigation.service';
                   </div>
                 </div>
               </div>
+              <div class="empty-message" *ngIf="recentCandidates.length === 0">
+                No recent candidates
+              </div>
             </div>
 
             <div class="card active-jobs">
@@ -58,7 +68,7 @@ import { NavigationService } from './core/services/navigation.service';
                 <h3>Active Job Postings</h3>
                 <a routerLink="/jobs">View All</a>
               </div>
-              <div class="job-list">
+              <div class="job-list" *ngIf="activeJobs.length > 0">
                 <div class="job-item" *ngFor="let job of activeJobs">
                   <div class="job-info">
                     <div class="job-title">{{ job.title }}</div>
@@ -67,6 +77,9 @@ import { NavigationService } from './core/services/navigation.service';
                   <div class="job-status">{{ job.status }}</div>
                 </div>
               </div>
+              <div class="empty-message" *ngIf="activeJobs.length === 0">
+                No active jobs
+              </div>
             </div>
 
             <div class="card pipeline-overview">
@@ -74,11 +87,14 @@ import { NavigationService } from './core/services/navigation.service';
                 <h3>Hiring Pipeline</h3>
                 <a routerLink="/pipeline">View Details</a>
               </div>
-              <div class="pipeline-stages">
+              <div class="pipeline-stages" *ngIf="pipelineStages.length > 0">
                 <div class="stage" *ngFor="let stage of pipelineStages">
                   <div class="stage-count">{{ stage.count }}</div>
                   <div class="stage-name">{{ stage.name }}</div>
                 </div>
+              </div>
+              <div class="empty-message" *ngIf="pipelineStages.length === 0">
+                No pipeline data
               </div>
             </div>
 
@@ -87,7 +103,7 @@ import { NavigationService } from './core/services/navigation.service';
                 <h3>Quick Actions</h3>
               </div>
               <div class="actions-grid">
-                <button class="action-btn" *ngFor="let action of quickActions">
+                <button class="action-btn" *ngFor="let action of quickActions" (click)="executeAction(action.action)">
                   <span class="action-icon">{{ action.icon }}</span>
                   <span>{{ action.label }}</span>
                 </button>
@@ -382,6 +398,24 @@ import { NavigationService } from './core/services/navigation.service';
       font-size: 1.25rem;
     }
 
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 32px;
+      color: #64748b;
+      font-size: 1.125rem;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 32px;
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+
     @media (max-width: 1024px) {
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -393,14 +427,16 @@ import { NavigationService } from './core/services/navigation.service';
     }
   `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   Math = Math;
   userName = 'User';
 
   constructor(
     private authService: AuthService,
     private navigationService: NavigationService,
-    private router: Router
+    private router: Router,
+    private jobService: JobService,
+    private applicationService: ApplicationService
   ) {}
 
   ngOnInit() {
@@ -409,44 +445,132 @@ export class DashboardComponent implements OnInit {
         this.userName = `${user.firstName} ${user.lastName}`;
       }
     });
+    this.loadDashboardData();
+    
+    // Auto-refresh every 10 seconds
+    this.refreshInterval = setInterval(() => {
+      this.loadDashboardData();
+    }, 10000);
   }
 
-  stats = [
-    { icon: '👥', value: '1,234', label: 'Total Candidates', trend: 12 },
-    { icon: '💼', value: '45', label: 'Active Jobs', trend: 8 },
-    { icon: '📝', value: '89', label: 'Applications', trend: -5 },
-    { icon: '✅', value: '23', label: 'Hired This Month', trend: 15 }
-  ];
+  ngOnDestroy() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+  }
 
-  recentCandidates = [
-    { name: 'Sarah Johnson', role: 'Senior Developer', initials: 'SJ', status: 'interview' },
-    { name: 'Michael Chen', role: 'Product Manager', initials: 'MC', status: 'screening' },
-    { name: 'Emily Davis', role: 'UX Designer', initials: 'ED', status: 'offer' },
-    { name: 'James Wilson', role: 'Data Analyst', initials: 'JW', status: 'screening' }
-  ];
+  loadDashboardData() {
+    forkJoin({
+      jobs: this.jobService.getAllJobs(0, 100),
+      applications: this.applicationService.getAllApplications(0, 100)
+    }).subscribe({
+      next: ({ jobs, applications }) => {
+        this.calculateStats(jobs.content, applications.content);
+        this.loadRecentData(jobs.content, applications.content);
+      },
+      error: (err) => console.error('Failed to load dashboard data:', err)
+    });
+  }
 
-  activeJobs = [
-    { title: 'Senior Full Stack Developer', applicants: 45, daysOpen: 12, status: 'Active' },
-    { title: 'Product Manager', applicants: 32, daysOpen: 8, status: 'Active' },
-    { title: 'UX/UI Designer', applicants: 28, daysOpen: 15, status: 'Active' },
-    { title: 'DevOps Engineer', applicants: 19, daysOpen: 5, status: 'Active' }
-  ];
+  calculateStats(jobs: any[], applications: any[]) {
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+    const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
 
-  pipelineStages = [
-    { name: 'Applied', count: 156 },
-    { name: 'Screening', count: 89 },
-    { name: 'Interview', count: 34 },
-    { name: 'Offer', count: 12 }
-  ];
+    // Active Jobs (Open positions)
+    const activeJobs = jobs.filter(j => j.status === 'ACTIVE').length;
+
+    // New Applications This Month (based on appliedAt or createdAt)
+    const newApplicationsThisMonth = applications.filter(app => {
+      const dateStr = app.appliedAt || app.createdAt;
+      if (!dateStr) return false;
+      const date = new Date(dateStr);
+      return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
+    }).length;
+
+    const newApplicationsLastMonth = applications.filter(app => {
+      const dateStr = app.appliedAt || app.createdAt;
+      if (!dateStr) return false;
+      const date = new Date(dateStr);
+      return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
+    }).length;
+
+    const appTrend = newApplicationsLastMonth > 0 
+      ? Math.round(((newApplicationsThisMonth - newApplicationsLastMonth) / newApplicationsLastMonth) * 100)
+      : (newApplicationsThisMonth > 0 ? 100 : 0);
+
+    // Active Interviews (currently in interview stages)
+    const activeInterviews = applications.filter(app => {
+      const interviewStages = ['INTERVIEW', 'PHONE_INTERVIEW', 'TECHNICAL_INTERVIEW', 'FINAL_INTERVIEW'];
+      return interviewStages.includes(app.status);
+    }).length;
+
+    // Placements This Month (status = HIRED)
+    const placementsThisMonth = applications.filter(app => {
+      const status = app.status || app.stage;
+      return status === 'HIRED' || status === 'OFFER_ACCEPTED';
+    }).length;
+
+    this.stats = [
+      { icon: '💼', value: activeJobs.toString(), label: 'Open Positions', trend: 0 },
+      { icon: '📝', value: newApplicationsThisMonth.toString(), label: 'New Applications', trend: appTrend },
+      { icon: '🎯', value: activeInterviews.toString(), label: 'Active Interviews', trend: 0 },
+      { icon: '✅', value: placementsThisMonth.toString(), label: 'Placements', trend: 0 }
+    ];
+  }
+
+  loadRecentData(jobs: any[], applications: any[]) {
+    // Load active jobs with applicant counts
+    this.activeJobs = jobs
+      .filter(j => j.status === 'ACTIVE')
+      .slice(0, 4)
+      .map(job => {
+        const applicants = applications.filter(app => app.jobOrderId === job.id).length;
+        const daysOpen = this.getDaysAgo(job.createdAt);
+        return {
+          title: job.title,
+          applicants,
+          daysOpen,
+          status: 'Active'
+        };
+      });
+
+    // Load pipeline stages
+    const stages = ['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER'];
+    this.pipelineStages = stages.map(stage => ({
+      name: stage.charAt(0) + stage.slice(1).toLowerCase(),
+      count: applications.filter(app => app.stage === stage).length
+    }));
+  }
+
+  getDaysAgo(dateString: string): number {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  stats: any[] = [];
+  recentCandidates: any[] = [];
+  activeJobs: any[] = [];
+  pipelineStages: any[] = [];
+  loading = true;
+  refreshInterval: any;
 
   quickActions = [
-    { icon: '➕', label: 'Add Candidate' },
-    { icon: '📋', label: 'Schedule Interview' },
-    { icon: '📧', label: 'Send Email' },
-    { icon: '📊', label: 'View Reports' }
+    { icon: '➕', label: 'Post New Job', action: () => this.navigateToJobs() },
+    { icon: '👥', label: 'View Candidates', action: () => this.router.navigate(['/candidates']) },
+    { icon: '📋', label: 'View Applications', action: () => this.router.navigate(['/applications']) },
+    { icon: '⚙️', label: 'Settings', action: () => this.router.navigate(['/settings']) }
   ];
 
   navigateToJobs() {
     this.router.navigate(['/jobs']);
+  }
+
+  executeAction(action: () => void) {
+    action();
   }
 }

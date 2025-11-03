@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { JobService } from '../../core/services/job.service';
 
 @Component({
   selector: 'app-jobs-create',
@@ -10,9 +12,12 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './jobs-create.component.html',
   styleUrls: ['./jobs-create.component.scss']
 })
-export class JobsCreateComponent {
+export class JobsCreateComponent implements OnInit {
   currentStep = 1;
   skillInput = '';
+  saving = false;
+  error = '';
+  clients: any[] = [];
 
   job = {
     title: '',
@@ -29,10 +34,61 @@ export class JobsCreateComponent {
     education: ''
   };
 
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private jobService: JobService,
+    private http: HttpClient
+  ) {}
+
+  ngOnInit() {
+    this.loadClients();
+    this.route.queryParams.subscribe(params => {
+      if (params['clientId']) {
+        this.job.clientId = params['clientId'];
+      }
+    });
+  }
+
+  loadClients() {
+    this.http.get<any[]>('/api/clients').subscribe({
+      next: (data) => {
+        this.clients = data;
+      },
+      error: (err: any) => {
+        console.error('Failed to load clients:', err);
+      }
+    });
+  }
+
   nextStep() {
+    if (!this.validateStep()) {
+      return;
+    }
     if (this.currentStep < 4) {
       this.currentStep++;
     }
+  }
+
+  validateStep(): boolean {
+    if (this.currentStep === 1) {
+      if (!this.job.title || !this.job.location) {
+        this.error = 'Please fill in Job Title and Location';
+        return false;
+      }
+    } else if (this.currentStep === 2) {
+      if (!this.job.description) {
+        this.error = 'Please fill in Job Description';
+        return false;
+      }
+    } else if (this.currentStep === 3) {
+      if (this.job.skills.length === 0) {
+        this.error = 'Please add at least one skill';
+        return false;
+      }
+    }
+    this.error = '';
+    return true;
   }
 
   previousStep() {
@@ -42,9 +98,11 @@ export class JobsCreateComponent {
   }
 
   addSkill() {
-    if (this.skillInput.trim() && !this.job.skills.includes(this.skillInput.trim())) {
-      this.job.skills.push(this.skillInput.trim());
+    const skill = this.skillInput.trim();
+    if (skill && !this.job.skills.includes(skill)) {
+      this.job.skills.push(skill);
       this.skillInput = '';
+      this.error = '';
     }
   }
 
@@ -53,6 +111,33 @@ export class JobsCreateComponent {
   }
 
   saveJob() {
-    console.log('Saving job:', this.job);
+    if (!this.job.title || !this.job.location) {
+      this.error = 'Please fill in required fields';
+      return;
+    }
+
+    this.saving = true;
+    this.error = '';
+
+    const jobRequest = {
+      title: this.job.title,
+      description: this.job.description || 'Job description',
+      requirements: this.job.skills.join(', '),
+      location: this.job.location,
+      salaryMin: this.job.salaryMin ? parseInt(this.job.salaryMin) : null,
+      salaryMax: this.job.salaryMax ? parseInt(this.job.salaryMax) : null,
+      jobType: this.job.type.toUpperCase().replace('-', '_'),
+      companyId: 'dddddddd-dddd-dddd-dddd-dddddddddddd'
+    };
+
+    this.jobService.createJob(jobRequest).subscribe({
+      next: (job) => {
+        this.router.navigate(['/jobs']);
+      },
+      error: (err: any) => {
+        this.error = err.error?.message || 'Failed to create job';
+        this.saving = false;
+      }
+    });
   }
 }

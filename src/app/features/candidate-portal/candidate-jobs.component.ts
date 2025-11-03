@@ -179,7 +179,8 @@ export class CandidateJobsComponent implements OnInit {
     this.loading = true;
     const page = this.currentPage - 1;
     
-    this.jobService.getAllJobs(page, this.itemsPerPage).subscribe({
+    // Candidates see all ACTIVE jobs across all tenants
+    this.jobService.getPublicActiveJobs(page, this.itemsPerPage).subscribe({
       next: (data: JobPage) => {
         this.jobs = data.content;
         this.totalJobs = data.totalElements;

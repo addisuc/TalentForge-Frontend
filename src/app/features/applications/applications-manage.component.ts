@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ApplicationService, JobApplication, ApplicationPage } from '../../core/services/application.service';
 import { InterviewService, InterviewRequest } from '../../core/services/interview.service';
@@ -21,6 +22,7 @@ export class ApplicationsManageComponent implements OnInit {
   compactView = false;
   loading = false;
   error = '';
+  clients: any[] = [];
   showStatusModal = false;
   selectedApplication: JobApplication | null = null;
   statusNotes = '';
@@ -64,11 +66,28 @@ export class ApplicationsManageComponent implements OnInit {
 
   constructor(
     private applicationService: ApplicationService,
-    private interviewService: InterviewService
+    private interviewService: InterviewService,
+    private http: HttpClient
   ) {}
 
+  onFilterChange() {
+    this.organizeApplicationsByStage();
+  }
+
   ngOnInit() {
+    this.loadClients();
     this.loadApplications();
+  }
+
+  loadClients() {
+    this.http.get<any[]>('/api/clients').subscribe({
+      next: (data) => {
+        this.clients = data;
+      },
+      error: (err: any) => {
+        console.error('Failed to load clients:', err);
+      }
+    });
   }
 
   loadApplications() {
@@ -89,10 +108,19 @@ export class ApplicationsManageComponent implements OnInit {
     });
   }
 
+  get filteredApplications() {
+    return this.applications.filter(app => {
+      const matchesClient = this.selectedClient === 'all' || app.clientId?.toString() === this.selectedClient;
+      const matchesJob = this.selectedJob === 'all' || app.jobId === this.selectedJob;
+      const matchesPosition = this.selectedPosition === 'all' || app.jobTitle?.toLowerCase().includes(this.selectedPosition.toLowerCase());
+      return matchesClient && matchesJob && matchesPosition;
+    });
+  }
+
   organizeApplicationsByStage() {
     this.stages.forEach(stage => stage.applications = []);
     
-    this.applications.forEach(app => {
+    this.filteredApplications.forEach(app => {
       const mappedApp = {
         id: app.id,
         name: app.candidateName || 'Unknown Candidate',

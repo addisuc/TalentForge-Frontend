@@ -11,19 +11,17 @@
     <button class="view-toggle" (click)="toggleView()">
       {{ compactView ? '📋 Cards' : '☰ List' }}
     </button>
-    <select class="filter-select" [(ngModel)]="selectedClient">
+    <select class="filter-select" [(ngModel)]="selectedClient" (change)="onFilterChange()">
       <option value="all">All Clients</option>
-      <option value="TechCorp">TechCorp Solutions</option>
-      <option value="FinanceInc">Global Finance Inc</option>
-      <option value="HealthPlus">HealthPlus Medical</option>
+      <option *ngFor="let client of clients" [value]="client.id">{{ client.name }}</option>
     </select>
-    <select class="filter-select" [(ngModel)]="selectedJob">
+    <select class="filter-select" [(ngModel)]="selectedJob" (change)="onFilterChange()">
       <option value="all">All Jobs</option>
       <option value="Developer">Senior Full Stack Developer</option>
       <option value="Manager">Product Manager</option>
       <option value="Designer">UX Designer</option>
     </select>
-    <select class="filter-select" [(ngModel)]="selectedPosition">
+    <select class="filter-select" [(ngModel)]="selectedPosition" (change)="onFilterChange()">
       <option value="all">All Positions</option>
       <option value="Developer">Developer</option>
       <option value="Manager">Manager</option>

@@ -19,6 +19,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/clients": {
+    "target": "http://localhost:8083",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api/applications": {
     "target": "http://localhost:8084",
     "secure": false,
@@ -31,6 +36,11 @@
   },
   "/api/billing": {
     "target": "http://localhost:8085",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/notifications": {
+    "target": "http://localhost:8086",
     "secure": false,
     "changeOrigin": true
   }

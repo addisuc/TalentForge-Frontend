@@ -117,3 +117,281 @@ input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+body {
+  margin: 0;
+  font-family: Roboto, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.light-theme,
+body:not(.dark-theme) {
+  background-color: #fafafa;
+  color: #212121;
+}
+
+body.dark-theme {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+body.dark-theme * {
+  border-color: #333 !important;
+}
+
+body.dark-theme .mat-toolbar {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .mat-card,
+body.dark-theme .mat-sidenav,
+body.dark-theme .mat-dialog-container {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme table,
+body.dark-theme th,
+body.dark-theme td {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme input,
+body.dark-theme textarea,
+body.dark-theme select {
+  background-color: #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .mat-form-field-label {
+  color: #b0b0b0 !important;
+}
+
+body.dark-theme button {
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .mat-button,
+body.dark-theme .mat-raised-button,
+body.dark-theme .mat-flat-button,
+body.dark-theme .mat-stroked-button {
+  background-color: #2a2a2a !important;
+}
+
+body.dark-theme .mat-primary {
+  background-color: #1976d2 !important;
+  color: white !important;
+}
+
+body.dark-theme .sidebar,
+body.dark-theme .mat-drawer,
+body.dark-theme nav {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme a {
+  color: #90caf9 !important;
+}
+
+body.dark-theme .mat-list-item,
+body.dark-theme .mat-menu-item {
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .mat-form-field-appearance-fill .mat-form-field-flex {
+  background-color: #2a2a2a !important;
+}
+
+body.dark-theme .mat-select-value,
+body.dark-theme .mat-input-element {
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .mat-option {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .mat-option:hover {
+  background-color: #2a2a2a !important;
+}
+
+body.dark-theme .content,
+body.dark-theme .main-content,
+body.dark-theme .container {
+  background-color: #121212 !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme h1,
+body.dark-theme h2,
+body.dark-theme h3,
+body.dark-theme h4,
+body.dark-theme h5,
+body.dark-theme h6,
+body.dark-theme p,
+body.dark-theme span,
+body.dark-theme label {
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .mat-tab-label,
+body.dark-theme .mat-tab-link {
+  color: #b0b0b0 !important;
+}
+
+body.dark-theme .mat-tab-label-active {
+  color: #90caf9 !important;
+}
+
+body.dark-theme .mat-divider {
+  border-top-color: #333 !important;
+}
+
+body.dark-theme .mat-expansion-panel {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+/* Blue Ocean Theme */
+body.blue-theme {
+  background-color: #0a1929;
+  color: #e3f2fd;
+}
+
+body.blue-theme .mat-toolbar,
+body.blue-theme .mat-card,
+body.blue-theme .mat-sidenav,
+body.blue-theme table {
+  background-color: #132f4c !important;
+  color: #e3f2fd !important;
+}
+
+body.blue-theme input,
+body.blue-theme textarea,
+body.blue-theme select {
+  background-color: #1a3a52 !important;
+  color: #e3f2fd !important;
+}
+
+body.blue-theme h1, body.blue-theme h2, body.blue-theme h3,
+body.blue-theme h4, body.blue-theme h5, body.blue-theme h6,
+body.blue-theme p, body.blue-theme span, body.blue-theme label {
+  color: #e3f2fd !important;
+}
+
+body.blue-theme .mat-primary {
+  background-color: #2196f3 !important;
+}
+
+body.blue-theme a {
+  color: #64b5f6 !important;
+}
+
+/* Purple Night Theme */
+body.purple-theme {
+  background-color: #1a0033;
+  color: #e1bee7;
+}
+
+body.purple-theme .mat-toolbar,
+body.purple-theme .mat-card,
+body.purple-theme .mat-sidenav,
+body.purple-theme table {
+  background-color: #2d0052 !important;
+  color: #e1bee7 !important;
+}
+
+body.purple-theme input,
+body.purple-theme textarea,
+body.purple-theme select {
+  background-color: #3d0066 !important;
+  color: #e1bee7 !important;
+}
+
+body.purple-theme h1, body.purple-theme h2, body.purple-theme h3,
+body.purple-theme h4, body.purple-theme h5, body.purple-theme h6,
+body.purple-theme p, body.purple-theme span, body.purple-theme label {
+  color: #e1bee7 !important;
+}
+
+body.purple-theme .mat-primary {
+  background-color: #9c27b0 !important;
+}
+
+body.purple-theme a {
+  color: #ce93d8 !important;
+}
+
+/* Forest Green Theme */
+body.green-theme {
+  background-color: #0d1f0d;
+  color: #c8e6c9;
+}
+
+body.green-theme .mat-toolbar,
+body.green-theme .mat-card,
+body.green-theme .mat-sidenav,
+body.green-theme table {
+  background-color: #1b3a1b !important;
+  color: #c8e6c9 !important;
+}
+
+body.green-theme input,
+body.green-theme textarea,
+body.green-theme select {
+  background-color: #234d23 !important;
+  color: #c8e6c9 !important;
+}
+
+body.green-theme h1, body.green-theme h2, body.green-theme h3,
+body.green-theme h4, body.green-theme h5, body.green-theme h6,
+body.green-theme p, body.green-theme span, body.green-theme label {
+  color: #c8e6c9 !important;
+}
+
+body.green-theme .mat-primary {
+  background-color: #4caf50 !important;
+}
+
+body.green-theme a {
+  color: #81c784 !important;
+}
+
+/* Sunset Orange Theme */
+body.sunset-theme {
+  background-color: #1f0f00;
+  color: #ffe0b2;
+}
+
+body.sunset-theme .mat-toolbar,
+body.sunset-theme .mat-card,
+body.sunset-theme .mat-sidenav,
+body.sunset-theme table {
+  background-color: #3d1f00 !important;
+  color: #ffe0b2 !important;
+}
+
+body.sunset-theme input,
+body.sunset-theme textarea,
+body.sunset-theme select {
+  background-color: #4d2800 !important;
+  color: #ffe0b2 !important;
+}
+
+body.sunset-theme h1, body.sunset-theme h2, body.sunset-theme h3,
+body.sunset-theme h4, body.sunset-theme h5, body.sunset-theme h6,
+body.sunset-theme p, body.sunset-theme span, body.sunset-theme label {
+  color: #ffe0b2 !important;
+}
+
+body.sunset-theme .mat-primary {
+  background-color: #ff6f00 !important;
+}
+
+body.sunset-theme a {
+  color: #ffb74d !important;
+}

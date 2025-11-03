@@ -3,7 +3,7 @@
     <h1>Post New Job</h1>
     <div class="header-actions">
       <button class="btn-secondary" routerLink="/jobs">Cancel</button>
-      <button class="btn-primary" (click)="saveJob()">Publish Job</button>
+      <button class="btn-primary" (click)="saveJob()" *ngIf="currentStep === 4" [disabled]="saving">{{ saving ? 'Publishing...' : 'Publish Job' }}</button>
     </div>
   </div>
 
@@ -39,8 +39,7 @@
             <label>Client Company *</label>
             <select [(ngModel)]="job.clientId">
               <option value="">Select client</option>
-              <option value="1">Tech Corp</option>
-              <option value="2">Innovation Labs</option>
+              <option *ngFor="let client of clients" [value]="client.id">{{ client.name }}</option>
             </select>
           </div>
           <div class="form-group">
@@ -139,9 +138,12 @@
         </div>
       </div>
 
+      <div class="error-message" *ngIf="error">{{ error }}</div>
+
       <div class="form-actions">
         <button class="btn-secondary" *ngIf="currentStep > 1" (click)="previousStep()">← Previous</button>
         <button class="btn-primary" *ngIf="currentStep < 4" (click)="nextStep()">Next →</button>
+        <button class="btn-primary" *ngIf="currentStep === 4" (click)="saveJob()" [disabled]="saving">{{ saving ? 'Publishing...' : 'Publish Job' }}</button>
       </div>
     </div>
   </div>

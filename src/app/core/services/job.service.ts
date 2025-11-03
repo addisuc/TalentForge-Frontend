@@ -15,6 +15,7 @@ export interface Job {
   status: string;
   companyId: string;
   recruiterId: string;
+  clientId?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -72,12 +73,23 @@ export class JobService {
     return this.http.get<JobPage>(`${this.apiUrl}/status/${status}`, { params });
   }
 
+  getPublicActiveJobs(page: number = 0, size: number = 20): Observable<JobPage> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<JobPage>(`${this.apiUrl}/public/active`, { params });
+  }
+
   createJob(request: JobRequest): Observable<Job> {
     return this.http.post<Job>(this.apiUrl, request);
   }
 
   updateJob(id: string, request: JobRequest): Observable<Job> {
     return this.http.put<Job>(`${this.apiUrl}/${id}`, request);
+  }
+
+  updateJobStatus(id: string, status: string): Observable<Job> {
+    return this.http.patch<Job>(`${this.apiUrl}/${id}/status`, { status });
   }
 
   deleteJob(id: string): Observable<void> {

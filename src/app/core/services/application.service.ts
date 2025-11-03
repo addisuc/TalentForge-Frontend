@@ -15,6 +15,7 @@ export interface JobApplication {
   candidateName?: string;
   candidateEmail?: string;
   coverLetter?: string;
+  clientId?: number;
 }
 
 export interface ApplicationRequest {

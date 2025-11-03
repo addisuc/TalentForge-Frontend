@@ -236,6 +236,29 @@ h1 {
       background: #b91c1c;
     }
   }
+
+  &.success {
+    background: #10b981;
+    
+    &:hover {
+      background: #059669;
+    }
+  }
+}
+
+.badge.status-draft {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.badge.status-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .pagination {
