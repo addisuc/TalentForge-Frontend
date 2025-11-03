@@ -538,11 +538,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
 
     // Load pipeline stages
-    const stages = ['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER'];
-    this.pipelineStages = stages.map(stage => ({
-      name: stage.charAt(0) + stage.slice(1).toLowerCase(),
-      count: applications.filter(app => app.stage === stage).length
-    }));
+    this.pipelineStages = [
+      { name: 'Applied', count: applications.filter(app => app.status === 'APPLIED').length },
+      { name: 'Screening', count: applications.filter(app => app.status === 'SCREENING').length },
+      { name: 'Interview', count: applications.filter(app => ['PHONE_INTERVIEW', 'TECHNICAL_INTERVIEW', 'FINAL_INTERVIEW'].includes(app.status)).length },
+      { name: 'Offer', count: applications.filter(app => ['OFFER_PENDING', 'OFFER_ACCEPTED', 'OFFER_DECLINED'].includes(app.status)).length }
+    ];
   }
 
   getDaysAgo(dateString: string): number {
