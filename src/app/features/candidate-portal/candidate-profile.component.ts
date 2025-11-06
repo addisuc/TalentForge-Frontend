@@ -678,9 +678,23 @@ export class CandidateProfileComponent implements OnInit {
 
   deleteResume() {
     if (confirm('Are you sure you want to delete your resume?')) {
-      this.profile.resume = null;
-      this.trackChanges();
-      this.calculateCompleteness();
+      if (this.candidate?.id && this.profile.resume?.url) {
+        // Delete from backend
+        this.candidateService.deleteResume(this.candidate.id).subscribe({
+          next: () => {
+            this.profile.resume = null;
+            this.trackChanges();
+            this.calculateCompleteness();
+          },
+          error: (err) => {
+            this.error = 'Failed to delete resume';
+          }
+        });
+      } else {
+        this.profile.resume = null;
+        this.trackChanges();
+        this.calculateCompleteness();
+      }
     }
   }
 
@@ -822,6 +836,27 @@ export class CandidateProfileComponent implements OnInit {
     const certifications = this.profile.certifications.filter((c: any) => c.name && c.issuer);
     const education = this.profile.education.filter((e: any) => e.degree && e.institution);
     const experience = this.profile.experience.filter((e: any) => e.title && e.company);
+
+    // Upload resume if new file selected
+    if (this.profile.resume?.file) {
+      this.candidateService.uploadResume(this.candidate.id, this.profile.resume.file).subscribe({
+        next: (response) => {
+          this.profile.resume.url = response.resumeUrl;
+          delete this.profile.resume.file;
+          this.saveOtherDetails(certifications, education, experience);
+        },
+        error: (err) => {
+          this.error = 'Failed to upload resume.';
+          this.loading = false;
+        }
+      });
+    } else {
+      this.saveOtherDetails(certifications, education, experience);
+    }
+  }
+
+  private saveOtherDetails(certifications: any[], education: any[], experience: any[]) {
+    if (!this.candidate) return;
 
     this.candidateService.saveCertifications(this.candidate.id, certifications).subscribe();
     this.candidateService.saveEducation(this.candidate.id, education).subscribe();

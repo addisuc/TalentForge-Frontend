@@ -137,6 +137,11 @@
             <h3>{{ selectedApplication.candidateName || 'Unknown Candidate' }}</h3>
             <p>{{ selectedApplication.jobTitle || 'Unknown Position' }}</p>
             <p class="current-status">Current Status: <strong>{{ selectedApplication.status }}</strong></p>
+            <div class="candidate-actions" *ngIf="selectedApplication.resumeUrl">
+              <a [href]="selectedApplication.resumeUrl" target="_blank" class="btn-resume">
+                📄 View Resume
+              </a>
+            </div>
           </div>
           
           <div class="application-history">

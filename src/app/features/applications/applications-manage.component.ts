@@ -148,6 +148,7 @@ export class ApplicationsManageComponent implements OnInit {
         phone: '',
         daysAgo: this.getDaysAgo(app.appliedAt),
         skills: [],
+        resumeUrl: (app as any).resumeUrl,
         originalApp: app
       };
 

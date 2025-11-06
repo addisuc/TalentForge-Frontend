@@ -167,7 +167,10 @@
 
         <div class="info-section">
           <h4>📄 Resume</h4>
-          <button class="btn-secondary" (click)="downloadResume(selectedCandidate.id)">📥 Download Resume</button>
+          <div class="resume-actions">
+            <a *ngIf="selectedCandidate.resumeUrl" [href]="selectedCandidate.resumeUrl" target="_blank" class="btn-secondary">👁️ Preview Resume</a>
+            <button class="btn-secondary" (click)="downloadResume(selectedCandidate.id)">📥 Download Resume</button>
+          </div>
         </div>
       </div>
       <div class="modal-footer">

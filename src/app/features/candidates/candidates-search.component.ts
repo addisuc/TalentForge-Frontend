@@ -24,22 +24,23 @@ export class CandidatesSearchComponent implements OnInit {
   }
 
   loadCandidates() {
-    this.http.get<any>('/api/users/role/CANDIDATE').subscribe({
+    this.http.get<any>('/api/candidates').subscribe({
       next: (response) => {
         console.log('Loaded candidates from API:', response);
-        this.candidates = (response.content || response).map((user: any) => {
-          console.log('Mapping user:', user.id, user.firstName, user.lastName);
+        this.candidates = (response.content || response).map((candidate: any) => {
+          console.log('Mapping candidate:', candidate.id, candidate.userId, candidate.resumeUrl);
           return {
-            id: user.id,
-            name: `${user.firstName} ${user.lastName}`,
-            initials: `${user.firstName[0]}${user.lastName[0]}`,
+            id: candidate.userId,
+            name: `${candidate.firstName || ''} ${candidate.lastName || ''}`.trim() || 'Unknown',
+            initials: `${(candidate.firstName || 'U')[0]}${(candidate.lastName || 'N')[0]}`,
             role: 'Candidate',
-            location: user.location || 'N/A',
-            experience: user.experience || 0,
-            salary: user.expectedSalary || 'N/A',
+            location: candidate.location || 'N/A',
+            experience: candidate.experience || 0,
+            salary: candidate.expectedSalary || 'N/A',
             status: 'Available',
-            skills: user.skills || [],
-            lastActive: Math.floor(Math.random() * 30)
+            skills: candidate.skills || [],
+            lastActive: Math.floor(Math.random() * 30),
+            resumeUrl: candidate.resumeUrl
           };
         });
         console.log('Final candidates array:', this.candidates);
@@ -319,8 +320,16 @@ export class CandidatesSearchComponent implements OnInit {
 
   downloadResume(id: number) {
     const candidate = this.candidates.find(c => c.id === id);
-    if (candidate) {
-      console.log(`Downloading resume for ${candidate.name}...`);
+    if (candidate?.resumeUrl) {
+      const link = document.createElement('a');
+      link.href = candidate.resumeUrl;
+      link.download = `${candidate.name.replace(/\s+/g, '_')}_Resume.pdf`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      this.showNotification('Resume not available', 'error');
     }
   }
 

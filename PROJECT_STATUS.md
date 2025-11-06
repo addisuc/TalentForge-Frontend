@@ -51,10 +51,22 @@
 - [x] Job search and apply
 - [x] Application tracking
 - [x] Interview schedule
-- [x] Profile management
-- [x] Resume upload (drag-drop, validation)
-- [x] Skills management
-- [x] Backend integration (`/api/users`)
+- [x] Profile management (Complete Refactor)
+  - [x] Separated candidate data from user authentication
+  - [x] Database schema (candidates, certifications, education, experience tables)
+  - [x] Backend CRUD operations (application-service port 8084)
+  - [x] Auto-creation during registration
+  - [x] Professional Quill rich text editor for summary
+  - [x] Skills management with proficiency levels
+  - [x] Certifications with dates and credentials
+  - [x] Education history
+  - [x] Work experience with "currently working" checkbox
+  - [x] Profile photo upload
+  - [x] Resume upload (drag-drop, validation)
+  - [x] Social links (LinkedIn, GitHub, Portfolio)
+  - [x] Profile completeness indicator
+  - [x] Change tracking with save button
+- [x] Backend integration (`/api/users`, `/api/candidates`)
 
 #### ✅ Team Management
 - [x] Team member listing with pagination

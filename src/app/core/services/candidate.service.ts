@@ -42,4 +42,8 @@ export class CandidateService {
   saveExperience(candidateId: string, experience: any[]): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${candidateId}/experience`, experience);
   }
+
+  deleteResume(candidateId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${candidateId}/resume`);
+  }
 }

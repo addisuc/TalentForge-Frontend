@@ -470,6 +470,19 @@
   }
 }
 
+.resume-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  
+  a, button {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
 .last-active {
   color: #64748b;
   font-size: 0.75rem;

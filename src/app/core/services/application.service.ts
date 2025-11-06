@@ -32,6 +32,7 @@ export interface JobApplication {
   candidateEmail?: string;
   coverLetter?: string;
   clientId?: number;
+  resumeUrl?: string;
   backgroundCheckStatus?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
   backgroundCheckProvider?: 'CHECKR' | 'HIRERIGHT' | 'STERLING';
   referenceCheckStatus?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
