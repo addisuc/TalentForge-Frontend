@@ -31,12 +31,32 @@
   <main class="main-content">
     <header class="top-bar">
       <div class="search-bar">
-        <span class="icon">🔍</span>
-        <input type="text" [placeholder]="searchPlaceholder">
+        <span class="icon search-icon" (click)="performGlobalSearch()">🔍</span>
+        <input type="text" [(ngModel)]="globalSearchTerm" (keyup.enter)="performGlobalSearch()" (input)="onSearchInput()" [placeholder]="searchPlaceholder">
+        <button *ngIf="globalSearchTerm" class="clear-search" (click)="clearSearch()">×</button>
       </div>
       <div class="top-actions">
-        <button class="icon-btn">🔔</button>
-        <div class="user-profile">
+        <button class="icon-btn notification-bell" (click)="toggleNotifications()" [class.has-notifications]="hasNotifications">
+          🔔
+          <span class="notification-badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
+        </button>
+        <div class="notification-dropdown" *ngIf="showNotifications">
+          <div class="notification-header">
+            <h4>Notifications</h4>
+            <button class="close-btn" (click)="closeNotifications()">×</button>
+          </div>
+          <div class="notification-list">
+            <div *ngFor="let notification of notifications" class="notification-item">
+              <p class="notification-title">{{ notification.title }}</p>
+              <p class="notification-message">{{ notification.message }}</p>
+              <span class="notification-time">{{ notification.time }}</span>
+            </div>
+            <div *ngIf="notifications.length === 0" class="no-notifications">
+              <p>No new notifications</p>
+            </div>
+          </div>
+        </div>
+        <div class="user-profile" (click)="navigateToProfile()">
           <div class="avatar">{{ userInitials }}</div>
           <span>{{ userName }}</span>
         </div>

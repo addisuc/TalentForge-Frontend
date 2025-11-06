@@ -6,11 +6,14 @@ import { HttpClient } from '@angular/common/http';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ApplicationService, JobApplication, ApplicationPage } from '../../core/services/application.service';
 import { InterviewService, InterviewRequest } from '../../core/services/interview.service';
+import { BackgroundCheckModalComponent } from './background-check-modal.component';
+import { ReferenceCheckModalComponent } from './reference-check-modal.component';
+import { OfferModalComponent } from './offer-modal.component';
 
 @Component({
   selector: 'app-applications-manage',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, DragDropModule],
+  imports: [CommonModule, RouterModule, FormsModule, DragDropModule, BackgroundCheckModalComponent, ReferenceCheckModalComponent, OfferModalComponent],
   templateUrl: './applications-manage.component.html',
   styleUrls: ['./applications-manage.component.scss']
 })
@@ -37,14 +40,28 @@ export class ApplicationsManageComponent implements OnInit {
   interviewerName = '';
   interviewerEmail = '';
   notes = '';
+  showBackgroundCheckModal = false;
+  showReferenceCheckModal = false;
+  showOfferModal = false;
+  selectedApplicationForAction: JobApplication | null = null;
+  showReferenceResponsesModal = false;
+  referenceResponses: any[] = [];
+  toastMessage = '';
+  toastType = '';
+  showToastFlag = false;
 
   cardsPerColumn = 25;
   applications: JobApplication[] = [];
   stages = [
     { name: 'Applied', status: 'APPLIED', visibleCount: 25, applications: [] as any[] },
     { name: 'Screening', status: 'SCREENING', visibleCount: 25, applications: [] as any[] },
-    { name: 'Interview', status: 'INTERVIEW', visibleCount: 25, applications: [] as any[] },
-    { name: 'Offer', status: 'OFFER', visibleCount: 25, applications: [] as any[] },
+    { name: 'Phone Screen', status: 'PHONE_INTERVIEW', visibleCount: 25, applications: [] as any[] },
+    { name: 'Technical', status: 'TECHNICAL_INTERVIEW', visibleCount: 25, applications: [] as any[] },
+    { name: 'Final Interview', status: 'FINAL_INTERVIEW', visibleCount: 25, applications: [] as any[] },
+    { name: 'Reference Check', status: 'REFERENCE_CHECK', visibleCount: 25, applications: [] as any[] },
+    { name: 'Background Check', status: 'BACKGROUND_CHECK', visibleCount: 25, applications: [] as any[] },
+    { name: 'Offer', status: 'OFFER_PENDING', visibleCount: 25, applications: [] as any[] },
+    { name: 'Offer Declined', status: 'OFFER_DECLINED', visibleCount: 25, applications: [] as any[] },
     { name: 'Hired', status: 'HIRED', visibleCount: 25, applications: [] as any[] },
     { name: 'Rejected', status: 'REJECTED', visibleCount: 25, applications: [] as any[] }
   ];
@@ -56,6 +73,7 @@ export class ApplicationsManageComponent implements OnInit {
     { value: 'TECHNICAL_INTERVIEW', label: 'Technical Interview' },
     { value: 'FINAL_INTERVIEW', label: 'Final Interview' },
     { value: 'REFERENCE_CHECK', label: 'Reference Check' },
+    { value: 'BACKGROUND_CHECK', label: 'Background Check' },
     { value: 'OFFER_PENDING', label: 'Offer Pending' },
     { value: 'OFFER_ACCEPTED', label: 'Offer Accepted' },
     { value: 'OFFER_DECLINED', label: 'Offer Declined' },
@@ -133,13 +151,12 @@ export class ApplicationsManageComponent implements OnInit {
         originalApp: app
       };
 
-      // Map interview statuses to INTERVIEW stage
+      // Map offer statuses properly
       let stageStatus = app.status;
-      if (['PHONE_INTERVIEW', 'TECHNICAL_INTERVIEW', 'FINAL_INTERVIEW'].includes(app.status)) {
-        stageStatus = 'INTERVIEW';
-      } else if (['OFFER_PENDING', 'OFFER_ACCEPTED', 'OFFER_DECLINED'].includes(app.status)) {
-        stageStatus = 'OFFER';
+      if (app.status === 'OFFER_ACCEPTED') {
+        stageStatus = 'HIRED';
       }
+      // OFFER_DECLINED stays as is and goes to Offer Declined lane
 
       const stage = this.stages.find(s => s.status === stageStatus);
       if (stage) {
@@ -170,6 +187,8 @@ export class ApplicationsManageComponent implements OnInit {
   updateApplicationStatus(application: any) {
     this.selectedApplication = application.originalApp || application;
     this.statusNotes = '';
+    console.log('Status options:', this.statusOptions);
+    console.log('Selected application:', this.selectedApplication);
     this.showStatusModal = true;
   }
 
@@ -181,6 +200,9 @@ export class ApplicationsManageComponent implements OnInit {
 
   handleStatusChange(newStatus: string) {
     const isInterviewStatus = ['PHONE_INTERVIEW', 'TECHNICAL_INTERVIEW', 'FINAL_INTERVIEW'].includes(newStatus);
+    const isBackgroundCheck = newStatus === 'BACKGROUND_CHECK';
+    const isReferenceCheck = newStatus === 'REFERENCE_CHECK';
+    const isOfferPending = newStatus === 'OFFER_PENDING';
     
     if (isInterviewStatus) {
       this.pendingStatusChange = {
@@ -192,6 +214,18 @@ export class ApplicationsManageComponent implements OnInit {
       this.meetingLink = '';
       this.closeStatusModal();
       this.showScheduleModal = true;
+    } else if (isBackgroundCheck) {
+      this.selectedApplicationForAction = this.selectedApplication;
+      this.closeStatusModal();
+      this.showBackgroundCheckModal = true;
+    } else if (isReferenceCheck) {
+      this.selectedApplicationForAction = this.selectedApplication;
+      this.closeStatusModal();
+      this.showReferenceCheckModal = true;
+    } else if (isOfferPending) {
+      this.selectedApplicationForAction = this.selectedApplication;
+      this.closeStatusModal();
+      this.showOfferModal = true;
     } else {
       this.submitStatusUpdate(newStatus);
     }
@@ -203,17 +237,24 @@ export class ApplicationsManageComponent implements OnInit {
     this.updatingStatus = true;
     this.applicationService.updateApplicationStatus(this.selectedApplication.id, newStatus).subscribe({
       next: (updatedApp) => {
+        // Update the main applications array
         const index = this.applications.findIndex(app => app.id === this.selectedApplication!.id);
         if (index !== -1) {
           this.applications[index] = updatedApp;
         }
+        
+        // Update the selected application to refresh the timeline
+        this.selectedApplication = updatedApp;
+        
+        // Reorganize applications by stage to reflect the change
         this.organizeApplicationsByStage();
+        
         this.closeStatusModal();
         this.updatingStatus = false;
       },
       error: (err) => {
         console.error('Error updating status:', err);
-        alert('Failed to update application status');
+        this.showToast('error', 'Update Failed', 'Failed to update application status. Please try again.');
         this.updatingStatus = false;
       }
     });
@@ -248,38 +289,43 @@ export class ApplicationsManageComponent implements OnInit {
 
     this.interviewService.createInterview(interviewRequest).subscribe({
       next: () => {
-        // Then update application status
-        if (this.pendingStatusChange.previousContainer) {
-          transferArrayItem(
-            this.pendingStatusChange.previousContainer,
-            this.pendingStatusChange.currentContainer,
-            this.pendingStatusChange.previousIndex,
-            this.pendingStatusChange.currentIndex
-          );
-        }
-        
+        // Update application status after interview is created
         this.applicationService.updateApplicationStatus(app.originalApp.id, status).subscribe({
           next: (updatedApp) => {
+            // Update the app object
             app.originalApp = updatedApp;
+            
+            // Update main applications array
+            const index = this.applications.findIndex(a => a.id === updatedApp.id);
+            if (index !== -1) {
+              this.applications[index] = updatedApp;
+            }
+            
+            // Move the item in UI
+            if (this.pendingStatusChange.previousContainer) {
+              transferArrayItem(
+                this.pendingStatusChange.previousContainer,
+                this.pendingStatusChange.currentContainer,
+                this.pendingStatusChange.previousIndex,
+                this.pendingStatusChange.currentIndex
+              );
+            }
+            
+            // Refresh lanes to ensure consistency
+            this.organizeApplicationsByStage();
+            
             this.closeScheduleModal();
           },
           error: (err) => {
             console.error('Error updating status:', err);
-            if (this.pendingStatusChange.previousContainer) {
-              transferArrayItem(
-                this.pendingStatusChange.currentContainer,
-                this.pendingStatusChange.previousContainer,
-                this.pendingStatusChange.currentIndex,
-                this.pendingStatusChange.previousIndex
-              );
-            }
+            this.showToast('error', 'Update Failed', 'Failed to update application status');
             this.closeScheduleModal();
           }
         });
       },
       error: (err) => {
         console.error('Error creating interview:', err);
-        alert('Failed to schedule interview');
+        this.showToast('error', 'Schedule Failed', 'Failed to schedule interview');
         this.closeScheduleModal();
       }
     });
@@ -330,10 +376,10 @@ export class ApplicationsManageComponent implements OnInit {
     } else {
       const app = event.previousContainer.data[event.previousIndex];
       const newStatus = this.getStatusForStage(targetStage.status);
-      const isInterviewStage = targetStage.status === 'INTERVIEW';
+      const isInterviewStage = ['PHONE_INTERVIEW', 'TECHNICAL_INTERVIEW', 'FINAL_INTERVIEW'].includes(newStatus);
       
       if (isInterviewStage) {
-        // Revert the drag and show schedule modal
+        // Don't move the item yet, show schedule modal first
         this.selectedApplication = app.originalApp;
         this.pendingStatusChange = {
           app: app,
@@ -348,6 +394,7 @@ export class ApplicationsManageComponent implements OnInit {
         this.meetingLink = '';
         this.showScheduleModal = true;
       } else {
+        // Optimistically update UI
         transferArrayItem(
           event.previousContainer.data,
           event.container.data,
@@ -355,18 +402,38 @@ export class ApplicationsManageComponent implements OnInit {
           event.currentIndex
         );
         
+        // Call backend API
+        console.log(`Drag-and-drop: Moving application ${app.originalApp.id} to status ${newStatus}`);
         this.applicationService.updateApplicationStatus(app.originalApp.id, newStatus).subscribe({
           next: (updatedApp) => {
+            console.log('Drag-and-drop API success:', updatedApp);
+            // Update the app object with latest data
             app.originalApp = updatedApp;
+            
+            // Update the main applications array
+            const index = this.applications.findIndex(a => a.id === updatedApp.id);
+            if (index !== -1) {
+              this.applications[index] = updatedApp;
+            }
+            
+            // Refresh the lanes to ensure consistency
+            this.organizeApplicationsByStage();
+            
+            // Update selected application if it's the same one
+            if (this.selectedApplication && this.selectedApplication.id === updatedApp.id) {
+              this.selectedApplication = updatedApp;
+            }
           },
           error: (err) => {
             console.error('Error updating status:', err);
+            // Revert the UI change on error
             transferArrayItem(
               event.container.data,
               event.previousContainer.data,
               event.currentIndex,
               event.previousIndex
             );
+            this.showToast('error', 'Update Failed', 'Failed to update application status. Please try again.');
           }
         });
       }
@@ -374,14 +441,126 @@ export class ApplicationsManageComponent implements OnInit {
   }
 
   getStatusForStage(stageStatus: string): string {
-    const statusMap: any = {
-      'APPLIED': 'APPLIED',
-      'SCREENING': 'SCREENING',
-      'INTERVIEW': 'PHONE_INTERVIEW',
-      'OFFER': 'OFFER_PENDING',
-      'HIRED': 'HIRED',
-      'REJECTED': 'REJECTED'
-    };
-    return statusMap[stageStatus] || stageStatus;
+    return stageStatus;
+  }
+
+  closeBackgroundCheckModal() {
+    this.showBackgroundCheckModal = false;
+    this.selectedApplicationForAction = null;
+  }
+
+  onBackgroundCheckInitiated() {
+    if (this.selectedApplicationForAction) {
+      // Set the selected application for status update
+      this.selectedApplication = this.selectedApplicationForAction;
+      this.submitStatusUpdate('BACKGROUND_CHECK');
+      // Keep modal open to show updated timeline
+      this.selectedApplicationForAction = null;
+    }
+  }
+
+  closeReferenceCheckModal() {
+    this.showReferenceCheckModal = false;
+    this.selectedApplicationForAction = null;
+  }
+
+  onReferenceCheckSubmitted() {
+    if (this.selectedApplicationForAction) {
+      this.selectedApplication = this.selectedApplicationForAction;
+      this.submitStatusUpdate('REFERENCE_CHECK');
+      this.showToast('success', 'References Sent', 'Reference requests have been sent successfully!');
+      // Keep modal open to show updated timeline
+      this.selectedApplicationForAction = null;
+    }
+  }
+
+  closeOfferModal() {
+    this.showOfferModal = false;
+    this.selectedApplicationForAction = null;
+  }
+
+  onOfferExtended() {
+    if (this.selectedApplicationForAction) {
+      this.selectedApplication = this.selectedApplicationForAction;
+      this.submitStatusUpdate('OFFER_PENDING');
+      // Keep modal open to show updated timeline
+      this.selectedApplicationForAction = null;
+    }
+  }
+
+  viewReferenceResponses(application: JobApplication) {
+    this.selectedApplication = application;
+    this.referenceResponses = [];
+    this.showReferenceResponsesModal = true;
+    
+    // Load reference responses from backend
+    this.http.get<any[]>(`/api/reference-checks/application/${application.id}`).subscribe({
+      next: (checks) => {
+        if (checks.length > 0) {
+          const latestCheck = checks[0];
+          this.http.get<any[]>(`/api/reference-checks/${latestCheck.id}/references`).subscribe({
+            next: (references) => {
+              this.referenceResponses = references;
+            },
+            error: (err) => console.error('Failed to load references:', err)
+          });
+        }
+      },
+      error: (err) => console.error('Failed to load reference checks:', err)
+    });
+  }
+
+  closeReferenceResponsesModal() {
+    this.showReferenceResponsesModal = false;
+    this.selectedApplication = null;
+    this.referenceResponses = [];
+  }
+
+  getApplicationSteps(application: JobApplication | null) {
+    if (!application) return [];
+
+    const allSteps = [
+      { name: 'Applied', status: 'APPLIED', date: application.appliedAt },
+      { name: 'Screening', status: 'SCREENING', date: null },
+      { name: 'Phone Interview', status: 'PHONE_INTERVIEW', date: null },
+      { name: 'Technical Interview', status: 'TECHNICAL_INTERVIEW', date: null },
+      { name: 'Final Interview', status: 'FINAL_INTERVIEW', date: null },
+      { name: 'Reference Check', status: 'REFERENCE_CHECK', date: null },
+      { name: 'Background Check', status: 'BACKGROUND_CHECK', date: null },
+      { name: 'Offer Pending', status: 'OFFER_PENDING', date: null },
+      { name: 'Hired', status: 'HIRED', date: null }
+    ];
+
+    const currentStatusIndex = allSteps.findIndex(step => step.status === application.status);
+    
+    return allSteps.map((step, index) => ({
+      ...step,
+      completed: index < currentStatusIndex,
+      current: index === currentStatusIndex,
+      date: step.date ? new Date(step.date) : (index <= currentStatusIndex ? new Date(application.updatedAt) : null)
+    }));
+  }
+
+  getReferenceStatusBadge(status: string): string {
+    switch(status) {
+      case 'COMPLETED': return 'badge-success';
+      case 'SENT': return 'badge-warning';
+      case 'PENDING': return 'badge-secondary';
+      case 'EXPIRED': return 'badge-danger';
+      default: return 'badge-secondary';
+    }
+  }
+
+  showToast(type: 'success' | 'error' | 'warning', title: string, message: string) {
+    this.toastType = type;
+    this.toastMessage = `${title}: ${message}`;
+    this.showToastFlag = true;
+    setTimeout(() => {
+      this.showToastFlag = false;
+    }, 4000);
+  }
+
+  closeToast() {
+    this.showToastFlag = false;
   }
 }

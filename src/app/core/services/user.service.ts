@@ -22,10 +22,7 @@ export interface User {
 export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
-  phoneNumber?: string;
-  skills?: string[];
-  experience?: string;
-  location?: string;
+  email?: string;
 }
 
 export interface UserPage {

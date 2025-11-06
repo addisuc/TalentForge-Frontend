@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { SessionTimeoutComponent } from '../../shared/components/session-timeout/session-timeout.component';
@@ -11,7 +12,7 @@ import { User } from '../../core/models/user.model';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, SessionTimeoutComponent, ToastComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SessionTimeoutComponent, ToastComponent],
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.scss']
 })
@@ -19,6 +20,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   navigationItems: NavigationItem[] = [];
   private destroy$ = new Subject<void>();
+  globalSearchTerm = '';
+  showNotifications = false;
+  notifications: any[] = [];
+  notificationCount = 0;
+  hasNotifications = false;
 
   constructor(
     private router: Router,
@@ -32,6 +38,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     if (currentUser) {
       this.currentUser = currentUser;
       this.navigationItems = this.navigationService.getNavigationForRole(currentUser.role);
+      this.loadNotifications();
     }
 
     // Subscribe to changes
@@ -41,8 +48,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.currentUser = user;
         if (user) {
           this.navigationItems = this.navigationService.getNavigationForRole(user.role);
+          this.loadNotifications();
         } else {
           this.navigationItems = [];
+          this.notifications = [];
+          this.notificationCount = 0;
         }
       });
   }
@@ -87,6 +97,77 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         return 'Search subscriptions or invoices...';
       default:
         return 'Search...';
+    }
+  }
+
+  performGlobalSearch() {
+    const searchTerm = this.globalSearchTerm.trim();
+    if (!searchTerm) return;
+    
+    console.log('Performing global search:', searchTerm);
+    
+    if (this.currentUser?.role === 'CANDIDATE') {
+      this.router.navigate(['/candidate/jobs'], { queryParams: { search: searchTerm } });
+    } else if (this.currentUser?.role === 'RECRUITER') {
+      this.router.navigate(['/recruiter/applications'], { queryParams: { search: searchTerm } });
+    } else {
+      // Default search behavior
+      console.log('Global search for:', searchTerm);
+    }
+  }
+
+  onSearchInput() {
+    // Optional: Add real-time search suggestions here
+  }
+
+  clearSearch() {
+    this.globalSearchTerm = '';
+  }
+
+  toggleNotifications() {
+    this.showNotifications = !this.showNotifications;
+  }
+
+  closeNotifications() {
+    this.showNotifications = false;
+  }
+
+  loadNotifications() {
+    if (!this.currentUser?.id) return;
+    
+    // Call notification service API
+    fetch(`/api/notifications/in-app/${this.currentUser.id}`)
+      .then(response => response.json())
+      .then(data => {
+        this.notifications = data.notifications || [];
+        this.notificationCount = data.unreadCount || 0;
+        this.hasNotifications = this.notificationCount > 0;
+      })
+      .catch(error => {
+        console.error('Failed to load notifications:', error);
+        // Fallback to empty notifications
+        this.notifications = [];
+        this.notificationCount = 0;
+        this.hasNotifications = false;
+      });
+  }
+
+  navigateToProfile() {
+    if (!this.currentUser) return;
+    
+    // Navigate based on user role
+    switch(this.currentUser.role) {
+      case 'CANDIDATE':
+        this.router.navigate(['/candidate/profile']);
+        break;
+      case 'RECRUITER':
+        this.router.navigate(['/recruiter/profile']);
+        break;
+      case 'TENANT_ADMIN':
+        this.router.navigate(['/admin/profile']);
+        break;
+      default:
+        this.router.navigate(['/profile']);
     }
   }
 

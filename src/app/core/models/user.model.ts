@@ -17,6 +17,8 @@ export interface User {
   lastName: string;
   role: UserRole;
   isEmailVerified: boolean;
+  tenantId?: string;
+  status?: string;
   createdAt: Date;
   updatedAt: Date;
 }

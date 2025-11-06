@@ -132,12 +132,45 @@
         <button class="close-btn" (click)="closeStatusModal()">✕</button>
       </div>
       <div class="modal-body" *ngIf="selectedApplication">
-        <div class="application-summary">
-          <h3>{{ selectedApplication.candidateName || 'Unknown Candidate' }}</h3>
-          <p>{{ selectedApplication.jobTitle || 'Unknown Position' }}</p>
-          <p class="current-status">Current Status: <strong>{{ selectedApplication.status }}</strong></p>
+        <div class="modal-content-wrapper">
+          <div class="application-summary">
+            <h3>{{ selectedApplication.candidateName || 'Unknown Candidate' }}</h3>
+            <p>{{ selectedApplication.jobTitle || 'Unknown Position' }}</p>
+            <p class="current-status">Current Status: <strong>{{ selectedApplication.status }}</strong></p>
+          </div>
+          
+          <div class="application-history">
+            <h4>Application Journey</h4>
+            <div class="timeline">
+              <div class="timeline-item" 
+                   *ngFor="let step of getApplicationSteps(selectedApplication)"
+                   [class.completed]="step.completed"
+                   [class.current]="step.current">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <span class="step-name">{{ step.name }}</span>
+                  <span class="step-date" *ngIf="step.date">{{ step.date | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
+        <div class="verification-actions" *ngIf="selectedApplication.status === 'REFERENCE_CHECK' || selectedApplication.status === 'BACKGROUND_CHECK' || selectedApplication.status === 'OFFER_PENDING'">
+          <h4>Verification Status</h4>
+          <div class="verification-buttons">
+            <button class="btn-info" *ngIf="selectedApplication.status === 'REFERENCE_CHECK'" (click)="viewReferenceResponses(selectedApplication)">
+              📋 View Reference Responses
+            </button>
+            <button class="btn-info" *ngIf="selectedApplication.status === 'BACKGROUND_CHECK'">
+              🔍 View Background Check
+            </button>
+            <button class="btn-info" *ngIf="selectedApplication.status === 'OFFER_PENDING'">
+              💼 View Offer Details
+            </button>
+          </div>
+        </div>
+
         <div class="status-options">
           <h4>Update Status To:</h4>
           <div class="status-grid">
@@ -155,6 +188,98 @@
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeStatusModal()">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Background Check Modal -->
+  <app-background-check-modal
+    *ngIf="showBackgroundCheckModal && selectedApplicationForAction"
+    [applicationId]="selectedApplicationForAction.id"
+    (closed)="closeBackgroundCheckModal()"
+    (initiated)="onBackgroundCheckInitiated()">
+  </app-background-check-modal>
+
+  <!-- Reference Check Modal -->
+  <app-reference-check-modal
+    *ngIf="showReferenceCheckModal && selectedApplicationForAction"
+    [applicationId]="selectedApplicationForAction.id"
+    (closed)="closeReferenceCheckModal()"
+    (submitted)="onReferenceCheckSubmitted()">
+  </app-reference-check-modal>
+
+  <!-- Offer Modal -->
+  <app-offer-modal
+    *ngIf="showOfferModal && selectedApplicationForAction"
+    [applicationId]="selectedApplicationForAction.id"
+    (closed)="closeOfferModal()"
+    (extended)="onOfferExtended()">
+  </app-offer-modal>
+
+  <!-- Reference Responses Modal -->
+  <div class="modal-overlay" *ngIf="showReferenceResponsesModal" (click)="closeReferenceResponsesModal()">
+    <div class="modal large-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Reference Responses</h2>
+        <button class="close-btn" (click)="closeReferenceResponsesModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="application-summary" *ngIf="selectedApplication">
+          <h3>{{ selectedApplication.candidateName }}</h3>
+          <p>{{ selectedApplication.jobTitle }}</p>
+        </div>
+        
+        <div class="references-list">
+          <div class="reference-card" *ngFor="let ref of referenceResponses">
+            <div class="reference-header">
+              <div class="reference-info">
+                <h4>{{ ref.name }}</h4>
+                <p>{{ ref.relationship }} at {{ ref.company }}</p>
+                <p class="contact">{{ ref.email }} • {{ ref.phone }}</p>
+              </div>
+              <span class="status-badge" [class]="getReferenceStatusBadge(ref.status)">
+                {{ ref.status }}
+              </span>
+            </div>
+            
+            <div class="reference-details" *ngIf="ref.status === 'COMPLETED'">
+              <div class="response-section">
+                <h5>Reference Response</h5>
+                <p><strong>Submitted:</strong> {{ ref.submittedAt | date:'medium' }}</p>
+                <div class="responses" *ngIf="ref.responses">
+                  <div class="response-item" *ngFor="let response of ref.responses">
+                    <p class="question">{{ response.question }}</p>
+                    <p class="answer">{{ response.answer }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="reference-actions" *ngIf="ref.status !== 'COMPLETED'">
+              <button class="btn-sm btn-secondary" *ngIf="ref.status === 'SENT'">
+                Resend Request
+              </button>
+              <p class="status-text" *ngIf="ref.status === 'PENDING'">Request not yet sent</p>
+              <p class="status-text" *ngIf="ref.status === 'EXPIRED'">Request expired</p>
+            </div>
+          </div>
+          
+          <div class="empty-state" *ngIf="referenceResponses.length === 0">
+            <p>No reference requests found for this application.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeReferenceResponsesModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" *ngIf="showToastFlag" [class]="'toast-' + toastType">
+    <div class="toast-content">
+      <span class="toast-icon">{{ toastType === 'success' ? '✓' : toastType === 'error' ? '✗' : '⚠' }}</span>
+      <span class="toast-message">{{ toastMessage }}</span>
+      <button class="toast-close" (click)="closeToast()">×</button>
     </div>
   </div>
 </div>

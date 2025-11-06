@@ -90,6 +90,16 @@ TalentForge is a multi-tenant recruiting platform that connects recruiters, clie
 - **FR-7.4**: Quick actions available on dashboards
 - **FR-7.5**: System maintains navigation state on refresh
 
+### 3.8 Client Management ✅
+- **FR-8.1**: Recruiters can create/edit/delete clients
+- **FR-8.2**: Clients have company info (name, email, phone, website, address)
+- **FR-8.3**: Client notes system for tracking interactions
+- **FR-8.4**: Email client functionality via notification service
+- **FR-8.5**: Create job from client with pre-filled clientId
+- **FR-8.6**: Filter jobs and applications by client
+- **FR-8.7**: Client details page with full information
+- **FR-8.8**: Tenant-based security (clients belong to tenants)
+
 ---
 
 ## 4. Non-Functional Requirements

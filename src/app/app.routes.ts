@@ -74,6 +74,21 @@ export const routes: Routes = [
     loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent)
   },
   {
+    path: 'recruiter/profile',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./features/candidate-portal/candidate-profile.component').then(m => m.CandidateProfileComponent)
+  },
+  {
+    path: 'admin/profile',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./features/candidate-portal/candidate-profile.component').then(m => m.CandidateProfileComponent)
+  },
+  {
+    path: 'profile',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./features/candidate-portal/candidate-profile.component').then(m => m.CandidateProfileComponent)
+  },
+  {
     path: 'platform-admin',
     canActivate: [AuthGuard, roleGuard([UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_SUPER_ADMIN])],
     loadComponent: () => import('./features/platform-admin/platform-admin-dashboard.component').then(m => m.PlatformAdminDashboardComponent)

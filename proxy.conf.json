@@ -29,8 +29,33 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/candidates": {
+    "target": "http://localhost:8084",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api/interviews": {
     "target": "http://localhost:8084",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/background-checks": {
+    "target": "http://localhost:8087",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/reference-checks": {
+    "target": "http://localhost:8087",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/offers": {
+    "target": "http://localhost:8087",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/webhooks": {
+    "target": "http://localhost:8087",
     "secure": false,
     "changeOrigin": true
   },
