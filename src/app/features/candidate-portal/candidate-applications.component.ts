@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApplicationService, JobApplication, ApplicationPage } from '../../core/services/application.service';
+import { ApplicationService, JobApplication, ApplicationPage, WithdrawApplicationRequest } from '../../core/services/application.service';
 import { InterviewService, Interview } from '../../core/services/interview.service';
 
 @Component({
@@ -143,11 +143,17 @@ import { InterviewService, Interview } from '../../core/services/interview.servi
         </div>
         <div class="modal-body">
           <p>Are you sure you want to withdraw your application for <strong>{{ appToWithdraw?.jobTitle }}</strong> at <strong>{{ appToWithdraw?.companyName }}</strong>?</p>
-          <p class="warning">This action cannot be undone and the application will be removed from your list.</p>
+          <div class="form-group">
+            <label for="withdrawalReason">Reason for withdrawal (required):</label>
+            <textarea id="withdrawalReason" [(ngModel)]="withdrawalReason" 
+                      class="form-control" rows="3" 
+                      placeholder="Please provide a reason for withdrawing your application..."></textarea>
+          </div>
+          <p class="warning">This action cannot be undone.</p>
         </div>
         <div class="modal-footer">
           <button class="btn-action secondary" (click)="cancelWithdraw()">Cancel</button>
-          <button class="btn-action danger" (click)="confirmWithdraw()">Withdraw Application</button>
+          <button class="btn-action danger" [disabled]="!withdrawalReason || !withdrawalReason.trim()" (click)="confirmWithdraw()">Withdraw Application</button>
         </div>
       </div>
     </div>
@@ -215,6 +221,10 @@ import { InterviewService, Interview } from '../../core/services/interview.servi
     .interview-actions { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e2e8f0; display: flex; gap: 0.5rem; }
     .modal-body p { color: #475569; line-height: 1.6; margin-bottom: 1rem; }
     .modal-body p.warning { color: #dc2626; font-size: 0.875rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 600; color: #0f172a; margin-bottom: 0.5rem; font-size: 0.875rem; }
+    .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box; font-family: inherit; resize: vertical; }
+    .form-control:focus { outline: none; border-color: #0066ff; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1.5rem; border-top: 1px solid #e2e8f0; }
   `]
 })
@@ -232,6 +242,7 @@ export class CandidateApplicationsComponent implements OnInit {
   appToWithdraw: JobApplication | null = null;
   interviews: Interview[] = [];
   loadingInterviews = false;
+  withdrawalReason = '';
 
   constructor(
     private applicationService: ApplicationService,
@@ -307,20 +318,27 @@ export class CandidateApplicationsComponent implements OnInit {
   cancelWithdraw() {
     this.showWithdrawConfirm = false;
     this.appToWithdraw = null;
+    this.withdrawalReason = '';
   }
 
   confirmWithdraw() {
-    if (this.appToWithdraw) {
-      this.applicationService.withdrawApplication(this.appToWithdraw.id).subscribe({
+    if (this.appToWithdraw && this.withdrawalReason.trim()) {
+      const request = {
+        reason: this.withdrawalReason.trim()
+      };
+      
+      this.applicationService.withdrawApplication(this.appToWithdraw.id, request).subscribe({
         next: () => {
           this.showWithdrawConfirm = false;
           this.appToWithdraw = null;
+          this.withdrawalReason = '';
           this.loadApplications();
         },
         error: (err) => {
           console.error('Error withdrawing application:', err);
           this.showWithdrawConfirm = false;
           this.appToWithdraw = null;
+          this.withdrawalReason = '';
         }
       });
     }

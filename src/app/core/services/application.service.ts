@@ -51,6 +51,10 @@ export interface ApplicationRequest {
   coverLetter?: string;
 }
 
+export interface WithdrawApplicationRequest {
+  reason: string;
+}
+
 export interface ApplicationPage {
   content: JobApplication[];
   totalElements: number;
@@ -114,7 +118,14 @@ export class ApplicationService {
     );
   }
 
-  withdrawApplication(id: string): Observable<JobApplication> {
+  withdrawApplication(id: string, request?: WithdrawApplicationRequest): Observable<JobApplication> {
+    if (request) {
+      // Send withdrawal with reason, but still update status to WITHDRAWN
+      return this.http.put<JobApplication>(`${this.apiUrl}/${id}/status`, { 
+        status: 'WITHDRAWN',
+        reason: request.reason 
+      });
+    }
     return this.http.put<JobApplication>(`${this.apiUrl}/${id}/status`, { status: 'WITHDRAWN' });
   }
 
