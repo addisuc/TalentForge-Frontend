@@ -53,6 +53,12 @@ export class NavigationService {
       { label: 'Interviews', route: '/candidate/interviews', icon: '📅' },
       { label: 'Profile', route: '/candidate/profile', icon: '👤' },
       { label: 'Messages', route: '/candidate/messages', icon: '💬' }
+    ],
+    [UserRole.CLIENT]: [
+      { label: 'Dashboard', route: '/client', icon: '📊' },
+      { label: 'My Jobs', route: '/client/jobs', icon: '💼' },
+      { label: 'Candidates', route: '/client/candidates', icon: '👥' },
+      { label: 'Interviews', route: '/client/interviews', icon: '📅' }
     ]
   };
 
@@ -62,7 +68,8 @@ export class NavigationService {
     [UserRole.BILLING_MANAGER]: '/billing',
     [UserRole.TENANT_ADMIN]: '/admin',
     [UserRole.RECRUITER]: '/dashboard',
-    [UserRole.CANDIDATE]: '/candidate'
+    [UserRole.CANDIDATE]: '/candidate',
+    [UserRole.CLIENT]: '/client'
   };
 
   getNavigationForRole(role: UserRole): NavigationItem[] {

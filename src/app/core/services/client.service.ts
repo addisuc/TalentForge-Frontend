@@ -38,4 +38,8 @@ export class ClientService {
   getNotes(clientId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${clientId}/notes`);
   }
+
+  getActivities(clientId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${clientId}/activities`);
+  }
 }

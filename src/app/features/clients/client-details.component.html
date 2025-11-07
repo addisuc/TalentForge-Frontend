@@ -2,17 +2,23 @@
   <div class="breadcrumb">
     <a routerLink="/clients">← Back to Clients</a>
   </div>
+  
+  <div class="loading" *ngIf="loading">
+    <p>Loading client details...</p>
+  </div>
 
-  <div class="header">
+  <div class="header" *ngIf="!loading && client">
     <div class="client-info">
-      <div class="logo">{{ client.logo }}</div>
+      <div class="logo">{{ getInitials(client.name) }}</div>
       <div>
         <h1>{{ client.name }}</h1>
-        <p class="industry">{{ client.industry }} • Client since {{ client.since | date:'MMM yyyy' }}</p>
+        <p class="industry">{{ client.industry || 'Industry' }}</p>
       </div>
     </div>
     <div class="actions">
+      <button class="btn-secondary" (click)="editClient()">✏️ Edit</button>
       <button class="btn-secondary" (click)="contactClient()">✉️ Contact</button>
+      <button class="btn-secondary" (click)="addNote()">📝 Add Note</button>
       <button class="btn-primary" (click)="createJob()">➕ New Job</button>
     </div>
   </div>
@@ -36,23 +42,36 @@
 
       <div class="section">
         <div class="section-header">
-          <h2>Active Job Orders</h2>
-          <button class="btn-link">View All →</button>
+          <h2>Job Orders ({{ jobs.length }})</h2>
         </div>
-        <div class="jobs-list">
-          <div class="job-item" *ngFor="let job of jobs">
+        <div class="jobs-list" *ngIf="jobs.length > 0">
+          <div class="job-item" *ngFor="let job of jobs" (click)="viewJob(job.id)" style="cursor: pointer;">
             <div class="job-info">
               <h3>{{ job.title }}</h3>
-              <span class="meta">{{ job.applicants }} applicants • Posted {{ job.posted | date:'MMM d' }}</span>
+              <span class="meta">{{ getApplicationCount(job.id) }} applications • Posted {{ job.createdAt | date:'MMM d, yyyy' }}</span>
             </div>
-            <span class="status active">{{ job.status }}</span>
+            <span class="status" [class.active]="job.status === 'OPEN' || job.status === 'ACTIVE'">{{ job.status }}</span>
           </div>
         </div>
+        <p *ngIf="jobs.length === 0" class="empty-state">No jobs posted for this client yet.</p>
+      </div>
+      
+      <div class="section">
+        <div class="section-header">
+          <h2>Notes ({{ notes.length }})</h2>
+        </div>
+        <div class="notes-list" *ngIf="notes.length > 0">
+          <div class="note-item" *ngFor="let note of notes">
+            <p class="note-text">{{ note.note }}</p>
+            <span class="note-date">{{ note.createdAt | date:'MMM d, yyyy h:mm a' }}</span>
+          </div>
+        </div>
+        <p *ngIf="notes.length === 0" class="empty-state">No notes yet. Click "Add Note" to add one.</p>
       </div>
 
       <div class="section">
-        <h2>Recent Hires</h2>
-        <div class="hires-list">
+        <h2>Recent Hires ({{ recentHires.length }})</h2>
+        <div class="hires-list" *ngIf="recentHires.length > 0">
           <div class="hire-item" *ngFor="let hire of recentHires">
             <span class="avatar">{{ hire.avatar }}</span>
             <div class="hire-info">
@@ -62,6 +81,24 @@
             <span class="date">{{ hire.date | date:'MMM d, yyyy' }}</span>
           </div>
         </div>
+        <p *ngIf="recentHires.length === 0" class="empty-state">No hires yet.</p>
+      </div>
+
+      <div class="section">
+        <h2>Activity Timeline</h2>
+        <div class="timeline" *ngIf="activities.length > 0">
+          <div class="timeline-item" *ngFor="let activity of activities">
+            <span class="timeline-icon">{{ activity.icon }}</span>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <strong>{{ activity.title }}</strong>
+                <span class="timeline-date">{{ activity.date | date:'MMM d, yyyy h:mm a' }}</span>
+              </div>
+              <p class="timeline-description">{{ activity.description }}</p>
+            </div>
+          </div>
+        </div>
+        <p *ngIf="activities.length === 0" class="empty-state">No activity yet.</p>
       </div>
     </div>
 
@@ -72,7 +109,7 @@
           <span class="icon">👤</span>
           <div>
             <div class="label">Primary Contact</div>
-            <div class="value">{{ client.contact }}</div>
+            <div class="value">{{ client.contactPerson || client.contact }}</div>
           </div>
         </div>
         <div class="info-item">
@@ -131,6 +168,26 @@
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeEmailModal()">Cancel</button>
         <button class="btn-primary" (click)="sendEmail()" [disabled]="sending">{{ sending ? 'Sending...' : 'Send Email' }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Note Modal -->
+  <div class="modal-overlay" *ngIf="showNoteModal" (click)="closeNoteModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Add Note</h2>
+        <button class="close-btn" (click)="closeNoteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Note *</label>
+          <textarea [(ngModel)]="noteText" class="form-control" rows="6" placeholder="Enter your note about this client..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeNoteModal()">Cancel</button>
+        <button class="btn-primary" (click)="saveNote()">Save Note</button>
       </div>
     </div>
   </div>

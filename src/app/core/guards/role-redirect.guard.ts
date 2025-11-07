@@ -28,6 +28,8 @@ export const roleRedirectGuard = () => {
             return router.createUrlTree(['/admin']);
           case 'CANDIDATE':
             return router.createUrlTree(['/candidate']);
+          case 'CLIENT':
+            return router.createUrlTree(['/client']);
           default:
             return true;
         }

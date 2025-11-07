@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ClientService } from '../../core/services/client.service';
 import { EmailService } from '../../core/services/email.service';
@@ -38,7 +38,8 @@ export class ClientsManageComponent implements OnInit {
     email: '',
     phone: '',
     address: '',
-    website: ''
+    website: '',
+    description: ''
   };
 
   emailData = {
@@ -53,11 +54,19 @@ export class ClientsManageComponent implements OnInit {
 
   constructor(
     private clientService: ClientService,
-    private emailService: EmailService
+    private emailService: EmailService,
+    private router: Router
   ) {}
 
   ngOnInit() {
     this.loadClients();
+    
+    // Check if we need to open edit modal from navigation state
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation?.extras?.state?.['editClientId']) {
+      const clientId = navigation.extras.state['editClientId'];
+      setTimeout(() => this.editClient(clientId), 500);
+    }
   }
 
   loadClients() {
@@ -137,7 +146,10 @@ export class ClientsManageComponent implements OnInit {
   editClient(id: number) {
     this.selectedClient = this.clients.find(c => c.id === id);
     if (this.selectedClient) {
-      this.newClient = { ...this.selectedClient };
+      this.newClient = { 
+        ...this.selectedClient,
+        contact: this.selectedClient.contactPerson || this.selectedClient.contact
+      };
       this.showEditModal = true;
     }
   }
@@ -153,9 +165,21 @@ export class ClientsManageComponent implements OnInit {
       return;
     }
     
-    this.clientService.updateClient(this.selectedClient.id, this.newClient).subscribe({
-      next: () => {
-        this.loadClients();
+    const { contact, ...clientData } = this.newClient;
+    const payload = {
+      ...clientData,
+      contactPerson: contact
+    };
+    console.log('Updating client with data:', payload);
+    
+    this.clientService.updateClient(this.selectedClient.id, payload).subscribe({
+      next: (updatedClient) => {
+        console.log('Backend returned updated client:', updatedClient);
+        // Update the client in the list
+        const index = this.clients.findIndex(c => c.id === this.selectedClient.id);
+        if (index !== -1) {
+          this.clients[index] = updatedClient;
+        }
         this.closeEditModal();
         this.showNotification('Client updated successfully', 'success');
       },
@@ -314,7 +338,8 @@ export class ClientsManageComponent implements OnInit {
       email: '',
       phone: '',
       address: '',
-      website: ''
+      website: '',
+      description: ''
     };
   }
 
@@ -328,7 +353,13 @@ export class ClientsManageComponent implements OnInit {
       return;
     }
 
-    this.clientService.createClient(this.newClient).subscribe({
+    const { contact, ...clientData } = this.newClient;
+    const payload = {
+      ...clientData,
+      contactPerson: contact
+    };
+
+    this.clientService.createClient(payload).subscribe({
       next: () => {
         this.loadClients();
         this.closeAddModal();

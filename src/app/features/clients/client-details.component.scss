@@ -377,6 +377,172 @@
   border-top: 1px solid #e2e8f0;
 }
 
+.timeline {
+  .timeline-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e2e8f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .timeline-icon {
+      font-size: 1.5rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .timeline-content {
+      flex: 1;
+
+      .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.25rem;
+
+        strong {
+          color: #0f172a;
+          font-size: 0.95rem;
+        }
+
+        .timeline-date {
+          font-size: 0.75rem;
+          color: #94a3b8;
+        }
+      }
+
+      .timeline-description {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin: 0;
+      }
+    }
+  }
+}
+
+.notes-list {
+  .note-item {
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .note-text {
+      color: #0f172a;
+      margin: 0 0 0.5rem 0;
+      line-height: 1.5;
+    }
+
+    .note-date {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.timeline {
+  .timeline-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e2e8f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .timeline-icon {
+      font-size: 1.5rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .timeline-content {
+      flex: 1;
+
+      .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.25rem;
+
+        strong {
+          color: #0f172a;
+          font-size: 0.95rem;
+        }
+
+        .timeline-date {
+          font-size: 0.75rem;
+          color: #94a3b8;
+        }
+      }
+
+      .timeline-description {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin: 0;
+      }
+    }
+  }
+}
+
+.notes-list {
+  .note-item {
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .note-text {
+      color: #0f172a;
+      margin: 0 0 0.5rem 0;
+      line-height: 1.5;
+    }
+
+    .note-date {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2rem;
+  font-style: italic;
+}
+
 .toast {
   position: fixed;
   bottom: 2rem;

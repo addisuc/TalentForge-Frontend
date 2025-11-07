@@ -79,14 +79,16 @@
 - [x] Deactivate/Reactivate users (Admin only)
 - [x] Invite users (Admin only)
 
-#### ✅ Client Management
+#### ✅ Client Management (100% Complete)
 - [x] Client CRUD operations
-- [x] Client details page
+- [x] Client details page with activity timeline
 - [x] Client notes system
-- [x] Email client functionality
-- [x] Create job from client
+- [x] Email client functionality (notification-service integration)
+- [x] Create job from client with pre-filled clientId
 - [x] Client filter on Jobs/Applications pages
 - [x] Backend integration with tenant security
+- [x] Activity tracking (CLIENT_CREATED, CLIENT_UPDATED, NOTE_ADDED)
+- [x] Field mappings (contactPerson/contact, description)
 
 #### ✅ Other Modules
 - [x] Candidates database with search
@@ -235,6 +237,57 @@
   - [ ] Security scanning (npm audit, Snyk)
   - [ ] Automated deployment to staging
   - [ ] Manual approval for production
+
+---
+
+## 🚀 Week 2: Client Portal Foundation (Ready to Start)
+
+### Overview
+Transform the client portal from mock data to fully functional with CLIENT user role, real backend APIs, and complete candidate review workflow.
+
+**📋 Detailed Plan**: See [WEEK_2_CLIENT_PORTAL.md](./WEEK_2_CLIENT_PORTAL.md)
+
+### What's Already Done
+- ✅ Client Management (100% complete)
+- ✅ Client Portal UI components (with mock data)
+- ✅ Routing configured
+- ✅ CLIENT role added to frontend enum
+
+### Week 2 Goals
+1. Add CLIENT user role to backend
+2. Connect client portal to real APIs
+3. Implement data filtering by clientId
+4. Build candidate review system
+5. Enable interview management
+
+### Day-by-Day Timeline
+- **Day 1**: CLIENT role setup (backend + frontend)
+- **Day 2**: Dashboard integration with real metrics
+- **Day 3**: Jobs page with real data
+- **Day 4**: Candidates page (view + approve/reject)
+- **Day 5**: Candidates page (feedback + resume download)
+- **Day 6**: Interviews page integration
+- **Day 7**: Testing and polish
+
+### Success Criteria
+- [ ] CLIENT users can log in and access portal
+- [ ] Dashboard shows real metrics
+- [ ] Clients see only their jobs (data isolation)
+- [ ] Clients can approve/reject candidates
+- [ ] Clients can manage interviews
+- [ ] Mobile responsive
+- [ ] Zero data leakage between clients
+
+### Key Deliverables
+1. CLIENT role in backend (UserRole enum + clientId field)
+2. Client-specific API endpoints (/api/client/*)
+3. Data isolation filters (WHERE client_id = :currentUserClientId)
+4. Candidate review workflow (approve/reject/feedback)
+5. Interview management interface
+
+**Status**: ✅ Plan Complete - Ready to implement  
+**Estimated Effort**: 7 days (56 hours)  
+**Priority**: HIGH - Competitive advantage feature
 
 ---
 

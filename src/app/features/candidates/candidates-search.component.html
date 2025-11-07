@@ -172,6 +172,21 @@
             <button class="btn-secondary" (click)="downloadResume(selectedCandidate.id)">📥 Download Resume</button>
           </div>
         </div>
+
+        <div class="info-section">
+          <h4>📝 Recruiter Notes</h4>
+          <div class="notes-section">
+            <div class="note-item" *ngFor="let note of candidateNotesList">
+              <p class="note-text">{{ note.note }}</p>
+              <p class="note-meta">{{ note.createdAt | date:'short' }} by {{ note.createdBy || 'You' }}</p>
+            </div>
+            <p class="no-notes" *ngIf="candidateNotesList.length === 0">No notes yet</p>
+            <div class="add-note">
+              <textarea [(ngModel)]="candidateNotes" class="form-control" rows="2" placeholder="Add a note about this candidate..."></textarea>
+              <button class="btn-primary btn-sm" [disabled]="!candidateNotes.trim()" (click)="addCandidateNote()">Add Note</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeViewModal()">Close</button>
@@ -190,6 +205,16 @@
       </div>
       <div class="modal-body" *ngIf="selectedCandidate">
         <p>Send email to <strong>{{ selectedCandidate.name }}</strong></p>
+        <div class="form-group">
+          <label>Email Template</label>
+          <select [(ngModel)]="emailTemplate" (change)="onTemplateChange()" class="form-control">
+            <option value="custom">Custom Message</option>
+            <option value="interview">Interview Invitation</option>
+            <option value="rejection">Rejection</option>
+            <option value="followup">Follow-up</option>
+            <option value="offer">Job Offer</option>
+          </select>
+        </div>
         <div class="form-group">
           <label>Subject</label>
           <input type="text" [(ngModel)]="emailSubject" class="form-control" placeholder="Job Opportunity">

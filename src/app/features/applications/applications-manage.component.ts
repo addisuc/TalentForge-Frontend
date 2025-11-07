@@ -49,6 +49,8 @@ export class ApplicationsManageComponent implements OnInit {
   toastMessage = '';
   toastType = '';
   showToastFlag = false;
+  timelineActivities: any[] = [];
+  loadingTimeline = false;
 
   cardsPerColumn = 25;
   applications: JobApplication[] = [];
@@ -181,8 +183,24 @@ export class ApplicationsManageComponent implements OnInit {
     const application = this.applications.find(app => app.id === id);
     if (application) {
       this.selectedApplication = application;
+      this.loadTimeline(id);
       this.showStatusModal = true;
     }
+  }
+
+  loadTimeline(applicationId: string) {
+    this.loadingTimeline = true;
+    this.applicationService.getApplicationTimeline(applicationId).subscribe({
+      next: (activities) => {
+        this.timelineActivities = activities;
+        this.loadingTimeline = false;
+      },
+      error: (err) => {
+        console.error('Failed to load timeline:', err);
+        this.timelineActivities = [];
+        this.loadingTimeline = false;
+      }
+    });
   }
 
   updateApplicationStatus(application: any) {
@@ -532,13 +550,25 @@ export class ApplicationsManageComponent implements OnInit {
       { name: 'Hired', status: 'HIRED', date: null }
     ];
 
+    // Map timeline activities to steps
+    if (this.timelineActivities.length > 0) {
+      this.timelineActivities.forEach(activity => {
+        if (activity.newStatus) {
+          const step = allSteps.find(s => s.status === activity.newStatus);
+          if (step && !step.date) {
+            step.date = activity.createdAt;
+          }
+        }
+      });
+    }
+
     const currentStatusIndex = allSteps.findIndex(step => step.status === application.status);
     
     return allSteps.map((step, index) => ({
       ...step,
       completed: index < currentStatusIndex,
       current: index === currentStatusIndex,
-      date: step.date ? new Date(step.date) : (index <= currentStatusIndex ? new Date(application.updatedAt) : null)
+      date: step.date ? new Date(step.date) : null
     }));
   }
 

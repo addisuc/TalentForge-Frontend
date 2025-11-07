@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApplicationService, JobApplication, ApplicationPage, WithdrawApplicationRequest } from '../../core/services/application.service';
+import { ApplicationService, JobApplication, ApplicationPage, WithdrawApplicationRequest, ApplicationActivity } from '../../core/services/application.service';
 import { InterviewService, Interview } from '../../core/services/interview.service';
 
 @Component({
@@ -89,6 +89,26 @@ import { InterviewService, Interview } from '../../core/services/interview.servi
             <label>Cover Letter:</label>
             <p class="cover-letter">{{ selectedApp.coverLetter }}</p>
           </div>
+          <div class="timeline-section">
+            <h3>Application Timeline</h3>
+            <div class="timeline" *ngIf="activities.length > 0">
+              <div *ngFor="let activity of activities" class="timeline-item">
+                <div class="timeline-marker" [class]="getActivityClass(activity.activityType)"></div>
+                <div class="timeline-content">
+                  <div class="timeline-header">
+                    <span class="timeline-title">{{ getActivityTitle(activity) }}</span>
+                    <span class="timeline-date">{{ activity.createdAt | date:'MMM d, y, h:mm a' }}</span>
+                  </div>
+                  <p class="timeline-description">{{ activity.description }}</p>
+                  <div class="timeline-status" *ngIf="activity.oldStatus && activity.newStatus">
+                    <span class="status-change">{{ formatStatus(activity.oldStatus) }} → {{ formatStatus(activity.newStatus) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="loadingActivities" class="loading-timeline">Loading timeline...</div>
+          </div>
+          
           <div class="interview-section" *ngIf="interviews.length > 0">
             <h3>Scheduled Interviews</h3>
             <div class="interview-card" *ngFor="let interview of interviews">
@@ -225,6 +245,23 @@ import { InterviewService, Interview } from '../../core/services/interview.servi
     .form-group label { display: block; font-weight: 600; color: #0f172a; margin-bottom: 0.5rem; font-size: 0.875rem; }
     .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box; font-family: inherit; resize: vertical; }
     .form-control:focus { outline: none; border-color: #0066ff; }
+    .timeline-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; }
+    .timeline-section h3 { font-size: 1rem; font-weight: 600; color: #0f172a; margin-bottom: 1rem; }
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before { content: ''; position: absolute; left: 0.75rem; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+    .timeline-item { position: relative; margin-bottom: 1.5rem; }
+    .timeline-marker { position: absolute; left: -2rem; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #e2e8f0; background: white; }
+    .timeline-marker.status-change { border-color: #3b82f6; background: #3b82f6; }
+    .timeline-marker.application-submitted { border-color: #10b981; background: #10b981; }
+    .timeline-marker.application-withdrawn { border-color: #f59e0b; background: #f59e0b; }
+    .timeline-content { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; }
+    .timeline-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+    .timeline-title { font-weight: 600; color: #0f172a; font-size: 0.875rem; }
+    .timeline-date { color: #64748b; font-size: 0.75rem; }
+    .timeline-description { color: #475569; font-size: 0.875rem; margin: 0 0 0.5rem 0; line-height: 1.4; }
+    .timeline-status { }
+    .status-change { background: #eff6ff; color: #1e40af; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .loading-timeline { color: #64748b; font-style: italic; text-align: center; padding: 1rem; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1.5rem; border-top: 1px solid #e2e8f0; }
   `]
 })
@@ -243,6 +280,8 @@ export class CandidateApplicationsComponent implements OnInit {
   interviews: Interview[] = [];
   loadingInterviews = false;
   withdrawalReason = '';
+  activities: ApplicationActivity[] = [];
+  loadingActivities = false;
 
   constructor(
     private applicationService: ApplicationService,
@@ -286,6 +325,7 @@ export class CandidateApplicationsComponent implements OnInit {
   viewDetails(app: JobApplication) {
     this.selectedApp = app;
     this.loadInterviews(app.id);
+    this.loadTimeline(app.id);
   }
 
   loadInterviews(applicationId: string) {
@@ -308,6 +348,7 @@ export class CandidateApplicationsComponent implements OnInit {
   closeDetails() {
     this.selectedApp = null;
     this.interviews = [];
+    this.activities = [];
   }
 
   withdrawApplication(app: JobApplication) {
@@ -342,5 +383,39 @@ export class CandidateApplicationsComponent implements OnInit {
         }
       });
     }
+  }
+  
+  loadTimeline(applicationId: string) {
+    this.loadingActivities = true;
+    this.activities = [];
+    
+    this.applicationService.getApplicationTimeline(applicationId).subscribe({
+      next: (activities) => {
+        this.activities = activities;
+        this.loadingActivities = false;
+      },
+      error: (err) => {
+        console.error('Error loading timeline:', err);
+        this.loadingActivities = false;
+      }
+    });
+  }
+  
+  getActivityClass(activityType: string): string {
+    return activityType.toLowerCase().replace('_', '-');
+  }
+  
+  getActivityTitle(activity: ApplicationActivity): string {
+    switch (activity.activityType) {
+      case 'APPLICATION_SUBMITTED': return 'Application Submitted';
+      case 'STATUS_CHANGE': return 'Status Updated';
+      case 'APPLICATION_WITHDRAWN': return 'Application Withdrawn';
+      default: return activity.activityType.replace('_', ' ');
+    }
+  }
+  
+  formatStatus(status: string): string {
+    return status.replace('_', ' ').toLowerCase()
+      .replace(/\b\w/g, l => l.toUpperCase());
   }
 }

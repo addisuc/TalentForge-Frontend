@@ -167,6 +167,10 @@ export class ApplicationService {
     const status = accept ? 'ACCEPTED' : 'DECLINED';
     return this.http.put<any>(`/api/offers/${applicationId}/respond`, { status });
   }
+
+  getApplicationTimeline(applicationId: string): Observable<ApplicationActivity[]> {
+    return this.http.get<ApplicationActivity[]>(`${this.apiUrl}/${applicationId}/timeline`);
+  }
 }
 
 export interface ReferenceRequest {
@@ -175,4 +179,15 @@ export interface ReferenceRequest {
   phone?: string;
   relationship: string;
   company?: string;
+}
+
+export interface ApplicationActivity {
+  id: string;
+  activityType: string;
+  oldStatus?: string;
+  newStatus?: string;
+  description: string;
+  createdAt: string;
+  createdBy?: string;
+  createdByName?: string;
 }

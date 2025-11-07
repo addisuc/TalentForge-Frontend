@@ -152,18 +152,69 @@ export class CandidatesSearchComponent implements OnInit {
   
   emailSubject: string = '';
   emailMessage: string = '';
+  emailTemplate: string = 'custom';
   interviewType: string = 'PHONE';
   interviewDateTime: string = '';
   interviewMeetingLink: string = '';
   selectedJobId: string = '';
   applicationNotes: string = '';
   availableJobs: any[] = [];
+  candidateNotes: string = '';
+  candidateNotesList: any[] = [];
+  
+  emailTemplates = {
+    interview: {
+      subject: 'Interview Invitation',
+      body: 'Hi [NAME],\n\nWe are impressed with your profile and would like to invite you for an interview.\n\nBest regards'
+    },
+    rejection: {
+      subject: 'Application Update',
+      body: 'Hi [NAME],\n\nThank you for your interest. Unfortunately, we have decided to move forward with other candidates.\n\nBest regards'
+    },
+    followup: {
+      subject: 'Following Up',
+      body: 'Hi [NAME],\n\nI wanted to follow up on our previous conversation regarding the opportunity.\n\nBest regards'
+    },
+    offer: {
+      subject: 'Job Offer',
+      body: 'Hi [NAME],\n\nCongratulations! We are pleased to extend you an offer for the position.\n\nBest regards'
+    }
+  };
 
   viewCandidate(id: number) {
     this.selectedCandidate = this.candidates.find(c => c.id === id);
     if (this.selectedCandidate) {
+      this.loadCandidateNotes(id);
       this.showViewModal = true;
     }
+  }
+
+  loadCandidateNotes(candidateId: number) {
+    this.http.get<any[]>(`/api/candidates/${candidateId}/notes`).subscribe({
+      next: (notes) => {
+        this.candidateNotesList = notes;
+      },
+      error: (err) => {
+        console.error('Failed to load notes:', err);
+        this.candidateNotesList = [];
+      }
+    });
+  }
+
+  addCandidateNote() {
+    if (!this.candidateNotes.trim() || !this.selectedCandidate) return;
+    
+    this.http.post(`/api/candidates/${this.selectedCandidate.id}/notes`, { note: this.candidateNotes }).subscribe({
+      next: () => {
+        this.showNotification('Note added successfully', 'success');
+        this.candidateNotes = '';
+        this.loadCandidateNotes(this.selectedCandidate.id);
+      },
+      error: (err) => {
+        console.error('Failed to add note:', err);
+        this.showNotification('Failed to add note', 'error');
+      }
+    });
   }
 
   closeViewModal() {
@@ -173,11 +224,20 @@ export class CandidatesSearchComponent implements OnInit {
   contactCandidate(id: number) {
     this.selectedCandidate = this.candidates.find(c => c.id === id);
     if (this.selectedCandidate) {
+      this.emailTemplate = 'custom';
       this.emailSubject = 'Job Opportunity';
       this.emailMessage = `Hi ${this.selectedCandidate.name},\n\nI have an exciting opportunity that matches your profile...`;
       this.showContactModal = true;
       console.log('Contact modal opened:', this.showContactModal);
     }
+  }
+
+  onTemplateChange() {
+    if (this.emailTemplate === 'custom' || !this.selectedCandidate) return;
+    
+    const template = this.emailTemplates[this.emailTemplate as keyof typeof this.emailTemplates];
+    this.emailSubject = template.subject;
+    this.emailMessage = template.body.replace('[NAME]', this.selectedCandidate.name);
   }
 
   sendEmail() {

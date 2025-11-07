@@ -2,6 +2,7 @@ export enum UserRole {
   // Public registration roles
   CANDIDATE = 'CANDIDATE',
   RECRUITER = 'RECRUITER',
+  CLIENT = 'CLIENT',
   
   // Invitation-only roles
   TENANT_ADMIN = 'TENANT_ADMIN',
