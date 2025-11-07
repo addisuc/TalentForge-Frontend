@@ -11,7 +11,43 @@ import { RouterModule } from '@angular/router';
       <nav class="navbar">
         <div class="container">
           <div class="logo">
-            <span class="logo-icon">⚡</span>
+            <svg class="logo-icon" viewBox="0 0 64 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- T (Talent) -->
+              <g class="logo-t">
+                <path d="M6 8 L26 8" stroke="#0066ff" stroke-width="4.5" stroke-linecap="round"/>
+                <path d="M16 8 L16 36" stroke="#0066ff" stroke-width="4.5" stroke-linecap="round"/>
+              </g>
+              
+              <!-- Forge Connection (center) -->
+              <g class="logo-forge">
+                <circle cx="32" cy="22" r="8" stroke="url(#logo-gradient)" stroke-width="3.5" fill="none"/>
+                <circle cx="32" cy="22" r="3" fill="url(#logo-gradient)"/>
+                <!-- Connection sparks -->
+                <circle cx="32" cy="14" r="1.5" fill="#00d4ff" opacity="0.8"/>
+                <circle cx="32" cy="30" r="1.5" fill="#00d4ff" opacity="0.8"/>
+                <circle cx="24" cy="22" r="1.5" fill="#0066ff" opacity="0.8"/>
+                <circle cx="40" cy="22" r="1.5" fill="#00d4ff" opacity="0.8"/>
+              </g>
+              
+              <!-- F (Future) -->
+              <g class="logo-f">
+                <path d="M48 8 L48 36" stroke="#00d4ff" stroke-width="4.5" stroke-linecap="round"/>
+                <path d="M48 8 L62 8" stroke="#00d4ff" stroke-width="4.5" stroke-linecap="round"/>
+                <path d="M48 20 L58 20" stroke="#00d4ff" stroke-width="4.5" stroke-linecap="round"/>
+              </g>
+              
+              <!-- Flow lines -->
+              <path d="M16 22 L24 22" stroke="#0066ff" stroke-width="2" stroke-linecap="round" opacity="0.4" stroke-dasharray="2 2"/>
+              <path d="M40 22 L48 22" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" opacity="0.4" stroke-dasharray="2 2"/>
+              
+              <defs>
+                <linearGradient id="logo-gradient" x1="24" y1="14" x2="40" y2="30" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#0066ff"/>
+                  <stop offset="50%" stop-color="#0088ff"/>
+                  <stop offset="100%" stop-color="#00d4ff"/>
+                </linearGradient>
+              </defs>
+            </svg>
             <span>TalentForge</span>
           </div>
           <div class="nav-actions" style="margin-left: auto;">
@@ -334,12 +370,33 @@ import { RouterModule } from '@angular/router';
     }
 
     .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-size: 1.5rem;
       font-weight: 700;
-      background: linear-gradient(135deg, #0066ff 0%, #00d4ff 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #0f172a;
+    }
+
+    .logo-icon {
+      width: 56px;
+      height: 40px;
+      filter: drop-shadow(0 2px 8px rgba(0, 102, 255, 0.4));
+      transition: all 0.3s ease;
+    }
+
+    .logo:hover .logo-icon {
+      filter: drop-shadow(0 4px 12px rgba(0, 102, 255, 0.6));
+      transform: scale(1.05);
+    }
+
+    .logo-forge {
+      animation: forge-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes forge-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
 
     .nav-links {
@@ -1486,7 +1543,7 @@ import { RouterModule } from '@angular/router';
 })
 export class HomepageComponent {
   stats = [
-    { icon: '🤖', number: 'AI-Powered', label: 'Smart Matching', trend: 'Machine Learning' },
+    { icon: '✨', number: 'AI-Powered', label: 'Smart Matching', trend: 'Machine Learning' },
     { icon: '⚡', number: 'Automated', label: 'Workflow Engine', trend: 'Save Time' },
     { icon: '🔗', number: '150+', label: 'Integrations', trend: 'Connect Everything' },
     { icon: '📊', number: 'Real-Time', label: 'Analytics Dashboard', trend: 'Data-Driven' }
@@ -1494,7 +1551,7 @@ export class HomepageComponent {
 
   features = [
     {
-      icon: '🧠',
+      icon: '🔍',
       title: 'AI Talent Matching',
       description: 'Machine learning algorithms analyze 200+ data points to match candidates with jobs based on skills, experience, culture fit, and career trajectory.'
     },
