@@ -363,6 +363,7 @@ export class CandidateJobsComponent implements OnInit {
     { name: '', email: '', phone: '', relationship: '', company: '', title: '' },
     { name: '', email: '', phone: '', relationship: '', company: '', title: '' }
   ];
+  clients: any[] = [];
 
   constructor(
     private jobService: JobService,
@@ -371,8 +372,14 @@ export class CandidateJobsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.loadClients();
     this.loadJobs();
     this.loadAppliedJobs();
+  }
+
+  loadClients() {
+    // Note: Candidates can't access /api/clients directly due to RLS
+    // The backend should provide client names with jobs or via a public endpoint
   }
 
   loadJobs() {
@@ -395,6 +402,12 @@ export class CandidateJobsComponent implements OnInit {
   }
 
   getCompanyName(job: Job): string {
+    // For now, extract from description or use a placeholder
+    // TODO: Backend should include client name in job response for candidates
+    if ((job as any).companyName) {
+      return (job as any).companyName;
+    }
+    // Try to extract from description
     if (job.description && job.description.includes('Company:')) {
       const match = job.description.match(/Company: ([^\n]+)/);
       if (match) return match[1];

@@ -15,7 +15,7 @@ export class ClientService {
     return this.http.get<any[]>(this.apiUrl);
   }
 
-  getClientById(id: number): Observable<any> {
+  getClientById(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}`);
   }
 
@@ -23,23 +23,23 @@ export class ClientService {
     return this.http.post<any>(this.apiUrl, client);
   }
 
-  updateClient(id: number, client: any): Observable<any> {
+  updateClient(id: string, client: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${id}`, client);
   }
 
-  deleteClient(id: number): Observable<void> {
+  deleteClient(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  addNote(clientId: number, note: string): Observable<any> {
+  addNote(clientId: string, note: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/${clientId}/notes`, { note });
   }
 
-  getNotes(clientId: number): Observable<any[]> {
+  getNotes(clientId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${clientId}/notes`);
   }
 
-  getActivities(clientId: number): Observable<any[]> {
+  getActivities(clientId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${clientId}/activities`);
   }
 }

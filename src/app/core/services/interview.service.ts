@@ -65,6 +65,10 @@ export class InterviewService {
     const params = new HttpParams().set('days', days.toString());
     return this.http.get<Interview[]>(`${this.apiUrl}/upcoming`, { params });
   }
+  
+  getMyInterviews(): Observable<Interview[]> {
+    return this.http.get<Interview[]>(`${this.apiUrl}/my-interviews`);
+  }
 
   createInterview(request: InterviewRequest): Observable<Interview> {
     return this.http.post<Interview>(this.apiUrl, request);

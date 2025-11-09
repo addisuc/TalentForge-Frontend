@@ -96,9 +96,9 @@ export class JobService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
   
-  getJobsByClient(clientId: number, page: number = 0, size: number = 100): Observable<Job[]> {
+  getJobsByClient(clientId: string, page: number = 0, size: number = 100): Observable<Job[]> {
     const params = new HttpParams()
-      .set('clientId', clientId.toString())
+      .set('clientId', clientId)
       .set('page', page.toString())
       .set('size', size.toString());
     return this.http.get<Job[]>(`${this.apiUrl}`, { params });

@@ -85,10 +85,19 @@ import { DOCUMENT } from '@angular/common';
                     [class.error]="role?.invalid && role?.touched">
               <option value="">Select your role</option>
               <option value="CANDIDATE">Job Seeker</option>
-              <option value="RECRUITER">Recruiter</option>
+              <option value="TENANT_ADMIN">Employer</option>
             </select>
             <div class="error-message" *ngIf="role?.invalid && role?.touched">
               <span *ngIf="role?.errors?.['required']">Please select a role</span>
+            </div>
+          </div>
+
+          <div class="form-group" *ngIf="role?.value === 'TENANT_ADMIN'">
+            <label for="companyName">Company Name</label>
+            <input id="companyName" type="text" formControlName="companyName" class="form-control" 
+                   [class.error]="companyName?.invalid && companyName?.touched" placeholder="Acme Corporation" />
+            <div class="error-message" *ngIf="companyName?.invalid && companyName?.touched">
+              <span *ngIf="companyName?.errors?.['required']">Company name is required</span>
             </div>
           </div>
 
@@ -182,8 +191,19 @@ export class RegisterComponent {
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', Validators.required],
       role: ['', Validators.required],
+      companyName: [''],
       acceptTerms: [false, Validators.requiredTrue]
     }, { validators: this.passwordMatchValidator });
+
+    // Add conditional validation for companyName
+    this.role?.valueChanges.subscribe(role => {
+      if (role === 'TENANT_ADMIN') {
+        this.companyName?.setValidators([Validators.required]);
+      } else {
+        this.companyName?.clearValidators();
+      }
+      this.companyName?.updateValueAndValidity();
+    });
 
     this.password?.valueChanges.subscribe(value => {
       this.updatePasswordStrength(value);
@@ -196,6 +216,7 @@ export class RegisterComponent {
   get password() { return this.registerForm.get('password'); }
   get confirmPassword() { return this.registerForm.get('confirmPassword'); }
   get role() { return this.registerForm.get('role'); }
+  get companyName() { return this.registerForm.get('companyName'); }
   get acceptTerms() { return this.registerForm.get('acceptTerms'); }
 
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
@@ -246,13 +267,18 @@ export class RegisterComponent {
       this.loading = true;
       this.errorMessage = '';
 
-      const userData = {
+      const userData: any = {
         firstName: this.firstName?.value,
         lastName: this.lastName?.value,
         email: this.email?.value,
         password: this.password?.value,
         role: this.role?.value
       };
+      
+      // Add companyName if employer
+      if (this.role?.value === 'TENANT_ADMIN') {
+        userData.companyName = this.companyName?.value;
+      }
 
       this.authFacade.register(userData);
       

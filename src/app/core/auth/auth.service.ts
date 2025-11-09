@@ -122,6 +122,8 @@ export class AuthService {
         lastName: response.lastName,
         role: response.role,
         isEmailVerified: true,
+        tenantId: response.tenantId,
+        tenantName: response.tenantName,
         createdAt: new Date(),
         updatedAt: new Date()
       },

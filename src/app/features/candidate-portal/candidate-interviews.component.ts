@@ -34,7 +34,7 @@ import { InterviewService, Interview, RescheduleRequest } from '../../core/servi
               <td><span class="badge" [class]="interview.status.toLowerCase()">{{ interview.status }}</span></td>
               <td>
                 <button *ngIf="interview.status === 'Scheduled' && interview.meetingLink" class="btn-action" (click)="joinInterview(interview)">Join</button>
-                <button class="btn-action secondary">Details</button>
+                <button class="btn-action secondary" (click)="viewDetails(interview)">Details</button>
                 <button *ngIf="interview.status === 'Scheduled'" class="btn-action secondary" (click)="requestReschedule(interview)">Request Reschedule</button>
               </td>
             </tr>
@@ -54,6 +54,44 @@ import { InterviewService, Interview, RescheduleRequest } from '../../core/servi
           <button (click)="previousPage()" [disabled]="currentPage === 1" class="btn-page">Previous</button>
           <button *ngFor="let page of pageNumbers" (click)="goToPage(page)" [class.active]="page === currentPage" class="btn-page">{{ page }}</button>
           <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="btn-page">Next</button>
+        </div>
+      </div>
+
+      <div class="modal-overlay" *ngIf="showDetailsModal" (click)="showDetailsModal = false">
+        <div class="modal" (click)="$event.stopPropagation()" style="max-width: 600px;">
+          <div class="modal-header">
+            <h2>Interview Details</h2>
+            <button class="close-btn" (click)="showDetailsModal = false">✕</button>
+          </div>
+          <div class="modal-body" *ngIf="selectedInterview">
+            <div style="margin-bottom: 1.5rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">Position</h3>
+              <p style="margin: 0;"><strong>{{ selectedInterview.position }}</strong> at {{ selectedInterview.company }}</p>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">Schedule</h3>
+              <p style="margin: 0 0 0.5rem 0;"><strong>Date & Time:</strong> {{ selectedInterview.datetime }}</p>
+              <p style="margin: 0 0 0.5rem 0;"><strong>Type:</strong> {{ selectedInterview.type }}</p>
+              <p style="margin: 0;"><strong>Status:</strong> <span class="badge" [class]="selectedInterview.status.toLowerCase()">{{ selectedInterview.status }}</span></p>
+            </div>
+            <div style="margin-bottom: 1.5rem;" *ngIf="selectedInterview.meetingLink || selectedInterview.location">
+              <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">Meeting Info</h3>
+              <p style="margin: 0 0 0.5rem 0;" *ngIf="selectedInterview.meetingLink"><strong>Link:</strong> <a [href]="selectedInterview.meetingLink" target="_blank" style="color: #0066ff;">Join Meeting</a></p>
+              <p style="margin: 0;" *ngIf="selectedInterview.location"><strong>Location:</strong> {{ selectedInterview.location }}</p>
+            </div>
+            <div *ngIf="selectedInterview.interviewerName" style="margin-bottom: 1.5rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">Interviewer</h3>
+              <p style="margin: 0;">{{ selectedInterview.interviewerName }}</p>
+            </div>
+            <div *ngIf="selectedInterview.notes">
+              <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">Notes</h3>
+              <p style="margin: 0;">{{ selectedInterview.notes }}</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="showDetailsModal = false">Close</button>
+            <button *ngIf="selectedInterview?.meetingLink" class="btn-primary" (click)="joinInterview(selectedInterview); showDetailsModal = false">Join Meeting</button>
+          </div>
         </div>
       </div>
 
@@ -136,7 +174,7 @@ export class CandidateInterviewsComponent implements OnInit {
   loadInterviews() {
     this.loading = true;
     this.error = '';
-    this.interviewService.getUpcomingInterviews(90).subscribe({
+    this.interviewService.getMyInterviews().subscribe({
       next: (data) => {
         this.interviews = data.map(interview => this.mapInterviewToDisplay(interview));
         this.loading = false;
@@ -152,12 +190,15 @@ export class CandidateInterviewsComponent implements OnInit {
   mapInterviewToDisplay(interview: Interview) {
     return {
       id: interview.id,
-      position: interview.interviewType,
-      company: interview.interviewerName || 'Company',
+      position: (interview as any).jobTitle || 'Position',
+      company: (interview as any).companyName || 'Company',
       datetime: new Date(interview.scheduledAt).toLocaleString(),
-      type: interview.meetingPlatform || 'Not specified',
+      type: interview.interviewType,
       status: interview.status,
-      meetingLink: interview.meetingLink
+      meetingLink: interview.meetingLink,
+      location: interview.location,
+      interviewerName: interview.interviewerName,
+      notes: interview.notes
     };
   }
 
@@ -173,8 +214,14 @@ export class CandidateInterviewsComponent implements OnInit {
   onItemsPerPageChange() { this.currentPage = 1; }
 
   showRescheduleModal = false;
+  showDetailsModal = false;
   selectedInterview: any = null;
   rescheduleReason = '';
+
+  viewDetails(interview: any) {
+    this.selectedInterview = interview;
+    this.showDetailsModal = true;
+  }
 
   joinInterview(interview: any) {
     if (interview.meetingLink) {

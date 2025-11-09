@@ -7,6 +7,10 @@
     <p>Loading client details...</p>
   </div>
 
+  <div class="error" *ngIf="!loading && !client">
+    <p>Failed to load client details. Please try again.</p>
+  </div>
+
   <div class="header" *ngIf="!loading && client">
     <div class="client-info">
       <div class="logo">{{ getInitials(client.name) }}</div>

@@ -72,8 +72,8 @@ export class JobsCreateComponent implements OnInit {
 
   validateStep(): boolean {
     if (this.currentStep === 1) {
-      if (!this.job.title || !this.job.location) {
-        this.error = 'Please fill in Job Title and Location';
+      if (!this.job.title || !this.job.location || !this.job.clientId) {
+        this.error = 'Please fill in Job Title, Client, and Location';
         return false;
       }
     } else if (this.currentStep === 2) {
@@ -111,8 +111,11 @@ export class JobsCreateComponent implements OnInit {
   }
 
   saveJob() {
-    if (!this.job.title || !this.job.location) {
-      this.error = 'Please fill in required fields';
+    console.log('Selected clientId:', this.job.clientId);
+    console.log('Full job object:', this.job);
+    
+    if (!this.job.title || !this.job.location || !this.job.clientId) {
+      this.error = 'Please select a client and fill in required fields';
       return;
     }
 
@@ -127,8 +130,10 @@ export class JobsCreateComponent implements OnInit {
       salaryMin: this.job.salaryMin ? parseInt(this.job.salaryMin) : null,
       salaryMax: this.job.salaryMax ? parseInt(this.job.salaryMax) : null,
       jobType: this.job.type.toUpperCase().replace('-', '_'),
-      companyId: 'dddddddd-dddd-dddd-dddd-dddddddddddd'
+      companyId: this.job.clientId
     };
+    
+    console.log('Job request being sent:', jobRequest);
 
     this.jobService.createJob(jobRequest).subscribe({
       next: (job) => {

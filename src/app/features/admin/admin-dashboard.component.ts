@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { UserService } from '../../core/services/user.service';
+import { forkJoin } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -59,16 +62,20 @@ import { RouterModule } from '@angular/router';
 
           <div class="card">
             <div class="card-header">
-              <h3>Recent Activity</h3>
+              <h3>Recent Applications</h3>
+              <a routerLink="/applications">View All</a>
             </div>
-            <div class="list">
-              <div class="list-item" *ngFor="let activity of activities">
-                <span class="icon">{{ activity.icon }}</span>
+            <div class="list" *ngIf="recentApplications.length > 0">
+              <div class="list-item" *ngFor="let app of recentApplications">
+                <span class="icon">📝</span>
                 <div class="info">
-                  <div class="name">{{ activity.text }}</div>
-                  <div class="meta">{{ activity.time }}</div>
+                  <div class="name">{{ app.candidateName }} - {{ app.jobTitle }}</div>
+                  <div class="meta">{{ app.status }} • {{ app.appliedAt }}</div>
                 </div>
               </div>
+            </div>
+            <div *ngIf="recentApplications.length === 0" class="empty-state">
+              <p>No applications yet</p>
             </div>
           </div>
 
@@ -129,19 +136,22 @@ import { RouterModule } from '@angular/router';
     .actions { display: flex; flex-direction: column; gap: 8px; }
     .action { display: flex; align-items: center; gap: 8px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-weight: 600; color: #0f172a; text-align: left; }
     .action:hover { background: #e2e8f0; }
+    .empty-state { text-align: center; padding: 24px; color: #94a3b8; }
     @media (max-width: 1024px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .dashboard-grid { grid-template-columns: 1fr; }
     }
   `]
 })
-export class AdminDashboardComponent {
+export class AdminDashboardComponent implements OnInit {
   stats = [
-    { icon: '👥', value: '24', label: 'Team Members' },
-    { icon: '💼', value: '45', label: 'Active Jobs' },
-    { icon: '📊', value: '1,234', label: 'Total Candidates' },
-    { icon: '✅', value: '23', label: 'Placements' }
+    { icon: '👥', value: '0', label: 'Team Members' },
+    { icon: '💼', value: '0', label: 'Active Jobs' },
+    { icon: '📊', value: '0', label: 'Total Candidates' },
+    { icon: '✅', value: '0', label: 'Placements' }
   ];
+  
+  loading = true;
 
   teamMembers = [
     { name: 'Alice Johnson', role: 'Recruiter', initials: 'AJ' },
@@ -149,9 +159,81 @@ export class AdminDashboardComponent {
     { name: 'Carol White', role: 'Recruiter', initials: 'CW' }
   ];
 
-  activities = [
-    { icon: '👤', text: 'New user invited', time: '2 hours ago' },
-    { icon: '💼', text: 'Job posted', time: '5 hours ago' },
-    { icon: '⚙️', text: 'Settings updated', time: '1 day ago' }
-  ];
+  recentApplications: any[] = [];
+  
+  constructor(
+    private userService: UserService,
+    private http: HttpClient
+  ) {}
+  
+  ngOnInit() {
+    this.loadDashboardStats();
+  }
+  
+  loadDashboardStats() {
+    this.loading = true;
+    
+    forkJoin({
+      users: this.userService.getAllUsers(0, 1000),
+      jobs: this.http.get<any>('/api/jobs?page=0&size=1000'),
+      candidates: this.http.get<any>('/api/candidates?page=0&size=1000'),
+      applications: this.http.get<any>('/api/applications?page=0&size=1000')
+    }).subscribe({
+      next: (data) => {
+        this.stats[0].value = data.users.totalElements.toString();
+        this.stats[1].value = data.jobs.totalElements?.toString() || '0';
+        this.stats[2].value = data.candidates.totalElements?.toString() || '0';
+        
+        // Count placements (HIRED status)
+        const placements = data.applications.content?.filter((app: any) => 
+          app.status === 'HIRED' || app.status === 'PLACED'
+        ).length || 0;
+        this.stats[3].value = placements.toString();
+        
+        // Load recent team members
+        this.teamMembers = data.users.content.slice(0, 3).map((user: any) => ({
+          name: `${user.firstName} ${user.lastName}`,
+          role: this.getRoleLabel(user.role),
+          initials: `${user.firstName[0]}${user.lastName[0]}`
+        }));
+        
+        // Load recent applications
+        this.recentApplications = (data.applications.content || []).slice(0, 5).map((app: any) => ({
+          candidateName: app.candidateName || 'Candidate',
+          jobTitle: app.jobTitle || 'Position',
+          status: app.status,
+          appliedAt: this.formatDate(app.appliedAt || app.createdAt)
+        }));
+        
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load dashboard stats:', err);
+        this.loading = false;
+      }
+    });
+  }
+  
+  getRoleLabel(role: string): string {
+    const labels: any = {
+      'TENANT_ADMIN': 'Admin',
+      'RECRUITER': 'Recruiter',
+      'RECRUITING_MANAGER': 'Manager'
+    };
+    return labels[role] || role;
+  }
+  
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  }
 }

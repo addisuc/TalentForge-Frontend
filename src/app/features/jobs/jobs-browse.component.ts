@@ -187,9 +187,9 @@ export class JobsBrowseComponent implements OnInit {
   }
 
   getCompanyName(job: Job): string {
-    if (job.description && job.description.includes('Company:')) {
-      const match = job.description.match(/Company: ([^\n]+)/);
-      if (match) return match[1];
+    if (job.companyId) {
+      const client = this.clients.find(c => c.id === job.companyId);
+      if (client) return client.name;
     }
     return 'Company';
   }
@@ -427,6 +427,11 @@ export class JobsBrowseComponent implements OnInit {
     if (!this.validateStep()) {
       return;
     }
+    
+    if (!this.jobData.clientId) {
+      this.error = 'Please select a client';
+      return;
+    }
 
     this.loading = true;
     const jobRequest = {
@@ -437,7 +442,7 @@ export class JobsBrowseComponent implements OnInit {
       salaryMin: this.jobData.salaryMin ? parseInt(this.jobData.salaryMin) : null,
       salaryMax: this.jobData.salaryMax ? parseInt(this.jobData.salaryMax) : null,
       jobType: this.jobData.type.toUpperCase().replace('-', '_'),
-      companyId: 'dddddddd-dddd-dddd-dddd-dddddddddddd'
+      companyId: this.jobData.clientId
     };
 
     if (this.editingJob) {

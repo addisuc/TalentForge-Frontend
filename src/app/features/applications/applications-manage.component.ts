@@ -594,4 +594,12 @@ export class ApplicationsManageComponent implements OnInit {
   closeToast() {
     this.showToastFlag = false;
   }
+
+  getCompanyName(application: JobApplication): string {
+    if (application.clientId) {
+      const client = this.clients.find(c => c.id === application.clientId);
+      if (client) return client.name;
+    }
+    return 'Company';
+  }
 }

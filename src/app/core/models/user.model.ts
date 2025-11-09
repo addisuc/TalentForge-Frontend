@@ -19,6 +19,7 @@ export interface User {
   role: UserRole;
   isEmailVerified: boolean;
   tenantId?: string;
+  tenantName?: string;
   status?: string;
   createdAt: Date;
   updatedAt: Date;

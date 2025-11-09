@@ -45,10 +45,7 @@
       <tbody>
         <tr *ngFor="let client of paginatedClients" (click)="viewClient(client.id)">
           <td>
-            <div class="name-cell">
-              <span class="logo">{{ client.logo }}</span>
-              <strong>{{ client.name }}</strong>
-            </div>
+            <strong>{{ client.name }}</strong>
           </td>
           <td>{{ client.industry }}</td>
           <td>

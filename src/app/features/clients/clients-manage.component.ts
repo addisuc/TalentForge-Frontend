@@ -139,11 +139,11 @@ export class ClientsManageComponent implements OnInit {
     this.currentPage = 1;
   }
 
-  viewClient(id: number) {
-    console.log('View client:', id);
+  viewClient(id: string) {
+    this.router.navigate(['/clients', id]);
   }
 
-  editClient(id: number) {
+  editClient(id: string) {
     this.selectedClient = this.clients.find(c => c.id === id);
     if (this.selectedClient) {
       this.newClient = { 
@@ -190,7 +190,7 @@ export class ClientsManageComponent implements OnInit {
     });
   }
 
-  sendEmail(id: number) {
+  sendEmail(id: string) {
     this.selectedClient = this.clients.find(c => c.id === id);
     if (this.selectedClient) {
       this.emailData = {
@@ -233,11 +233,11 @@ export class ClientsManageComponent implements OnInit {
     });
   }
 
-  viewJobs(id: number) {
+  viewJobs(id: string) {
     window.location.href = `/jobs?clientId=${id}`;
   }
 
-  addNote(id: number) {
+  addNote(id: string) {
     this.selectedClient = this.clients.find(c => c.id === id);
     this.noteText = '';
     this.showNoteModal = true;
@@ -267,7 +267,7 @@ export class ClientsManageComponent implements OnInit {
     });
   }
 
-  viewDocuments(id: number) {
+  viewDocuments(id: string) {
     this.selectedClient = this.clients.find(c => c.id === id);
     this.showDocumentsModal = true;
   }
@@ -277,7 +277,7 @@ export class ClientsManageComponent implements OnInit {
     this.selectedClient = null;
   }
 
-  viewContracts(id: number) {
+  viewContracts(id: string) {
     this.selectedClient = this.clients.find(c => c.id === id);
     this.showContractsModal = true;
   }
@@ -287,7 +287,7 @@ export class ClientsManageComponent implements OnInit {
     this.selectedClient = null;
   }
 
-  deactivateClient(id: number) {
+  deactivateClient(id: string) {
     this.selectedClient = this.clients.find(c => c.id === id);
     this.showDeactivateModal = true;
   }
@@ -313,7 +313,7 @@ export class ClientsManageComponent implements OnInit {
     }
   }
 
-  activateClient(id: number) {
+  activateClient(id: string) {
     const client = this.clients.find(c => c.id === id);
     if (client) {
       this.clientService.updateClient(id, { ...client, status: 'Active' }).subscribe({
@@ -379,5 +379,10 @@ export class ClientsManageComponent implements OnInit {
     setTimeout(() => {
       this.showToast = false;
     }, 3000);
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   }
 }

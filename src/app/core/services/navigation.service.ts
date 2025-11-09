@@ -32,10 +32,11 @@ export class NavigationService {
     ],
     [UserRole.TENANT_ADMIN]: [
       { label: 'Dashboard', route: '/admin', icon: '📊' },
-      { label: 'Team', route: '/users', icon: '👥' },
       { label: 'Jobs', route: '/jobs', icon: '💼' },
+      { label: 'Applications', route: '/applications', icon: '📝' },
       { label: 'Candidates', route: '/candidates', icon: '👤' },
-      { label: 'Settings', route: '/settings', icon: '⚙️' }
+      { label: 'Clients', route: '/clients', icon: '🏢' },
+      { label: 'Team', route: '/users', icon: '👥' }
     ],
     [UserRole.RECRUITER]: [
       { label: 'Dashboard', route: '/dashboard', icon: '📊' },

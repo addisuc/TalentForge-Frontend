@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 import { UserRole } from '../../core/models/user.model';
+import { UserService, User as ApiUser } from '../../core/services/user.service';
 
 @Component({
   selector: 'app-users-manage',
@@ -30,69 +31,18 @@ export class UsersManageComponent implements OnInit {
   newRole = '';
   messageSubject = '';
   messageBody = '';
-  users = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      email: 'sarah.j@company.com',
-      role: 'RECRUITING_MANAGER',
-      avatar: '👩💼',
-      status: 'Active',
-      activeJobs: 12,
-      placements: 45,
-      lastActive: '2024-01-28T10:30:00'
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      email: 'mchen@company.com',
-      role: 'RECRUITER',
-      avatar: '👨💻',
-      status: 'Active',
-      activeJobs: 8,
-      placements: 28,
-      lastActive: '2024-01-28T09:15:00'
-    },
-    {
-      id: 3,
-      name: 'Emily Rodriguez',
-      email: 'emily.r@company.com',
-      role: 'RECRUITER',
-      avatar: '👩🦱',
-      status: 'Active',
-      activeJobs: 10,
-      placements: 32,
-      lastActive: '2024-01-28T11:00:00'
-    },
-    {
-      id: 4,
-      name: 'David Kim',
-      email: 'dkim@company.com',
-      role: 'TENANT_ADMIN',
-      avatar: '👨🏫',
-      status: 'Active',
-      activeJobs: 0,
-      placements: 0,
-      lastActive: '2024-01-27T16:45:00'
-    },
-    {
-      id: 5,
-      name: 'Lisa Anderson',
-      email: 'landerson@company.com',
-      role: 'RECRUITER',
-      avatar: '👩🏼',
-      status: 'Inactive',
-      activeJobs: 0,
-      placements: 15,
-      lastActive: '2024-01-20T14:20:00'
-    }
-  ];
+  users: any[] = [];
+  loading = false;
+  error = '';
 
   searchQuery = '';
   selectedRole = 'all';
   selectedStatus = 'all';
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private userService: UserService
+  ) {}
 
   ngOnInit() {
     const user = this.authService.getCurrentUserValue();
@@ -101,6 +51,44 @@ export class UsersManageComponent implements OnInit {
       this.isRecruiter = user.role === UserRole.RECRUITER;
       this.isTenantAdmin = user.role === UserRole.TENANT_ADMIN;
     }
+    this.loadUsers();
+  }
+  
+  loadUsers() {
+    this.loading = true;
+    this.error = '';
+    this.userService.getAllUsers(0, 100).subscribe({
+      next: (response) => {
+        this.users = response.content.map(user => ({
+          id: user.id,
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          role: user.role,
+          avatar: this.getAvatarForRole(user.role),
+          status: user.status === 'ACTIVE' ? 'Active' : 'Inactive',
+          activeJobs: 0,
+          placements: 0,
+          lastActive: user.updatedAt
+        }));
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load users:', err);
+        this.error = 'Failed to load team members';
+        this.loading = false;
+        this.users = [];
+      }
+    });
+  }
+  
+  getAvatarForRole(role: string): string {
+    const avatars: any = {
+      'TENANT_ADMIN': '👨🏫',
+      'RECRUITER': '👨💻',
+      'RECRUITING_MANAGER': '👩💼',
+      'CANDIDATE': '👤'
+    };
+    return avatars[role] || '👤';
   }
 
   get filteredUsers() {

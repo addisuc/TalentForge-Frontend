@@ -45,14 +45,14 @@ export class ClientDetailsComponent implements OnInit {
 
   ngOnInit() {
     this.route.params.subscribe(params => {
-      const clientId = +params['id'];
+      const clientId = params['id'];
       if (clientId) {
         this.loadClient(clientId);
       }
     });
   }
 
-  loadClient(id: number) {
+  loadClient(id: string) {
     this.loading = true;
     
     forkJoin({
@@ -73,6 +73,8 @@ export class ClientDetailsComponent implements OnInit {
         }));
         this.buildActivityTimeline();
         
+        this.calculateStats();
+        
         // Load applications for all jobs
         if (this.jobs.length > 0) {
           const applicationCalls = this.jobs.map(job => 
@@ -83,18 +85,14 @@ export class ClientDetailsComponent implements OnInit {
             next: (results) => {
               this.applications = results.flatMap(r => r.content);
               this.calculateStats();
-              this.loading = false;
             },
             error: (err) => {
               console.error('Error loading applications:', err);
-              this.calculateStats();
-              this.loading = false;
             }
           });
-        } else {
-          this.calculateStats();
-          this.loading = false;
         }
+        
+        this.loading = false;
       },
       error: (err) => {
         console.error('Error loading client data:', err);
