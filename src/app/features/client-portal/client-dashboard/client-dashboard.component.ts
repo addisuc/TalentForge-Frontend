@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
@@ -9,7 +10,7 @@ import { MaterialModule } from '../../../shared/material/material.module';
 @Component({
   selector: 'app-client-dashboard',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule],
   providers: [DatePipe],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss']
@@ -51,6 +52,7 @@ export class ClientDashboardComponent implements OnInit {
       location: null,
       meetingLink: 'https://zoom.us/j/123456789',
       meetingId: '123 456 789',
+      passcode: 'abc123',
       status: 'SCHEDULED'
     },
     {
@@ -66,6 +68,7 @@ export class ClientDashboardComponent implements OnInit {
       location: null,
       meetingLink: 'https://meet.google.com/abc-defg-hij',
       meetingId: 'abc-defg-hij',
+      passcode: null,
       status: 'SCHEDULED'
     },
     {
@@ -81,14 +84,34 @@ export class ClientDashboardComponent implements OnInit {
       location: 'Conference Room A, 5th Floor',
       meetingLink: null,
       meetingId: null,
+      passcode: null,
       status: 'SCHEDULED'
     }
   ];
 
   mockJobRequests = [
-    { title: 'Senior Software Engineer', department: 'Engineering', location: 'Remote', status: 'Active', requestedDate: 'Nov 1, 2024', recruiter: 'Jane Smith' },
-    { title: 'Product Manager', department: 'Product', location: 'New York', status: 'Pending', requestedDate: 'Nov 5, 2024', recruiter: 'Mike Johnson' }
+    { title: 'Senior Software Engineer', department: 'Engineering', location: 'Remote', status: 'Active', requestedDate: 'Nov 1, 2024', recruiter: 'Jane Smith', applicants: 12 },
+    { title: 'Product Manager', department: 'Product', location: 'New York', status: 'Pending', requestedDate: 'Nov 5, 2024', recruiter: 'Mike Johnson', applicants: 0 },
+    { title: 'UX Designer', department: 'Design', location: 'San Francisco', status: 'Active', requestedDate: 'Oct 28, 2024', recruiter: 'Sarah Wilson', applicants: 8 }
   ];
+
+  showJobRequestForm = false;
+  jobRequest: any = {
+    title: '',
+    department: '',
+    location: '',
+    employmentType: '',
+    openings: 1,
+    priority: '',
+    salaryRange: '',
+    benefits: '',
+    description: '',
+    requirements: '',
+    preferredQualifications: '',
+    startDate: '',
+    hiringManager: '',
+    notes: ''
+  };
 
   mockFeedback = [
     { candidateName: 'John Smith', position: 'Software Engineer', date: 'Nov 10, 2024', notes: 'Strong technical skills, good cultural fit. Recommend for final round.' },
@@ -251,8 +274,62 @@ export class ClientDashboardComponent implements OnInit {
     this.snackBar.open('Candidate details view coming soon', 'Close', { duration: 3000 });
   }
 
-  requestNewPosition(): void {
-    this.snackBar.open('Job request form coming soon', 'Close', { duration: 3000 });
+  openJobRequestForm(): void {
+    this.showJobRequestForm = true;
+    this.resetJobRequestForm();
+  }
+
+  closeJobRequestForm(): void {
+    this.showJobRequestForm = false;
+    this.resetJobRequestForm();
+  }
+
+  resetJobRequestForm(): void {
+    this.jobRequest = {
+      title: '',
+      department: '',
+      location: '',
+      employmentType: '',
+      openings: 1,
+      priority: '',
+      salaryRange: '',
+      benefits: '',
+      description: '',
+      requirements: '',
+      preferredQualifications: '',
+      startDate: '',
+      hiringManager: '',
+      notes: ''
+    };
+  }
+
+  submitJobRequest(event: Event): void {
+    event.preventDefault();
+    
+    if (!this.jobRequest.title || !this.jobRequest.department || !this.jobRequest.location || 
+        !this.jobRequest.employmentType || !this.jobRequest.priority || !this.jobRequest.salaryRange ||
+        !this.jobRequest.description || !this.jobRequest.requirements) {
+      this.snackBar.open('Please fill in all required fields', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
+
+    // In real implementation, this would call the backend API
+    console.log('Submitting job request:', this.jobRequest);
+    
+    this.snackBar.open('Job request submitted successfully! Your recruiter will be notified.', 'Close', { 
+      duration: 4000,
+      panelClass: ['success-snackbar']
+    });
+    
+    this.closeJobRequestForm();
+  }
+
+  viewJobDetails(job: any): void {
+    this.snackBar.open(`Viewing details for ${job.title}`, 'Close', { duration: 2000 });
+  }
+
+  viewCandidatesForJob(job: any): void {
+    this.snackBar.open(`Viewing candidates for ${job.title}`, 'Close', { duration: 2000 });
   }
 
   viewFullProfile(submission: any): void {
@@ -297,6 +374,16 @@ export class ClientDashboardComponent implements OnInit {
   copyToClipboard(text: string): void {
     navigator.clipboard.writeText(text).then(() => {
       this.snackBar.open('Copied to clipboard!', 'Close', { duration: 2000 });
+    });
+  }
+
+  copyMeetingDetails(interview: any): void {
+    let details = `Meeting Link: ${interview.meetingLink}`;
+    if (interview.meetingId) details += `\nMeeting ID: ${interview.meetingId}`;
+    if (interview.passcode) details += `\nPasscode: ${interview.passcode}`;
+    
+    navigator.clipboard.writeText(details).then(() => {
+      this.snackBar.open('Meeting details copied to clipboard!', 'Close', { duration: 2000 });
     });
   }
 

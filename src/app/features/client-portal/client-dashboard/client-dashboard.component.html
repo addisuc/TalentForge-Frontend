@@ -268,22 +268,156 @@
       <div *ngIf="activeSection === 'positions'" class="content-section">
         <div class="page-header">
           <div>
-            <h1>Your Positions</h1>
-            <p class="page-subtitle">View positions being filled for your company</p>
+            <h1>Job Requests</h1>
+            <p class="page-subtitle">Manage your hiring requests and open positions</p>
           </div>
+          <button class="btn-primary" (click)="openJobRequestForm()">
+            ➕ Request New Position
+          </button>
         </div>
         
-        <div class="positions-grid">
-          <div class="card position-card" *ngFor="let position of mockPositions">
-            <h3>{{ position.title }}</h3>
-            <p>{{ position.department }} • {{ position.location }}</p>
-            <div class="position-stats">
-              <span>{{ position.applicants }} applicants</span>
-              <span>{{ position.daysOpen }} days open</span>
+        <div *ngIf="!showJobRequestForm" class="job-requests-list">
+          <div class="card job-request-card" *ngFor="let job of mockJobRequests">
+            <div class="job-request-header">
+              <div>
+                <h3>{{ job.title }}</h3>
+                <p class="job-meta">{{ job.department }} • {{ job.location }}</p>
+              </div>
+              <span class="status-badge" [class]="job.status.toLowerCase()">{{ job.status }}</span>
             </div>
-            <div class="position-actions">
-              <button class="btn-primary">View Candidates</button>
+            <div class="job-request-details">
+              <div class="detail-item">
+                <span class="label">Requested:</span>
+                <span class="value">{{ job.requestedDate }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Recruiter:</span>
+                <span class="value">{{ job.recruiter }}</span>
+              </div>
+              <div class="detail-item" *ngIf="job.status === 'Active'">
+                <span class="label">Candidates:</span>
+                <span class="value">{{ job.applicants || 0 }} submitted</span>
+              </div>
             </div>
+            <div class="job-request-actions">
+              <button class="btn-secondary" (click)="viewJobDetails(job)">View Details</button>
+              <button class="btn-secondary" *ngIf="job.status === 'Active'" (click)="viewCandidatesForJob(job)">View Candidates</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Request Form -->
+        <div *ngIf="showJobRequestForm" class="job-request-form-container">
+          <div class="form-card">
+            <div class="form-header">
+              <h2>Request New Position</h2>
+              <button class="close-btn" (click)="closeJobRequestForm()">✕</button>
+            </div>
+            
+            <form class="job-request-form">
+              <div class="form-section">
+                <h3>Position Details</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Job Title *</label>
+                    <input type="text" [(ngModel)]="jobRequest.title" name="title" placeholder="e.g. Senior Software Engineer" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Department *</label>
+                    <input type="text" [(ngModel)]="jobRequest.department" name="department" placeholder="e.g. Engineering" required>
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Location *</label>
+                    <input type="text" [(ngModel)]="jobRequest.location" name="location" placeholder="e.g. Remote, New York, Hybrid" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Employment Type *</label>
+                    <select [(ngModel)]="jobRequest.employmentType" name="employmentType" required>
+                      <option value="">Select type</option>
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Temporary">Temporary</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Number of Openings *</label>
+                    <input type="number" [(ngModel)]="jobRequest.openings" name="openings" min="1" value="1" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Priority *</label>
+                    <select [(ngModel)]="jobRequest.priority" name="priority" required>
+                      <option value="">Select priority</option>
+                      <option value="High">High - Urgent</option>
+                      <option value="Medium">Medium - Normal</option>
+                      <option value="Low">Low - When possible</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>Compensation</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Salary Range *</label>
+                    <input type="text" [(ngModel)]="jobRequest.salaryRange" name="salaryRange" placeholder="e.g. $120,000 - $150,000" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Benefits</label>
+                    <input type="text" [(ngModel)]="jobRequest.benefits" name="benefits" placeholder="e.g. Health, 401k, Stock options">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>Requirements</h3>
+                <div class="form-group full-width">
+                  <label>Job Description *</label>
+                  <textarea [(ngModel)]="jobRequest.description" name="description" rows="4" placeholder="Describe the role, responsibilities, and what the candidate will be doing..." required></textarea>
+                </div>
+                
+                <div class="form-group full-width">
+                  <label>Required Skills & Qualifications *</label>
+                  <textarea [(ngModel)]="jobRequest.requirements" name="requirements" rows="4" placeholder="List required skills, experience, education, certifications..." required></textarea>
+                </div>
+                
+                <div class="form-group full-width">
+                  <label>Preferred Qualifications</label>
+                  <textarea [(ngModel)]="jobRequest.preferredQualifications" name="preferredQualifications" rows="3" placeholder="Nice-to-have skills or experience..."></textarea>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>Timeline & Additional Info</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Target Start Date</label>
+                    <input type="date" [(ngModel)]="jobRequest.startDate" name="startDate">
+                  </div>
+                  <div class="form-group">
+                    <label>Hiring Manager</label>
+                    <input type="text" [(ngModel)]="jobRequest.hiringManager" name="hiringManager" placeholder="Your name or hiring manager name">
+                  </div>
+                </div>
+                
+                <div class="form-group full-width">
+                  <label>Additional Notes</label>
+                  <textarea [(ngModel)]="jobRequest.notes" name="notes" rows="3" placeholder="Any additional information for the recruiter..."></textarea>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn-secondary" (click)="closeJobRequestForm()">Cancel</button>
+                <button type="submit" class="btn-primary" (click)="submitJobRequest($event)">Submit Request</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -365,15 +499,20 @@
               
               <div class="meeting-details">
                 <div class="meeting-info" *ngIf="interview.meetingLink">
-                  <div class="meeting-link">
-                    <span class="label">Meeting Link:</span>
-                    <a [href]="interview.meetingLink" target="_blank" class="link">{{ interview.meetingLink }}</a>
-                    <button class="copy-btn" (click)="copyToClipboard(interview.meetingLink)">📋</button>
-                  </div>
-                  <div class="meeting-id" *ngIf="interview.meetingId">
-                    <span class="label">Meeting ID:</span>
-                    <span class="value">{{ interview.meetingId }}</span>
-                    <button class="copy-btn" (click)="copyToClipboard(interview.meetingId)">📋</button>
+                  <div class="meeting-details-box">
+                    <div class="meeting-detail-row">
+                      <span class="detail-label">Meeting Link:</span>
+                      <a [href]="interview.meetingLink" target="_blank" class="meeting-link-text">{{ interview.meetingLink }}</a>
+                    </div>
+                    <div class="meeting-detail-row" *ngIf="interview.meetingId">
+                      <span class="detail-label">Meeting ID:</span>
+                      <span class="detail-value">{{ interview.meetingId }}</span>
+                    </div>
+                    <div class="meeting-detail-row" *ngIf="interview.passcode">
+                      <span class="detail-label">Passcode:</span>
+                      <span class="detail-value">{{ interview.passcode }}</span>
+                    </div>
+                    <button class="copy-all-btn" (click)="copyMeetingDetails(interview)">📋 Copy All Details</button>
                   </div>
                 </div>
                 
