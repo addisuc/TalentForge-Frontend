@@ -1,0 +1,433 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo-section">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 100 100" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+          <defs>
+            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <text x="15" y="45" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#logoGradient)">T</text>
+          <circle cx="50" cy="50" r="12" fill="none" stroke="url(#logoGradient)" stroke-width="3"/>
+          <circle cx="47" cy="47" r="2" fill="#ff6b35"/>
+          <circle cx="53" cy="47" r="2" fill="#ff6b35"/>
+          <circle cx="50" cy="53" r="2" fill="#ff6b35"/>
+          <text x="62" y="75" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#logoGradient)">F</text>
+        </svg>
+        <span style="font-weight: 700; font-size: 1.25rem;">TalentForge</span>
+      </div>
+      <div class="tenant-name">Client Portal</div>
+    </div>
+    
+    <nav class="nav-menu">
+      <a class="nav-item" [class.active]="activeSection === 'overview'" (click)="setActiveSection('overview')">
+        <span class="icon">📊</span>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item" [class.active]="activeSection === 'submissions'" (click)="setActiveSection('submissions')">
+        <span class="icon">👤</span>
+        <span>Candidate Submissions</span>
+        <span class="badge" *ngIf="dashboard.totalPending > 0">{{ dashboard.totalPending }}</span>
+      </a>
+      <a class="nav-item" [class.active]="activeSection === 'interviews'" (click)="setActiveSection('interviews')">
+        <span class="icon">📅</span>
+        <span>My Interviews</span>
+        <span class="badge">3</span>
+      </a>
+      <a class="nav-item" [class.active]="activeSection === 'positions'" (click)="setActiveSection('positions')">
+        <span class="icon">💼</span>
+        <span>Job Requests</span>
+        <span class="badge">2</span>
+      </a>
+      <a class="nav-item" [class.active]="activeSection === 'feedback'" (click)="setActiveSection('feedback')">
+        <span class="icon">💬</span>
+        <span>Feedback & Notes</span>
+      </a>
+      <a class="nav-item" [class.active]="activeSection === 'reports'" (click)="setActiveSection('reports')">
+        <span class="icon">📈</span>
+        <span>Hiring Progress</span>
+      </a>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <a class="nav-item" (click)="logout()">
+        <span class="icon">🚪</span>
+        <span>Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-bar">
+      <div class="search-bar">
+        <span class="icon search-icon">🔍</span>
+        <input type="text" placeholder="Search candidates, positions, interviews...">
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn notification-bell">
+          🔔
+        </button>
+        <div class="user-profile">
+          <div class="avatar">CU</div>
+          <span>Client User</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading dashboard...</p>
+      </div>
+
+      <!-- Overview Section -->
+      <div *ngIf="!isLoading && activeSection === 'overview'" class="content-section">
+        <div class="page-header">
+          <div>
+            <h1>Dashboard Overview</h1>
+            <p class="page-subtitle">Welcome to your client portal</p>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-icon">⏳</span>
+            </div>
+            <div class="stat-value">{{ dashboard.totalPending }}</div>
+            <div class="stat-label">Pending Reviews</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-icon">💼</span>
+            </div>
+            <div class="stat-value">5</div>
+            <div class="stat-label">Active Positions</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-icon">👥</span>
+            </div>
+            <div class="stat-value">8</div>
+            <div class="stat-label">Scheduled Interviews</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-icon">✅</span>
+            </div>
+            <div class="stat-value">3</div>
+            <div class="stat-label">Recent Hires</div>
+          </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+          <div class="card recent-candidates">
+            <div class="card-header">
+              <h3>Recent Candidates</h3>
+              <a (click)="setActiveSection('candidates')">View All</a>
+            </div>
+            <div class="candidate-list">
+              <div class="candidate-item" *ngFor="let candidate of mockCandidates">
+                <div class="candidate-avatar">{{ candidate.initials }}</div>
+                <div class="candidate-info">
+                  <div class="candidate-name">{{ candidate.name }}</div>
+                  <div class="candidate-role">{{ candidate.position }}</div>
+                </div>
+                <div class="candidate-status" [class]="candidate.status">
+                  {{ candidate.status }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card active-jobs">
+            <div class="card-header">
+              <h3>Active Positions</h3>
+              <a (click)="setActiveSection('positions')">View All</a>
+            </div>
+            <div class="job-list">
+              <div class="job-item" *ngFor="let job of mockPositions">
+                <div class="job-info">
+                  <div class="job-title">{{ job.title }}</div>
+                  <div class="job-meta">{{ job.applicants }} applicants • {{ job.daysOpen }} days open</div>
+                </div>
+                <div class="job-status">{{ job.status }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Candidate Submissions Section -->
+      <div *ngIf="activeSection === 'submissions'" class="content-section">
+        <div class="page-header">
+          <div>
+            <h1>Candidate Submissions</h1>
+            <p class="page-subtitle">Review candidates submitted by your recruiter</p>
+          </div>
+        </div>
+        
+        <div class="submissions-container">
+          <div *ngIf="candidateSubmissions.length === 0" class="empty-state">
+            <span class="empty-icon">👤</span>
+            <h3>No Candidate Submissions</h3>
+            <p>Your recruiter hasn't submitted any candidates yet.</p>
+          </div>
+
+          <div *ngIf="candidateSubmissions.length > 0" class="submissions-grid">
+            <div class="card candidate-submission" *ngFor="let submission of candidateSubmissions">
+              <div class="submission-header">
+                <div class="candidate-basic-info">
+                  <div class="candidate-avatar large">{{ getInitials(submission.candidateName) }}</div>
+                  <div class="candidate-details">
+                    <h3>{{ submission.candidateName }}</h3>
+                    <p class="position">{{ submission.position }}</p>
+                    <p class="recruiter">Submitted by: {{ submission.recruiterName }}</p>
+                  </div>
+                </div>
+                <span class="status-badge" [class]="submission.status.toLowerCase()">{{ submission.status }}</span>
+              </div>
+              
+              <div class="candidate-summary">
+                <div class="summary-row">
+                  <div class="summary-item">
+                    <span class="label">Experience:</span>
+                    <span class="value">{{ submission.experience }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Current:</span>
+                    <span class="value">{{ submission.currentCompany }}</span>
+                  </div>
+                </div>
+                <div class="summary-row">
+                  <div class="summary-item">
+                    <span class="label">Education:</span>
+                    <span class="value">{{ submission.education }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="label">Salary:</span>
+                    <span class="value">{{ submission.expectedSalary }}</span>
+                  </div>
+                </div>
+                <div class="key-strengths">
+                  <span class="label">Key Strengths:</span>
+                  <div class="strengths-tags">
+                    <span class="strength-tag" *ngFor="let strength of submission.keyStrengths">{{ strength }}</span>
+                  </div>
+                </div>
+                <div class="recruiter-assessment">
+                  <span class="rating-badge">{{ submission.recruiterRating }}</span>
+                </div>
+              </div>
+              
+              <div class="candidate-actions">
+                <div class="document-actions">
+                  <button class="btn-document" (click)="viewResume(submission)">
+                    📄 Resume
+                  </button>
+                  <button class="btn-document" *ngIf="submission.portfolioUrl" (click)="viewPortfolio(submission)">
+                    🔗 Portfolio
+                  </button>
+                </div>
+                <div class="decision-actions" *ngIf="submission.status === 'SUBMITTED'">
+                  <button class="btn-approve" (click)="moveToInterview(submission)">
+                    ✓ Move to Interview
+                  </button>
+                  <button class="btn-hold" (click)="putOnHold(submission)">
+                    ⏸ Put on Hold
+                  </button>
+                  <button class="btn-reject" (click)="rejectCandidate(submission)">
+                    ✗ Reject
+                  </button>
+                </div>
+              </div>
+              
+              <div class="submission-feedback" *ngIf="submission.status !== 'PENDING_REVIEW'">
+                <div class="feedback-section">
+                  <strong>Your Decision:</strong> {{ submission.clientDecision }}
+                  <p *ngIf="submission.clientFeedback">{{ submission.clientFeedback }}</p>
+                </div>
+                <div class="next-steps" *ngIf="submission.status === 'APPROVED_FOR_INTERVIEW'">
+                  <p>✅ Recruiter will coordinate interview scheduling</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other Sections -->
+      <div *ngIf="activeSection === 'positions'" class="content-section">
+        <div class="page-header">
+          <div>
+            <h1>Your Positions</h1>
+            <p class="page-subtitle">View positions being filled for your company</p>
+          </div>
+        </div>
+        
+        <div class="positions-grid">
+          <div class="card position-card" *ngFor="let position of mockPositions">
+            <h3>{{ position.title }}</h3>
+            <p>{{ position.department }} • {{ position.location }}</p>
+            <div class="position-stats">
+              <span>{{ position.applicants }} applicants</span>
+              <span>{{ position.daysOpen }} days open</span>
+            </div>
+            <div class="position-actions">
+              <button class="btn-primary">View Candidates</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeSection === 'candidates'" class="content-section">
+        <div class="page-header">
+          <div>
+            <h1>Candidates</h1>
+            <p class="page-subtitle">Browse and manage candidates</p>
+          </div>
+        </div>
+        
+        <div class="candidates-grid">
+          <div class="card candidate-card" *ngFor="let candidate of mockCandidates">
+            <div class="candidate-header">
+              <div class="candidate-avatar large">{{ candidate.initials }}</div>
+              <div>
+                <h3>{{ candidate.name }}</h3>
+                <p>{{ candidate.position }}</p>
+              </div>
+            </div>
+            <div class="candidate-status" [class]="candidate.status">
+              {{ candidate.status }}
+            </div>
+            <div class="candidate-actions">
+              <button class="btn-primary">View Profile</button>
+              <button class="btn-secondary">Provide Feedback</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeSection === 'interviews'" class="content-section">
+        <div class="page-header">
+          <div>
+            <h1>My Interviews</h1>
+            <p class="page-subtitle">Upcoming candidate interviews</p>
+          </div>
+        </div>
+        
+        <div class="interviews-container">
+          <div *ngIf="scheduledInterviews.length === 0" class="empty-state">
+            <span class="empty-icon">📅</span>
+            <h3>No Scheduled Interviews</h3>
+            <p>Your recruiter will coordinate interview scheduling.</p>
+          </div>
+
+          <div *ngIf="scheduledInterviews.length > 0" class="interviews-list">
+            <div class="interview-card" *ngFor="let interview of scheduledInterviews">
+              <div class="interview-main">
+                <div class="interview-datetime">
+                  <div class="date">{{ interview.date }}</div>
+                  <div class="time">{{ interview.time }}</div>
+                  <div class="duration">{{ interview.duration }}</div>
+                </div>
+                
+                <div class="interview-details">
+                  <div class="candidate-info">
+                    <div class="candidate-avatar">{{ getInitials(interview.candidateName) }}</div>
+                    <div class="candidate-data">
+                      <h3>{{ interview.candidateName }}</h3>
+                      <p class="position">{{ interview.position }}</p>
+                      <p class="interview-type">{{ interview.type }} • {{ interview.round }}</p>
+                    </div>
+                  </div>
+                  
+                  <div class="interview-meta">
+                    <div class="interviewer-list">
+                      <span class="label">Interviewers:</span>
+                      <span class="interviewers">{{ interview.interviewers.join(', ') }}</span>
+                    </div>
+                    <div class="location" *ngIf="interview.location">
+                      <span class="label">Location:</span>
+                      <span>{{ interview.location }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="meeting-details">
+                <div class="meeting-info" *ngIf="interview.meetingLink">
+                  <div class="meeting-link">
+                    <span class="label">Meeting Link:</span>
+                    <a [href]="interview.meetingLink" target="_blank" class="link">{{ interview.meetingLink }}</a>
+                    <button class="copy-btn" (click)="copyToClipboard(interview.meetingLink)">📋</button>
+                  </div>
+                  <div class="meeting-id" *ngIf="interview.meetingId">
+                    <span class="label">Meeting ID:</span>
+                    <span class="value">{{ interview.meetingId }}</span>
+                    <button class="copy-btn" (click)="copyToClipboard(interview.meetingId)">📋</button>
+                  </div>
+                </div>
+                
+                <div class="location-info" *ngIf="interview.location">
+                  <span class="label">Location:</span>
+                  <span class="value">{{ interview.location }}</span>
+                </div>
+                
+                <div class="interview-actions">
+                  <button class="btn-secondary" (click)="viewCandidateProfile(interview)">
+                    👤 View Candidate Profile
+                  </button>
+                  <button class="btn-secondary" (click)="downloadCalendar(interview)">
+                    📅 Add to Calendar
+                  </button>
+                </div>
+              </div>
+              
+              <div class="interview-status" *ngIf="interview.status !== 'SCHEDULED'">
+                <span class="status-indicator" [class]="interview.status.toLowerCase()">{{ interview.status }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeSection === 'reports'" class="content-section">
+        <div class="page-header">
+          <div>
+            <h1>Reports & Analytics</h1>
+            <p class="page-subtitle">Track your hiring performance</p>
+          </div>
+        </div>
+        
+        <div class="reports-grid">
+          <div class="card report-card">
+            <h3>📊 Hiring Metrics</h3>
+            <p>Track time-to-hire, conversion rates, and more</p>
+            <button class="btn-primary">View Report</button>
+          </div>
+          
+          <div class="card report-card">
+            <h3>💰 Cost Analysis</h3>
+            <p>Analyze hiring costs and ROI</p>
+            <button class="btn-primary">View Report</button>
+          </div>
+          
+          <div class="card report-card">
+            <h3>📈 Pipeline Analytics</h3>
+            <p>Monitor candidate pipeline performance</p>
+            <button class="btn-primary">View Report</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

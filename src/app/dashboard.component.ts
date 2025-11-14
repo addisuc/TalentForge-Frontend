@@ -1,17 +1,19 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 import { AuthService } from './core/auth/auth.service';
 import { NavigationService } from './core/services/navigation.service';
 import { JobService } from './core/services/job.service';
 import { ApplicationService } from './core/services/application.service';
+import { ClientService } from './core/services/client.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, MainLayoutComponent],
+  imports: [CommonModule, RouterModule, MainLayoutComponent, FormsModule],
   template: `
     <div class="dashboard-page">
         <div class="content">
@@ -103,13 +105,53 @@ import { forkJoin } from 'rxjs';
                 <h3>Quick Actions</h3>
               </div>
               <div class="actions-grid">
-                <button class="action-btn" *ngFor="let action of quickActions" (click)="executeAction(action.action)">
+                <button class="action-btn" *ngFor="let action of quickActions" 
+                        [class.primary]="action.primary" 
+                        (click)="executeAction(action.action)">
                   <span class="action-icon">{{ action.icon }}</span>
                   <span>{{ action.label }}</span>
                 </button>
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Client Invitation Modal -->
+        <div class="modal-overlay" *ngIf="showInviteModal" (click)="closeInviteModal()">
+          <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Invite Client</h2>
+              <button class="close-btn" (click)="closeInviteModal()">✕</button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Company Name *</label>
+                <input type="text" [(ngModel)]="inviteData.companyName" class="form-control" placeholder="Enter company name">
+              </div>
+              <div class="form-group">
+                <label>Contact Person *</label>
+                <input type="text" [(ngModel)]="inviteData.contactPerson" class="form-control" placeholder="Enter contact person name">
+              </div>
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" [(ngModel)]="inviteData.email" class="form-control" placeholder="Enter email address">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-secondary" (click)="closeInviteModal()">Cancel</button>
+              <button class="btn-primary" (click)="sendInvitation()" [disabled]="isInviting">{{ isInviting ? 'Sending...' : 'Send Invitation' }}</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Success Toast -->
+        <div class="toast success" *ngIf="showSuccessToast">
+          ✓ Client invitation sent successfully!
+        </div>
+
+        <!-- Error Toast -->
+        <div class="toast error" *ngIf="showErrorToast">
+          ⚠ Failed to send invitation. Please try again.
         </div>
     </div>
   `,
@@ -371,7 +413,7 @@ import { forkJoin } from 'rxjs';
 
     .actions-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
     }
 
@@ -387,11 +429,24 @@ import { forkJoin } from 'rxjs';
       transition: all 0.3s;
       font-weight: 600;
       color: #0f172a;
+      text-decoration: none;
     }
 
     .action-btn:hover {
       background: #e2e8f0;
       transform: translateY(-2px);
+    }
+
+    .action-btn.primary {
+      background: #0066ff;
+      color: white;
+      border-color: #0066ff;
+      box-shadow: 0 2px 4px rgba(0, 102, 255, 0.2);
+    }
+
+    .action-btn.primary:hover {
+      background: #0052cc;
+      box-shadow: 0 4px 8px rgba(0, 102, 255, 0.3);
     }
 
     .action-icon {
@@ -416,12 +471,147 @@ import { forkJoin } from 'rxjs';
       font-size: 0.875rem;
     }
 
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .modal-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #64748b;
+      padding: 4px;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #0066ff;
+      box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding: 24px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary {
+      background: #f8fafc;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      z-index: 1001;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .toast.success {
+      background: #10b981;
+      color: white;
+    }
+
+    .toast.error {
+      background: #ef4444;
+      color: white;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
     @media (max-width: 1024px) {
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
       }
       
       .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -436,7 +626,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private navigationService: NavigationService,
     private router: Router,
     private jobService: JobService,
-    private applicationService: ApplicationService
+    private applicationService: ApplicationService,
+    private clientService: ClientService
   ) {}
 
   ngOnInit() {
@@ -560,10 +751,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loading = true;
   refreshInterval: any;
 
+  // Client invitation modal
+  showInviteModal = false;
+  isInviting = false;
+  showSuccessToast = false;
+  showErrorToast = false;
+  inviteData = {
+    companyName: '',
+    contactPerson: '',
+    email: ''
+  };
+
   quickActions = [
-    { icon: '➕', label: 'Post New Job', action: () => this.navigateToJobs() },
+    { icon: '➕', label: 'Post New Job', action: () => this.navigateToJobs(), primary: true },
+    { icon: '👤', label: 'Invite Client User', action: () => this.openInviteClientModal(), primary: true },
     { icon: '👥', label: 'View Candidates', action: () => this.router.navigate(['/candidates']) },
     { icon: '📋', label: 'View Applications', action: () => this.router.navigate(['/applications']) },
+    { icon: '🏢', label: 'Manage Clients', action: () => this.router.navigate(['/clients']) },
     { icon: '⚙️', label: 'Settings', action: () => this.router.navigate(['/settings']) }
   ];
 
@@ -573,5 +777,59 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   executeAction(action: () => void) {
     action();
+  }
+
+  openInviteClientModal() {
+    this.showInviteModal = true;
+    this.inviteData = {
+      companyName: '',
+      contactPerson: '',
+      email: ''
+    };
+  }
+
+  closeInviteModal() {
+    this.showInviteModal = false;
+    this.inviteData = {
+      companyName: '',
+      contactPerson: '',
+      email: ''
+    };
+  }
+
+  sendInvitation() {
+    if (!this.inviteData.companyName || !this.inviteData.contactPerson || !this.inviteData.email) {
+      this.showError('Please fill in all required fields');
+      return;
+    }
+
+    this.isInviting = true;
+    
+    this.clientService.inviteClient(this.inviteData).subscribe({
+      next: (response) => {
+        this.isInviting = false;
+        this.closeInviteModal();
+        this.showSuccess('Client invitation sent successfully!');
+      },
+      error: (error) => {
+        this.isInviting = false;
+        console.error('Error sending invitation:', error);
+        this.showError('Failed to send invitation. Please try again.');
+      }
+    });
+  }
+
+  showSuccess(message: string) {
+    this.showSuccessToast = true;
+    setTimeout(() => {
+      this.showSuccessToast = false;
+    }, 3000);
+  }
+
+  showError(message: string) {
+    this.showErrorToast = true;
+    setTimeout(() => {
+      this.showErrorToast = false;
+    }, 3000);
   }
 }

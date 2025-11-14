@@ -11,6 +11,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatStepperModule } from '@angular/material/stepper';
+import { MatTableModule } from '@angular/material/table';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule } from '@angular/material/dialog';
 
 const MaterialModules = [
   MatButtonModule,
@@ -24,7 +27,10 @@ const MaterialModules = [
   MatToolbarModule,
   MatMenuModule,
   MatSelectModule,
-  MatStepperModule
+  MatStepperModule,
+  MatTableModule,
+  MatChipsModule,
+  MatDialogModule
 ];
 
 @NgModule({

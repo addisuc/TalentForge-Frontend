@@ -23,6 +23,12 @@
   }
 }
 
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, #0066ff, #00d4ff);
   color: white;

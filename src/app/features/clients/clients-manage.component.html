@@ -59,6 +59,7 @@
             <div class="action-buttons">
               <button class="btn-action" [routerLink]="['/clients', client.id]" (click)="$event.stopPropagation()" title="View Details">📋</button>
               <button class="btn-action" (click)="editClient(client.id); $event.stopPropagation()" title="Edit Client">✏️</button>
+              <button class="btn-action" (click)="inviteUser(client.id); $event.stopPropagation()" title="Invite User">👤</button>
               <button class="btn-action" (click)="sendEmail(client.id); $event.stopPropagation()" title="Email Client">✉️</button>
               <button class="btn-action" (click)="viewJobs(client.id); $event.stopPropagation()" title="View Jobs">💼</button>
               <button class="btn-action" (click)="addNote(client.id); $event.stopPropagation()" title="Add Note">📝</button>
@@ -354,6 +355,34 @@
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeContractsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invite Client Modal -->
+  <div class="modal-overlay" *ngIf="showInviteModal" (click)="closeInviteModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Invite User for {{ selectedClient?.name }}</h2>
+        <button class="close-btn" (click)="closeInviteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Company Name *</label>
+          <input type="text" [(ngModel)]="inviteData.companyName" class="form-control" placeholder="Enter company name">
+        </div>
+        <div class="form-group">
+          <label>Contact Person *</label>
+          <input type="text" [(ngModel)]="inviteData.contactPerson" class="form-control" placeholder="Enter contact person name">
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" [(ngModel)]="inviteData.email" class="form-control" placeholder="Enter email address">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeInviteModal()">Cancel</button>
+        <button class="btn-primary" (click)="sendInvitation()" [disabled]="isInviting" type="button">{{ isInviting ? 'Sending...' : 'Send Invitation' }}</button>
       </div>
     </div>
   </div>

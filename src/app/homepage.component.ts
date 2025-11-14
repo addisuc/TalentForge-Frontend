@@ -50,9 +50,21 @@ import { RouterModule } from '@angular/router';
             </svg>
             <span>TalentForge</span>
           </div>
-          <div class="nav-actions" style="margin-left: auto;">
-            <a routerLink="/auth/login" class="nav-link">Sign In</a>
-            <button class="btn-nav" routerLink="/auth/register">Get Started Free</button>
+          <div class="nav-actions">
+            <div class="nav-links">
+              <a routerLink="/client-login" class="nav-link client-portal">
+                <span class="link-icon">🏢</span>
+                <span>Client Portal</span>
+              </a>
+              <a routerLink="/auth/login" class="nav-link sign-in">
+                <span class="link-icon">🔐</span>
+                <span>Sign In</span>
+              </a>
+            </div>
+            <button class="btn-nav" routerLink="/auth/register">
+              <span>Get Started Free</span>
+              <span class="btn-arrow">→</span>
+            </button>
           </div>
         </div>
       </nav>
@@ -222,22 +234,20 @@ import { RouterModule } from '@angular/router';
         </div>
       </section>
 
-      <section class="testimonials">
+      <section class="benefits">
         <div class="container">
           <div class="section-header">
-            <span class="section-badge">CUSTOMER STORIES</span>
-            <h2>Loved by Recruiters Worldwide</h2>
+            <span class="section-badge">WHY CHOOSE US</span>
+            <h2>Built for Modern Hiring Teams</h2>
+            <p>Everything you need to streamline your recruitment process and hire top talent faster</p>
           </div>
-          <div class="testimonials-grid">
-            <div class="testimonial-card" *ngFor="let testimonial of testimonials">
-              <div class="testimonial-rating">★★★★★</div>
-              <p class="testimonial-text">"{{ testimonial.text }}"</p>
-              <div class="testimonial-author">
-                <div class="author-avatar">{{ testimonial.avatar }}</div>
-                <div>
-                  <div class="author-name">{{ testimonial.name }}</div>
-                  <div class="author-role">{{ testimonial.role }}</div>
-                </div>
+          <div class="benefits-grid">
+            <div class="benefit-card" *ngFor="let benefit of benefits">
+              <div class="benefit-icon">{{ benefit.icon }}</div>
+              <h3>{{ benefit.title }}</h3>
+              <p>{{ benefit.description }}</p>
+              <div class="benefit-stats">
+                <span class="stat-highlight">{{ benefit.stat }}</span>
               </div>
             </div>
           </div>
@@ -405,38 +415,115 @@ import { RouterModule } from '@angular/router';
       align-items: center;
     }
 
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-left: auto;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       color: #475569;
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 500;
       font-size: 0.9375rem;
-      padding: 10px 20px;
+      padding: 10px 16px;
       border-radius: 8px;
-      transition: all 0.2s;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 102, 255, 0.1), transparent);
+      transition: left 0.5s;
+    }
+
+    .nav-link:hover::before {
+      left: 100%;
     }
 
     .nav-link:hover {
       color: #0066ff;
-      background: #f1f5f9;
+      background: rgba(0, 102, 255, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .nav-link.client-portal:hover {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: 1px solid rgba(0, 102, 255, 0.2);
+    }
+
+    .link-icon {
+      font-size: 1rem;
+      transition: transform 0.3s;
+    }
+
+    .nav-link:hover .link-icon {
+      transform: scale(1.1);
     }
 
     .btn-nav {
-      background: #0066ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
       color: white;
-      padding: 12px 28px;
+      padding: 12px 24px;
       border: none;
       border-radius: 10px;
       font-weight: 600;
       font-size: 0.9375rem;
       cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 2px 8px rgba(0, 102, 255, 0.2);
+      transition: all 0.3s;
+      box-shadow: 0 4px 16px rgba(0, 102, 255, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-nav::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn-nav:hover::before {
+      left: 100%;
     }
 
     .btn-nav:hover {
-      background: #0052cc;
+      background: linear-gradient(135deg, #0052cc 0%, #003d99 100%);
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+      box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
+    }
+
+    .btn-arrow {
+      font-size: 1rem;
+      transition: transform 0.3s;
+    }
+
+    .btn-nav:hover .btn-arrow {
+      transform: translateX(2px);
     }
 
     .container {
@@ -1053,72 +1140,80 @@ import { RouterModule } from '@angular/router';
       line-height: 1.6;
     }
 
-    .testimonials {
+    .benefits {
       padding: 100px 0;
       background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
     }
 
-    .testimonials-grid {
+    .benefits-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 32px;
     }
 
-    .testimonial-card {
+    .benefit-card {
       background: white;
-      padding: 32px;
+      padding: 40px;
       border-radius: 20px;
       border: 1px solid #e2e8f0;
       transition: all 0.3s;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
     }
 
-    .testimonial-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    .benefit-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #0066ff 0%, #00d4ff 100%);
+      transform: scaleX(0);
+      transition: transform 0.3s;
     }
 
-    .testimonial-rating {
-      color: #fbbf24;
-      font-size: 1.25rem;
+    .benefit-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .benefit-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+      border-color: #0066ff;
+    }
+
+    .benefit-icon {
+      font-size: 3rem;
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    .benefit-card h3 {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: #0f172a;
       margin-bottom: 16px;
     }
 
-    .testimonial-text {
-      color: #475569;
-      font-size: 1rem;
-      line-height: 1.7;
-      margin-bottom: 24px;
-      font-style: italic;
-    }
-
-    .testimonial-author {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .author-avatar {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #0066ff 0%, #00d4ff 100%);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 1rem;
-    }
-
-    .author-name {
-      font-weight: 600;
-      color: #0f172a;
-      font-size: 0.9375rem;
-    }
-
-    .author-role {
+    .benefit-card p {
       color: #64748b;
-      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .benefit-stats {
+      padding: 16px;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-radius: 12px;
+      border: 1px solid #bfdbfe;
+    }
+
+    .stat-highlight {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #0066ff;
     }
 
     .pricing {
@@ -1610,24 +1705,24 @@ export class HomepageComponent {
     { icon: '🎉', title: 'Hire & Onboard', description: 'Send offers, collect e-signatures, and seamlessly transition to onboarding workflows' }
   ];
 
-  testimonials = [
+  benefits = [
     {
-      text: 'TalentForge reduced our time-to-hire from 45 days to 12 days. The AI matching is incredibly accurate and saves our team hours every week.',
-      name: 'Sarah Johnson',
-      role: 'VP of Talent, TechCorp',
-      avatar: 'SJ'
+      icon: '⚡',
+      title: 'Faster Hiring',
+      description: 'Reduce time-to-hire by up to 70% with AI-powered candidate matching and automated workflows.',
+      stat: 'Average 12 days vs industry 45 days'
     },
     {
-      text: 'Best recruiting platform we\'ve used. The automation features alone have saved us 30+ hours per week. ROI was immediate.',
-      name: 'Michael Chen',
-      role: 'Head of HR, StartupXYZ',
-      avatar: 'MC'
+      icon: '💰',
+      title: 'Cost Effective',
+      description: 'Save on recruitment costs with efficient processes and reduced dependency on external agencies.',
+      stat: 'Up to 60% cost reduction'
     },
     {
-      text: 'Game changer for our agency. Managing 50+ clients is now effortless with the multi-tenant features and client portals.',
-      name: 'Emily Rodriguez',
-      role: 'CEO, Elite Recruiting',
-      avatar: 'ER'
+      icon: '🎯',
+      title: 'Better Quality',
+      description: 'Find the right candidates faster with advanced filtering, skills assessment, and cultural fit analysis.',
+      stat: '94% candidate satisfaction rate'
     }
   ];
 

@@ -1,0 +1,115 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="brand-logo">
+        <div class="logo-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
+            <path d="M12 14h16v2H12v-2zm0 4h16v2H12v-2zm0 4h12v2H12v-2z" fill="white"/>
+            <defs>
+              <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#0066ff"/>
+                <stop offset="1" stop-color="#00d4ff"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Client Portal</h1>
+          <p>Sign in to review and manage candidates</p>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-message" role="alert" aria-live="assertive">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-control"
+          [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          placeholder="Enter your email address"
+          autocomplete="email"
+          [attr.aria-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          [attr.aria-describedby]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched ? 'email-error' : null"
+          aria-required="true"
+        />
+        <div class="error-text" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" role="alert">
+          <span *ngIf="loginForm.get('email')?.errors?.['required']" id="email-error">Email is required</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['email']" id="email-error">Please enter a valid email</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-wrapper">
+          <input
+            id="password"
+            [type]="hidePassword ? 'password' : 'text'"
+            formControlName="password"
+            class="form-control"
+            [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            [attr.aria-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            [attr.aria-describedby]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched ? 'password-error' : null"
+            aria-required="true"
+          />
+          <button type="button" class="toggle-password" (click)="hidePassword = !hidePassword" [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'">
+            <span aria-hidden="true">{{ hidePassword ? '👁️' : '🙈' }}</span>
+          </button>
+        </div>
+        <div class="error-text" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" role="alert">
+          <span *ngIf="loginForm.get('password')?.errors?.['required']" id="password-error">Password is required</span>
+          <span *ngIf="loginForm.get('password')?.errors?.['minlength']" id="password-error">Password must be at least 8 characters</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="loginForm.invalid || isLoading">
+        <span *ngIf="!isLoading">Sign In to Portal</span>
+        <span *ngIf="isLoading">Signing in...</span>
+      </button>
+
+      <div class="help-section">
+        <button type="button" class="help-link" (click)="showHelp = !showHelp">
+          <span class="help-icon">❓</span>
+          Need Help?
+        </button>
+      </div>
+    </form>
+
+    <!-- Demo Credentials Section -->
+    <div class="demo-section" [class.expanded]="showHelp">
+      <div class="demo-header">
+        <span class="demo-icon">🔑</span>
+        <h3>Demo Credentials</h3>
+      </div>
+      <div class="demo-content">
+        <div class="credential-item">
+          <label>Email:</label>
+          <code>client&#64;test.com</code>
+          <button type="button" class="copy-btn" (click)="copyToClipboard('client@test.com')" title="Copy email">
+            📋
+          </button>
+        </div>
+        <div class="credential-item">
+          <label>Password:</label>
+          <code>password123</code>
+          <button type="button" class="copy-btn" (click)="copyToClipboard('password123')" title="Copy password">
+            📋
+          </button>
+        </div>
+        <p class="demo-note">
+          <span class="note-icon">💡</span>
+          Use these credentials to explore the client portal features
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

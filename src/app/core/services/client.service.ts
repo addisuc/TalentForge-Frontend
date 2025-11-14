@@ -1,45 +1,167 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+
+export interface ClientLoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface ClientLoginResponse {
+  token: string;
+  message: string;
+}
+
+export interface ClientApproval {
+  id: string;
+  applicationId: string;
+  candidateName: string;
+  jobTitle: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+}
+
+export interface ClientDashboard {
+  pendingApprovals: ClientApproval[];
+  totalPending: number;
+  totalApproved: number;
+  totalRejected: number;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface ClientNote {
+  id: string;
+  content: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface ClientActivity {
+  id: string;
+  type: string;
+  description: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface ApprovalRequest {
+  applicationId: string;
+  status: 'APPROVED' | 'REJECTED';
+  feedback?: string;
+  rating?: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClientService {
-  private apiUrl = `${environment.apiUrl}/clients`;
+  private readonly baseUrl = `${environment.apiUrl}/clients`;
+  private readonly clientServiceUrl = `http://localhost:8088/api/clients`;
 
   constructor(private http: HttpClient) {}
 
-  getClients(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+  login(request: ClientLoginRequest, tenantId: string): Observable<ClientLoginResponse> {
+    const headers = new HttpHeaders({
+      'X-Tenant-ID': tenantId
+    });
+    return this.http.post<ClientLoginResponse>(`${this.clientServiceUrl}/login`, request, { headers });
   }
 
-  getClientById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`);
+  getDashboard(tenantId: string, clientUserId: string): Observable<ClientDashboard> {
+    const headers = new HttpHeaders({
+      'X-Tenant-ID': tenantId,
+      'X-User-ID': clientUserId
+    });
+    return this.http.get<ClientDashboard>(`${this.clientServiceUrl}/dashboard`, { headers });
   }
 
-  createClient(client: any): Observable<any> {
-    return this.http.post<any>(this.apiUrl, client);
+  getPendingApprovals(tenantId: string, clientUserId: string): Observable<ClientApproval[]> {
+    const token = localStorage.getItem('clientToken');
+    const headers = new HttpHeaders({
+      'X-Tenant-ID': tenantId,
+      'X-User-ID': clientUserId,
+      'Authorization': `Bearer ${token}`
+    });
+    return this.http.get<ClientApproval[]>(`${this.clientServiceUrl}/approvals/pending`, { headers });
   }
 
-  updateClient(id: string, client: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}`, client);
+  processApproval(request: ApprovalRequest, tenantId: string, clientUserId: string): Observable<any> {
+    const token = localStorage.getItem('clientToken');
+    const headers = new HttpHeaders({
+      'X-Tenant-ID': tenantId,
+      'X-User-ID': clientUserId,
+      'Authorization': `Bearer ${token}`
+    });
+    return this.http.post(`${this.clientServiceUrl}/approvals`, request, { headers });
   }
 
-  deleteClient(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  getClients(): Observable<Client[]> {
+    return this.http.get<Client[]>(`${this.baseUrl}`);
   }
 
-  addNote(clientId: string, note: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/${clientId}/notes`, { note });
+  getClientById(id: string): Observable<Client> {
+    return this.http.get<Client>(`${this.baseUrl}/${id}`);
   }
 
-  getNotes(clientId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${clientId}/notes`);
+  createClient(client: Partial<Client>): Observable<Client> {
+    return this.http.post<Client>(`${this.baseUrl}`, client);
   }
 
-  getActivities(clientId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${clientId}/activities`);
+  updateClient(id: string, client: Partial<Client>): Observable<Client> {
+    return this.http.put<Client>(`${this.baseUrl}/${id}`, client);
+  }
+
+  getNotes(clientId: string): Observable<ClientNote[]> {
+    return this.http.get<ClientNote[]>(`${this.baseUrl}/${clientId}/notes`);
+  }
+
+  addNote(clientId: string, content: string): Observable<ClientNote> {
+    return this.http.post<ClientNote>(`${this.baseUrl}/${clientId}/notes`, { content });
+  }
+
+  getActivities(clientId: string): Observable<ClientActivity[]> {
+    return this.http.get<ClientActivity[]>(`${this.baseUrl}/${clientId}/activities`);
+  }
+
+  inviteClient(invitation: {email: string, companyName: string, contactPerson: string, clientId?: string}): Observable<any> {
+    // Get tenant ID from authenticated user's session
+    const currentUserStr = localStorage.getItem('user');
+    console.log('user from localStorage:', currentUserStr);
+    
+    if (!currentUserStr) {
+      throw new Error('No user session found. Please log in.');
+    }
+    
+    const currentUser = JSON.parse(currentUserStr);
+    const tenantId = currentUser.tenantId;
+    const token = localStorage.getItem('token');
+    
+    console.log('Extracted tenantId:', tenantId);
+    
+    if (!tenantId) {
+      throw new Error('No tenant ID found in user session.');
+    }
+    
+    const headers = new HttpHeaders({
+      'X-Tenant-ID': tenantId,
+      'Authorization': `Bearer ${token}`
+    });
+    return this.http.post(`${this.clientServiceUrl}/invite`, invitation, { headers });
+  }
+
+  verifyInvitation(token: string): Observable<any> {
+    return this.http.get(`${this.clientServiceUrl}/verify-invitation?token=${token}`);
+  }
+
+  registerInvitedClient(token: string, password: string): Observable<any> {
+    return this.http.post(`${this.clientServiceUrl}/register-invited?token=${token}`, { password });
   }
 }

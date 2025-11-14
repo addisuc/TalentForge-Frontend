@@ -134,6 +134,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/billing/billing-reports.component').then(m => m.BillingReportsComponent)
   },
   {
+    path: 'client-login',
+    loadComponent: () => import('./features/client-portal/client-login/client-login.component').then(m => m.ClientLoginComponent)
+  },
+  {
+    path: 'client-register',
+    loadComponent: () => import('./features/client-portal/client-register/client-register.component').then(m => m.ClientRegisterComponent)
+  },
+  {
+    path: 'client-dashboard',
+    loadComponent: () => import('./features/client-portal/client-dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent)
+  },
+  {
     path: 'client',
     canActivate: [AuthGuard],
     loadComponent: () => import('./features/client-portal/client-dashboard.component').then(m => m.ClientDashboardComponent)

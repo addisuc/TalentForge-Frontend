@@ -52,6 +52,14 @@ export class ClientsManageComponent implements OnInit {
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
 
+  showInviteModal = false;
+  isInviting = false;
+  inviteData = {
+    companyName: '',
+    contactPerson: '',
+    email: ''
+  };
+
   constructor(
     private clientService: ClientService,
     private emailService: EmailService,
@@ -384,5 +392,49 @@ export class ClientsManageComponent implements OnInit {
   getInitials(name: string): string {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  inviteUser(clientId: string) {
+    const client = this.clients.find(c => c.id === clientId);
+    if (client) {
+      this.selectedClient = client;
+      this.showInviteModal = true;
+      this.inviteData = {
+        companyName: client.name,
+        contactPerson: '',
+        email: ''
+      };
+    }
+  }
+
+  closeInviteModal() {
+    this.showInviteModal = false;
+  }
+
+  sendInvitation() {
+    if (!this.inviteData.companyName || !this.inviteData.contactPerson || !this.inviteData.email) {
+      this.showNotification('Please fill in all required fields', 'error');
+      return;
+    }
+
+    this.isInviting = true;
+    
+    const invitationData = {
+      ...this.inviteData,
+      clientId: this.selectedClient?.id
+    };
+    
+    this.clientService.inviteClient(invitationData).subscribe({
+      next: (response) => {
+        this.isInviting = false;
+        this.closeInviteModal();
+        this.showNotification('Client invitation sent successfully!', 'success');
+      },
+      error: (error) => {
+        this.isInviting = false;
+        console.error('Error sending invitation:', error);
+        this.showNotification('Failed to send invitation. Please try again.', 'error');
+      }
+    });
   }
 }

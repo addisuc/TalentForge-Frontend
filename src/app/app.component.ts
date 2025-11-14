@@ -27,7 +27,7 @@ export class AppComponent implements OnInit {
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       const url = event.url;
-      this.showLayout = !url.includes('/auth') && !url.includes('/home') && !url.includes('/legal') && url !== '/';
+      this.showLayout = !url.includes('/auth') && !url.includes('/home') && !url.includes('/legal') && !url.includes('/client-login') && !url.includes('/client-dashboard') && url !== '/';
     });
   }
 
