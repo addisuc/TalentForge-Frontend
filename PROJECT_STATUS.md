@@ -90,6 +90,14 @@
 - [x] Activity tracking (CLIENT_CREATED, CLIENT_UPDATED, NOTE_ADDED)
 - [x] Field mappings (contactPerson/contact, description)
 
+#### 🚀 Recruiter-Client Workflows (IN PROGRESS)
+- [x] Phase 0: Preparation complete (models, services, documentation)
+- [ ] Feature 1: Job Request Workflow (Frontend ✅ | Backend ⏳)
+- [ ] Feature 2: Candidate Submission Workflow
+- [ ] Feature 3: Interview Scheduling Workflow
+- [ ] Feature 4: Feedback & Communication Workflow
+- [ ] Feature 5: Notification System
+
 #### ✅ Other Modules
 - [x] Candidates database with search
 - [x] Analytics dashboard (basic)
@@ -240,54 +248,66 @@
 
 ---
 
-## 🚀 Week 2: Client Portal Foundation (Ready to Start)
+## 🚀 Recruiter-Client Workflow Implementation (IN PROGRESS)
 
 ### Overview
-Transform the client portal from mock data to fully functional with CLIENT user role, real backend APIs, and complete candidate review workflow.
+Implementing 4 core workflows between recruiters and clients with proper backend integration.
 
-**📋 Detailed Plan**: See [WEEK_2_CLIENT_PORTAL.md](./WEEK_2_CLIENT_PORTAL.md)
+**📋 Master Plan**: See [RECRUITER_CLIENT_WORKFLOW_MASTER_PLAN.md](./RECRUITER_CLIENT_WORKFLOW_MASTER_PLAN.md)
 
-### What's Already Done
-- ✅ Client Management (100% complete)
-- ✅ Client Portal UI components (with mock data)
-- ✅ Routing configured
-- ✅ CLIENT role added to frontend enum
+### Phase 0: Preparation ✅ COMPLETE
+- ✅ Removed all hardcoded mock data
+- ✅ Created models (`client.model.ts`)
+- ✅ Created services (`job-request.service.ts`, `candidate-submission.service.ts`)
+- ✅ Integrated services into components
+- ✅ Created backend documentation
+- ✅ Created testing checklists
 
-### Week 2 Goals
-1. Add CLIENT user role to backend
-2. Connect client portal to real APIs
-3. Implement data filtering by clientId
-4. Build candidate review system
-5. Enable interview management
+### Feature 1: Job Request Workflow (IN PROGRESS)
+**Status**: Frontend ✅ Complete | Backend ⏳ Pending
 
-### Day-by-Day Timeline
-- **Day 1**: CLIENT role setup (backend + frontend)
-- **Day 2**: Dashboard integration with real metrics
-- **Day 3**: Jobs page with real data
-- **Day 4**: Candidates page (view + approve/reject)
-- **Day 5**: Candidates page (feedback + resume download)
-- **Day 6**: Interviews page integration
-- **Day 7**: Testing and polish
+**Flow**: Client creates job request → Recruiter approves/rejects
 
-### Success Criteria
-- [ ] CLIENT users can log in and access portal
-- [ ] Dashboard shows real metrics
-- [ ] Clients see only their jobs (data isolation)
-- [ ] Clients can approve/reject candidates
-- [ ] Clients can manage interviews
-- [ ] Mobile responsive
-- [ ] Zero data leakage between clients
+**Frontend Complete**:
+- ✅ Client can create job request
+- ✅ Client can view their requests
+- ✅ Recruiter can view all requests
+- ✅ Recruiter can approve/reject
+- ✅ Status updates in real-time
 
-### Key Deliverables
-1. CLIENT role in backend (UserRole enum + clientId field)
-2. Client-specific API endpoints (/api/client/*)
-3. Data isolation filters (WHERE client_id = :currentUserClientId)
-4. Candidate review workflow (approve/reject/feedback)
-5. Interview management interface
+**Backend Needed**:
+- [ ] `job_requests` database table
+- [ ] `JobRequest.java` entity
+- [ ] `JobRequestRepository.java`
+- [ ] `JobRequestService.java`
+- [ ] `JobRequestController.java`
+- [ ] API endpoints (POST, GET, PATCH)
 
-**Status**: ✅ Plan Complete - Ready to implement  
-**Estimated Effort**: 7 days (56 hours)  
-**Priority**: HIGH - Competitive advantage feature
+**Testing**: See [FEATURE_1_QUICK_START.md](./FEATURE_1_QUICK_START.md)
+
+### Feature 2: Candidate Submission Workflow (NOT STARTED)
+**Status**: Services ✅ Ready | UI ⏳ Pending
+
+**Flow**: Recruiter submits candidate → Client reviews → Client provides feedback
+
+### Feature 3: Interview Scheduling Workflow (NOT STARTED)
+**Status**: ⏳ Not Started
+
+**Flow**: Recruiter schedules interview → Both receive notifications → Both can join
+
+### Feature 4: Feedback & Communication Workflow (NOT STARTED)
+**Status**: ⏳ Not Started
+
+**Flow**: Client provides feedback → Recruiter responds
+
+### Implementation Approach
+✅ **One feature at a time**
+✅ **Test thoroughly before moving to next**
+✅ **Clean, scalable code**
+✅ **Easy to test**
+
+**Current Focus**: Complete Feature 1 backend implementation and testing
+**Next**: Feature 2 after Feature 1 is fully tested
 
 ---
 

@@ -5,6 +5,8 @@ import { ClientService } from '../../core/services/client.service';
 import { EmailService } from '../../core/services/email.service';
 import { JobService } from '../../core/services/job.service';
 import { ApplicationService } from '../../core/services/application.service';
+import { JobRequestService } from '../../core/services/job-request.service';
+import { JobRequest } from '../../core/models/client.model';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -33,6 +35,34 @@ export class ClientDetailsComponent implements OnInit {
   showToast = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
+  
+  // Tabs
+  activeTab = 'overview';
+  
+  // Job Requests
+  jobRequestFilter = 'pending';
+  jobRequests: any[] = [];
+  
+  // Candidate Submissions
+  candidateSubmissions: any[] = [];
+  
+  // Client Feedback
+  clientFeedback: any[] = [];
+  
+  // Shared Interviews
+  sharedInterviews: any[] = [];
+  
+  get pendingJobRequests(): number {
+    return this.jobRequests.filter(r => r.status === 'PENDING').length;
+  }
+  
+  get pendingApprovals(): number {
+    return this.candidateSubmissions.filter(s => s.status === 'SUBMITTED').length;
+  }
+  
+  get unreadFeedback(): number {
+    return this.clientFeedback.filter(f => !f.read).length;
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -40,7 +70,8 @@ export class ClientDetailsComponent implements OnInit {
     private clientService: ClientService,
     private emailService: EmailService,
     private jobService: JobService,
-    private applicationService: ApplicationService
+    private applicationService: ApplicationService,
+    private jobRequestService: JobRequestService
   ) {}
 
   ngOnInit() {
@@ -48,6 +79,7 @@ export class ClientDetailsComponent implements OnInit {
       const clientId = params['id'];
       if (clientId) {
         this.loadClient(clientId);
+        this.loadJobRequests();
       }
     });
   }
@@ -280,6 +312,105 @@ export class ClientDetailsComponent implements OnInit {
       'EMAIL_SENT': '✉️'
     };
     return icons[activityType] || '📌';
+  }
+  
+  // Job Requests Methods
+  loadJobRequests() {
+    this.jobRequestService.getJobRequestsForRecruiter().subscribe({
+      next: (requests) => {
+        const clientId = this.route.snapshot.params['id'];
+        this.jobRequests = requests.filter(r => r.clientId === clientId);
+      },
+      error: (err) => {
+        console.error('Error loading job requests:', err);
+      }
+    });
+  }
+  
+  getPendingJobRequests() {
+    return this.jobRequests.filter(r => r.status === 'PENDING');
+  }
+  
+  getFilteredJobRequests() {
+    if (this.jobRequestFilter === 'all') return this.jobRequests;
+    if (this.jobRequestFilter === 'pending') return this.jobRequests.filter(r => r.status === 'PENDING');
+    if (this.jobRequestFilter === 'approved') return this.jobRequests.filter(r => r.status === 'IN_PROGRESS');
+    return this.jobRequests;
+  }
+  
+  approveJobRequest(request: JobRequest) {
+    this.jobRequestService.updateJobRequestStatus(request.id, 'IN_PROGRESS').subscribe({
+      next: (updated) => {
+        this.showNotification(`Job request "${request.title}" approved`, 'success');
+        request.status = 'IN_PROGRESS';
+      },
+      error: (err) => {
+        console.error('Error approving job request:', err);
+        this.showNotification('Failed to approve job request', 'error');
+      }
+    });
+  }
+  
+  rejectJobRequest(request: JobRequest) {
+    if (confirm(`Decline job request for "${request.title}"?`)) {
+      this.jobRequestService.updateJobRequestStatus(request.id, 'REJECTED').subscribe({
+        next: (updated) => {
+          this.showNotification(`Job request "${request.title}" declined`, 'success');
+          request.status = 'REJECTED';
+        },
+        error: (err) => {
+          console.error('Error rejecting job request:', err);
+          this.showNotification('Failed to reject job request', 'error');
+        }
+      });
+    }
+  }
+  
+  viewJobRequestDetails(request: any) {
+    alert(`Full details for: ${request.title}\n\nDescription: ${request.description}\n\nRequirements: ${request.requirements}`);
+  }
+  
+  viewCreatedJob(request: any) {
+    this.showNotification('Navigating to created job...', 'success');
+  }
+  
+  // Candidate Submissions Methods
+  openSubmitCandidateModal() {
+    this.showNotification('Submit candidate modal coming soon', 'success');
+  }
+  
+  viewCandidateProfile(submission: any) {
+    this.showNotification(`Viewing profile for ${submission.candidateName}`, 'success');
+  }
+  
+  // Client Feedback Methods
+  respondToFeedback(feedback: any) {
+    this.showNotification('Opening response form...', 'success');
+  }
+  
+  markAsRead(feedback: any) {
+    feedback.read = true;
+    this.showNotification('Marked as read', 'success');
+  }
+  
+  // Interview Methods
+  scheduleInterview() {
+    this.showNotification('Schedule interview modal coming soon', 'success');
+  }
+  
+  editInterview(interview: any) {
+    this.showNotification(`Editing interview for ${interview.candidateName}`, 'success');
+  }
+  
+  notifyClient(interview: any) {
+    this.showNotification(`Notification sent to client about ${interview.candidateName} interview`, 'success');
+  }
+  
+  cancelInterview(interview: any) {
+    if (confirm(`Cancel interview with ${interview.candidateName}?`)) {
+      this.showNotification('Interview cancelled', 'success');
+      interview.status = 'Cancelled';
+    }
   }
 }
 

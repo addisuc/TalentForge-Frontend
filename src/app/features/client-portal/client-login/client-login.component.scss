@@ -311,6 +311,24 @@
   margin-top: 0.125rem;
 }
 
+.forgot-password {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.forgot-link {
+  color: #0066ff;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #0052cc;
+    text-decoration: underline;
+  }
+}
+
 // Responsive design
 @media (max-width: 768px) {
   .auth-container {

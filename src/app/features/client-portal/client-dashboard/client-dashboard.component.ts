@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ClientService, ClientDashboard, ClientApproval } from '../../../core/services/client.service';
+import { JobRequestService } from '../../../core/services/job-request.service';
+import { JobRequest } from '../../../core/models/client.model';
 import { MaterialModule } from '../../../shared/material/material.module';
 
 @Component({
@@ -26,76 +28,80 @@ export class ClientDashboardComponent implements OnInit {
   displayedColumns: string[] = ['candidate', 'job', 'appliedDate', 'status', 'actions'];
   activeSection = 'overview';
 
-  mockCandidates = [
-    { name: 'John Smith', position: 'Software Engineer', status: 'interview', initials: 'JS' },
-    { name: 'Sarah Johnson', position: 'Product Manager', status: 'screening', initials: 'SJ' },
-    { name: 'Mike Chen', position: 'Designer', status: 'offer', initials: 'MC' }
-  ];
 
-  mockPositions = [
-    { title: 'Senior Software Engineer', department: 'Engineering', location: 'Remote', applicants: 12, daysOpen: 5, status: 'Active' },
-    { title: 'Product Manager', department: 'Product', location: 'New York', applicants: 8, daysOpen: 3, status: 'Active' },
-    { title: 'UX Designer', department: 'Design', location: 'San Francisco', applicants: 15, daysOpen: 7, status: 'Active' }
-  ];
 
-  scheduledInterviews = [
-    {
-      id: '1',
-      candidateName: 'Maria Chen',
-      position: 'Product Manager',
-      date: 'Today, Nov 13',
-      time: '2:00 PM - 3:00 PM',
-      duration: '60 min',
-      type: 'Video Call',
-      round: 'Final Round',
-      interviewers: ['You', 'Sarah Wilson (PM)', 'Mike Johnson (Engineering)'],
-      location: null,
-      meetingLink: 'https://zoom.us/j/123456789',
-      meetingId: '123 456 789',
-      passcode: 'abc123',
-      status: 'SCHEDULED'
-    },
-    {
-      id: '2', 
-      candidateName: 'Alex Rodriguez',
-      position: 'Senior Software Engineer',
-      date: 'Tomorrow, Nov 14',
-      time: '10:00 AM - 11:30 AM',
-      duration: '90 min',
-      type: 'Technical Interview',
-      round: 'Round 2',
-      interviewers: ['You', 'David Kim (Tech Lead)', 'Lisa Park (Senior Dev)'],
-      location: null,
-      meetingLink: 'https://meet.google.com/abc-defg-hij',
-      meetingId: 'abc-defg-hij',
-      passcode: null,
-      status: 'SCHEDULED'
-    },
-    {
-      id: '3',
-      candidateName: 'James Wilson',
-      position: 'UX Designer',
-      date: 'Friday, Nov 15',
-      time: '3:00 PM - 4:00 PM', 
-      duration: '60 min',
-      type: 'In-Person',
-      round: 'Portfolio Review',
-      interviewers: ['You', 'Emma Davis (Design Director)'],
-      location: 'Conference Room A, 5th Floor',
-      meetingLink: null,
-      meetingId: null,
-      passcode: null,
-      status: 'SCHEDULED'
-    }
-  ];
+  scheduledInterviews: any[] = [];
 
-  mockJobRequests = [
-    { title: 'Senior Software Engineer', department: 'Engineering', location: 'Remote', status: 'Active', requestedDate: 'Nov 1, 2024', recruiter: 'Jane Smith', applicants: 12 },
-    { title: 'Product Manager', department: 'Product', location: 'New York', status: 'Pending', requestedDate: 'Nov 5, 2024', recruiter: 'Mike Johnson', applicants: 0 },
-    { title: 'UX Designer', department: 'Design', location: 'San Francisco', status: 'Active', requestedDate: 'Oct 28, 2024', recruiter: 'Sarah Wilson', applicants: 8 }
-  ];
+  jobRequests: JobRequest[] = [];
+  loadingJobRequests = false;
 
+  // Filters
+  submissionFilter = 'all';
+  positionFilter = 'all';
+  candidateSearch = '';
+  filteredSubmissions: any[] = [];
+  
+  interviewFilter = 'all';
+  interviewSearch = '';
+  filteredInterviews: any[] = [];
+  
+  // Notifications
+  showNotifications = false;
+  notifications: any[] = [];
+  
+  get unreadNotifications(): number {
+    return this.notifications.filter(n => !n.read).length;
+  }
+  
+  // Email & Notification Settings
+  emailSettings = {
+    newCandidates: true,
+    interviewScheduled: true,
+    jobUpdates: true,
+    candidateStatusChange: true,
+    recruiterMessages: true,
+    dailySummary: false
+  };
+  
+  notificationSettings = {
+    pushEnabled: true,
+    soundEnabled: false
+  };
+  
+  // Settings Tab
+  settingsTab = 'account';
+  
+  // Account Settings
+  accountSettings = {
+    fullName: '',
+    email: '',
+    companyName: '',
+    jobTitle: '',
+    phone: ''
+  };
+  
+  passwordChange = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  };
+  
+  // Preferences
+  preferences = {
+    theme: 'light',
+    compactView: false,
+    language: 'en',
+    dateFormat: 'MM/DD/YYYY',
+    timeFormat: '12h',
+    itemsPerPage: 25,
+    showStats: true,
+    showRecentCandidates: true,
+    showActivePositions: true
+  };
+  
   showJobRequestForm = false;
+  showJobRequestDetails = false;
+  selectedJobRequest: any = null;
   jobRequest: any = {
     title: '',
     department: '',
@@ -113,60 +119,24 @@ export class ClientDashboardComponent implements OnInit {
     notes: ''
   };
 
-  mockFeedback = [
-    { candidateName: 'John Smith', position: 'Software Engineer', date: 'Nov 10, 2024', notes: 'Strong technical skills, good cultural fit. Recommend for final round.' },
-    { candidateName: 'Sarah Johnson', position: 'Product Manager', date: 'Nov 8, 2024', notes: 'Excellent communication skills, needs more experience in our industry.' }
-  ];
+  feedbackHistory: any[] = [];
 
-  candidateSubmissions = [
-    {
-      id: '1',
-      candidateName: 'Alex Rodriguez',
-      position: 'Senior Software Engineer',
-      recruiterName: 'Jane Smith',
-      status: 'SUBMITTED',
-      stage: 'Client Review',
-      experience: '8 years',
-      currentCompany: 'Microsoft',
-      education: 'BS Computer Science - Stanford',
-      expectedSalary: '$180,000',
-      availability: '2 weeks notice',
-      recruiterRating: 'A+ Candidate',
-      keyStrengths: ['Technical Leadership', 'System Architecture', 'Team Management'],
-      submittedDate: '2024-11-12',
-      resumeUrl: '/resumes/alex-rodriguez.pdf',
-      portfolioUrl: 'https://alexrodriguez.dev'
-    },
-    {
-      id: '2', 
-      candidateName: 'Maria Chen',
-      position: 'Product Manager',
-      recruiterName: 'Mike Johnson',
-      status: 'APPROVED_FOR_INTERVIEW',
-      experience: '6 years in product management',
-      skills: ['Product Strategy', 'Agile', 'Data Analysis', 'User Research'],
-      recruiterNotes: 'Strong product sense with proven track record of launching successful products. Great communication skills and stakeholder management.',
-      submittedDate: '2024-11-10',
-      clientDecision: 'Approved for Interview',
-      clientFeedback: 'Impressive background, would like to discuss product vision in interview.'
-    },
-    {
-      id: '3',
-      candidateName: 'David Kim',
-      position: 'UX Designer', 
-      recruiterName: 'Sarah Wilson',
-      status: 'REJECTED',
-      experience: '4 years in UX design',
-      skills: ['Figma', 'User Research', 'Prototyping', 'Design Systems'],
-      recruiterNotes: 'Creative designer with good portfolio. Experience in B2B products and mobile design.',
-      submittedDate: '2024-11-08',
-      clientDecision: 'Not Interested',
-      clientFeedback: 'Portfolio doesn\'t align with our design standards. Looking for more enterprise experience.'
-    }
-  ];
+  showFeedbackForm = false;
+  feedbackData: any = {
+    type: '',
+    candidateId: '',
+    positionId: '',
+    category: '',
+    subject: '',
+    message: '',
+    priority: 'Normal'
+  };
+
+  candidateSubmissions: any[] = [];
 
   constructor(
     private clientService: ClientService,
+    private jobRequestService: JobRequestService,
     private router: Router,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
@@ -174,7 +144,23 @@ export class ClientDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadUserProfile();
     this.loadDashboard();
+    this.loadJobRequests();
+  }
+
+  loadUserProfile(): void {
+    const userStr = localStorage.getItem('clientUser');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      this.accountSettings.fullName = user.contactPerson || '';
+      this.accountSettings.email = user.email || '';
+      this.accountSettings.companyName = user.companyName || 'Client Company';
+    }
+  }
+  
+  get uniquePositions(): string[] {
+    return [...new Set(this.candidateSubmissions.map(s => s.position))];
   }
 
   loadDashboard(): void {
@@ -254,6 +240,7 @@ export class ClientDashboardComponent implements OnInit {
     localStorage.removeItem('clientToken');
     localStorage.removeItem('tenantId');
     localStorage.removeItem('clientUserId');
+    localStorage.removeItem('clientUser');
     this.router.navigate(['/client-login']);
   }
 
@@ -303,6 +290,34 @@ export class ClientDashboardComponent implements OnInit {
     };
   }
 
+  isJobRequestFormValid(): boolean {
+    return !!(this.jobRequest.title && 
+              this.jobRequest.department && 
+              this.jobRequest.location && 
+              this.jobRequest.employmentType && 
+              this.jobRequest.priority && 
+              this.jobRequest.salaryRange && 
+              this.jobRequest.description && 
+              this.jobRequest.requirements);
+  }
+
+  loadJobRequests(): void {
+    const clientId = localStorage.getItem('clientUserId');
+    if (!clientId) return;
+
+    this.loadingJobRequests = true;
+    this.jobRequestService.getClientJobRequests(clientId).subscribe({
+      next: (requests) => {
+        this.jobRequests = requests;
+        this.loadingJobRequests = false;
+      },
+      error: (error) => {
+        console.error('Failed to load job requests:', error);
+        this.loadingJobRequests = false;
+      }
+    });
+  }
+
   submitJobRequest(event: Event): void {
     event.preventDefault();
     
@@ -313,23 +328,195 @@ export class ClientDashboardComponent implements OnInit {
       return;
     }
 
-    // In real implementation, this would call the backend API
-    console.log('Submitting job request:', this.jobRequest);
-    
-    this.snackBar.open('Job request submitted successfully! Your recruiter will be notified.', 'Close', { 
-      duration: 4000,
-      panelClass: ['success-snackbar']
+    const clientId = localStorage.getItem('clientUserId');
+    const clientName = this.accountSettings.companyName;
+
+    const request: Partial<JobRequest> = {
+      clientId: clientId!,
+      clientName: clientName,
+      title: this.jobRequest.title,
+      department: this.jobRequest.department,
+      location: this.jobRequest.location,
+      employmentType: this.jobRequest.employmentType,
+      priority: this.jobRequest.priority,
+      numberOfOpenings: this.jobRequest.openings,
+      salaryRange: this.jobRequest.salaryRange,
+      description: this.jobRequest.description,
+      requirements: this.jobRequest.requirements,
+      status: 'PENDING'
+    };
+
+    this.jobRequestService.createJobRequest(request).subscribe({
+      next: () => {
+        this.snackBar.open('Job request submitted successfully! Your recruiter will be notified.', 'Close', { 
+          duration: 4000,
+          panelClass: ['success-snackbar']
+        });
+        this.closeJobRequestForm();
+        this.loadJobRequests();
+      },
+      error: (error) => {
+        console.error('Failed to submit job request:', error);
+        const errorMessage = error.error?.error || 'Failed to submit job request. Please try again.';
+        this.snackBar.open(errorMessage, 'Close', { 
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
     });
-    
-    this.closeJobRequestForm();
   }
 
   viewJobDetails(job: any): void {
-    this.snackBar.open(`Viewing details for ${job.title}`, 'Close', { duration: 2000 });
+    this.selectedJobRequest = job;
+    this.showJobRequestDetails = true;
+  }
+
+  closeJobRequestDetails(): void {
+    this.showJobRequestDetails = false;
+    this.selectedJobRequest = null;
   }
 
   viewCandidatesForJob(job: any): void {
     this.snackBar.open(`Viewing candidates for ${job.title}`, 'Close', { duration: 2000 });
+  }
+
+  openFeedbackForm(): void {
+    this.showFeedbackForm = true;
+    this.resetFeedbackForm();
+  }
+
+  closeFeedbackForm(): void {
+    this.showFeedbackForm = false;
+    this.resetFeedbackForm();
+  }
+
+  resetFeedbackForm(): void {
+    this.feedbackData = {
+      type: '',
+      candidateId: '',
+      positionId: '',
+      category: '',
+      subject: '',
+      message: '',
+      priority: 'Normal'
+    };
+  }
+
+  onFeedbackTypeChange(): void {
+    this.feedbackData.candidateId = '';
+    this.feedbackData.positionId = '';
+    this.feedbackData.category = '';
+  }
+
+  onCandidateSelect(): void {
+    const candidate = this.candidateSubmissions.find(c => c.id === this.feedbackData.candidateId);
+    if (candidate) {
+      this.feedbackData.subject = `Feedback on ${candidate.candidateName}`;
+    }
+  }
+
+  onPositionSelect(): void {
+    this.feedbackData.subject = `Question about ${this.feedbackData.positionId}`;
+  }
+
+  submitFeedback(event: Event): void {
+    event.preventDefault();
+    
+    if (!this.feedbackData.type || !this.feedbackData.subject || !this.feedbackData.message) {
+      this.snackBar.open('Please fill in all required fields', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
+
+    console.log('Submitting feedback:', this.feedbackData);
+    
+    this.snackBar.open('Feedback sent successfully! Your recruiter will be notified.', 'Close', { 
+      duration: 4000,
+      panelClass: ['success-snackbar']
+    });
+    
+    this.closeFeedbackForm();
+  }
+  
+
+  
+
+  
+  toggleNotifications(): void {
+    this.showNotifications = !this.showNotifications;
+  }
+  
+  markAllAsRead(): void {
+    this.notifications.forEach(n => n.read = true);
+    this.snackBar.open('All notifications marked as read', 'Close', { duration: 2000 });
+  }
+  
+  handleNotificationClick(notification: any): void {
+    notification.read = true;
+    this.showNotifications = false;
+    this.setActiveSection(notification.action);
+  }
+  
+  getNotificationIcon(type: string): string {
+    const icons: any = {
+      'candidate': '👤',
+      'interview': '📅',
+      'job': '💼',
+      'feedback': '💬',
+      'system': '⚙️'
+    };
+    return icons[type] || '🔔';
+  }
+  
+  viewAllNotifications(): void {
+    this.showNotifications = false;
+    this.snackBar.open('Full notifications page coming soon', 'Close', { duration: 2000 });
+  }
+  
+  saveEmailSettings(): void {
+    console.log('Saving email settings:', this.emailSettings);
+    this.snackBar.open('Email notification preferences saved', 'Close', { duration: 2000, panelClass: ['success-snackbar'] });
+  }
+  
+  saveNotificationSettings(): void {
+    console.log('Saving notification settings:', this.notificationSettings);
+    this.snackBar.open('Notification preferences saved', 'Close', { duration: 2000, panelClass: ['success-snackbar'] });
+  }
+  
+  saveAccountSettings(): void {
+    console.log('Saving account settings:', this.accountSettings);
+    this.snackBar.open('Account information updated successfully', 'Close', { duration: 2000, panelClass: ['success-snackbar'] });
+  }
+  
+  changePassword(): void {
+    if (!this.passwordChange.currentPassword || !this.passwordChange.newPassword || !this.passwordChange.confirmPassword) {
+      this.snackBar.open('Please fill in all password fields', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
+    
+    if (this.passwordChange.newPassword !== this.passwordChange.confirmPassword) {
+      this.snackBar.open('New passwords do not match', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
+    
+    if (this.passwordChange.newPassword.length < 8) {
+      this.snackBar.open('Password must be at least 8 characters', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
+    
+    console.log('Changing password');
+    this.snackBar.open('Password updated successfully', 'Close', { duration: 2000, panelClass: ['success-snackbar'] });
+    
+    // Reset form
+    this.passwordChange = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    };
+  }
+  
+  savePreferences(): void {
+    console.log('Saving preferences:', this.preferences);
+    this.snackBar.open('Preferences saved successfully', 'Close', { duration: 2000, panelClass: ['success-snackbar'] });
   }
 
   viewFullProfile(submission: any): void {

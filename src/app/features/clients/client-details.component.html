@@ -2,16 +2,12 @@
   <div class="breadcrumb">
     <a routerLink="/clients">← Back to Clients</a>
   </div>
-  
-  <div class="loading" *ngIf="loading">
-    <p>Loading client details...</p>
-  </div>
 
   <div class="error" *ngIf="!loading && !client">
     <p>Failed to load client details. Please try again.</p>
   </div>
 
-  <div class="header" *ngIf="!loading && client">
+  <div class="header" *ngIf="client">
     <div class="client-info">
       <div class="logo">{{ getInitials(client.name) }}</div>
       <div>
@@ -37,14 +33,33 @@
     </div>
   </div>
 
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">Overview</button>
+    <button class="tab" [class.active]="activeTab === 'job-requests'" (click)="activeTab = 'job-requests'">
+      Job Requests
+      <span class="tab-badge" *ngIf="pendingJobRequests > 0">{{ pendingJobRequests }}</span>
+    </button>
+    <button class="tab" [class.active]="activeTab === 'submissions'" (click)="activeTab = 'submissions'">
+      Candidate Submissions
+      <span class="tab-badge" *ngIf="pendingApprovals > 0">{{ pendingApprovals }}</span>
+    </button>
+    <button class="tab" [class.active]="activeTab === 'feedback'" (click)="activeTab = 'feedback'">
+      Client Feedback
+      <span class="tab-badge" *ngIf="unreadFeedback > 0">{{ unreadFeedback }}</span>
+    </button>
+    <button class="tab" [class.active]="activeTab === 'interviews'" (click)="activeTab = 'interviews'">Interviews</button>
+  </div>
+
   <div class="content-grid">
     <div class="main-content">
-      <div class="section">
-        <h2>About</h2>
-        <p>{{ client.description }}</p>
-      </div>
+      <!-- Overview Tab -->
+      <div *ngIf="activeTab === 'overview'">
+        <div class="section">
+          <h2>About</h2>
+          <p>{{ client.description }}</p>
+        </div>
 
-      <div class="section">
+        <div class="section">
         <div class="section-header">
           <h2>Job Orders ({{ jobs.length }})</h2>
         </div>
@@ -88,9 +103,9 @@
         <p *ngIf="recentHires.length === 0" class="empty-state">No hires yet.</p>
       </div>
 
-      <div class="section">
-        <h2>Activity Timeline</h2>
-        <div class="timeline" *ngIf="activities.length > 0">
+        <div class="section">
+          <h2>Activity Timeline</h2>
+          <div class="timeline" *ngIf="activities.length > 0">
           <div class="timeline-item" *ngFor="let activity of activities">
             <span class="timeline-icon">{{ activity.icon }}</span>
             <div class="timeline-content">
@@ -102,7 +117,234 @@
             </div>
           </div>
         </div>
-        <p *ngIf="activities.length === 0" class="empty-state">No activity yet.</p>
+          <p *ngIf="activities.length === 0" class="empty-state">No activity yet.</p>
+        </div>
+      </div>
+
+      <!-- Job Requests Tab -->
+      <div *ngIf="activeTab === 'job-requests'">
+        <div class="section">
+          <div class="section-header">
+            <h2>Job Requests from Client</h2>
+            <div class="filter-tabs">
+              <button [class.active]="jobRequestFilter === 'pending'" (click)="jobRequestFilter = 'pending'">Pending ({{ getPendingJobRequests().length }})</button>
+              <button [class.active]="jobRequestFilter === 'approved'" (click)="jobRequestFilter = 'approved'">Approved</button>
+              <button [class.active]="jobRequestFilter === 'all'" (click)="jobRequestFilter = 'all'">All</button>
+            </div>
+          </div>
+          
+          <div class="job-requests-list">
+            <div class="job-request-card" *ngFor="let request of getFilteredJobRequests()">
+              <div class="request-header">
+                <div>
+                  <h3>{{ request.title }}</h3>
+                  <p class="request-meta">{{ request.department }} • {{ request.location }} • {{ request.employmentType }}</p>
+                  <p class="request-id" *ngIf="request.requestId" style="margin-top: 4px;"><small>Request ID: <code>{{ request.requestId }}</code></small></p>
+                </div>
+                <span class="status-badge" [class]="request.status.toLowerCase()">{{ request.status }}</span>
+              </div>
+              
+              <div class="request-details">
+                <div class="detail-row">
+                  <span class="label">Priority:</span>
+                  <span class="value priority" [class]="request.priority.toLowerCase()">{{ request.priority }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Openings:</span>
+                  <span class="value">{{ request.openings }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Salary Range:</span>
+                  <span class="value">{{ request.salaryRange }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Requested:</span>
+                  <span class="value">{{ request.requestedDate }}</span>
+                </div>
+              </div>
+              
+              <div class="request-description">
+                <strong>Description:</strong>
+                <p>{{ request.description }}</p>
+              </div>
+              
+              <div class="request-requirements">
+                <strong>Requirements:</strong>
+                <p>{{ request.requirements }}</p>
+              </div>
+              
+              <div class="request-actions" *ngIf="request.status === 'Pending'">
+                <button class="btn-primary" (click)="approveJobRequest(request)">✓ Approve & Create Job</button>
+                <button class="btn-secondary" (click)="viewJobRequestDetails(request)">View Full Details</button>
+                <button class="btn-secondary danger" (click)="rejectJobRequest(request)">✗ Decline</button>
+              </div>
+              
+              <div class="request-actions" *ngIf="request.status === 'Approved'">
+                <button class="btn-secondary" (click)="viewCreatedJob(request)">View Created Job</button>
+              </div>
+            </div>
+            
+            <div class="empty-state" *ngIf="getFilteredJobRequests().length === 0">
+              <span class="empty-icon">💼</span>
+              <h3>No Job Requests</h3>
+              <p>No {{ jobRequestFilter === 'all' ? '' : jobRequestFilter }} job requests from this client</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Candidate Submissions Tab -->
+      <div *ngIf="activeTab === 'submissions'">
+        <div class="section">
+          <div class="section-header">
+            <h2>Candidate Submissions</h2>
+            <button class="btn-primary" (click)="openSubmitCandidateModal()">➕ Submit New Candidate</button>
+          </div>
+          
+          <div class="submissions-list">
+            <div class="submission-card" *ngFor="let submission of candidateSubmissions">
+              <div class="submission-header">
+                <div class="candidate-info">
+                  <div class="avatar">{{ getInitials(submission.candidateName) }}</div>
+                  <div>
+                    <h3>{{ submission.candidateName }}</h3>
+                    <p>{{ submission.position }}</p>
+                  </div>
+                </div>
+                <span class="status-badge" [class]="submission.status.toLowerCase()">{{ submission.status }}</span>
+              </div>
+              
+              <div class="submission-details">
+                <div class="detail-item">
+                  <span class="label">Submitted:</span>
+                  <span class="value">{{ submission.submittedDate }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Your Rating:</span>
+                  <span class="value">{{ submission.recruiterRating }}</span>
+                </div>
+              </div>
+              
+              <div class="recruiter-notes" *ngIf="submission.recruiterNotes">
+                <strong>Your Notes:</strong>
+                <p>{{ submission.recruiterNotes }}</p>
+              </div>
+              
+              <div class="client-response" *ngIf="submission.clientFeedback">
+                <div class="response-header">
+                  <strong>Client Response:</strong>
+                  <span class="response-date">{{ submission.responseDate }}</span>
+                </div>
+                <p>{{ submission.clientFeedback }}</p>
+              </div>
+              
+              <div class="submission-actions">
+                <button class="btn-secondary" (click)="viewCandidateProfile(submission)">View Profile</button>
+                <button class="btn-secondary" *ngIf="submission.status === 'Pending Review'">Send Reminder</button>
+              </div>
+            </div>
+            
+            <div class="empty-state" *ngIf="candidateSubmissions.length === 0">
+              <span class="empty-icon">👤</span>
+              <h3>No Submissions Yet</h3>
+              <p>Submit candidates to this client for review</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Client Feedback Tab -->
+      <div *ngIf="activeTab === 'feedback'">
+        <div class="section">
+          <div class="section-header">
+            <h2>Feedback from Client</h2>
+          </div>
+          
+          <div class="feedback-list">
+            <div class="feedback-card" *ngFor="let feedback of clientFeedback">
+              <div class="feedback-header">
+                <div>
+                  <span class="feedback-type" [class]="feedback.type.toLowerCase()">{{ feedback.type }}</span>
+                  <h3>{{ feedback.subject }}</h3>
+                </div>
+                <span class="feedback-date">{{ feedback.date }}</span>
+              </div>
+              
+              <div class="feedback-context" *ngIf="feedback.candidateName || feedback.positionTitle">
+                <span *ngIf="feedback.candidateName">👤 {{ feedback.candidateName }}</span>
+                <span *ngIf="feedback.positionTitle">💼 {{ feedback.positionTitle }}</span>
+              </div>
+              
+              <div class="feedback-message">
+                <p>{{ feedback.message }}</p>
+              </div>
+              
+              <div class="feedback-actions">
+                <button class="btn-secondary" (click)="respondToFeedback(feedback)">💬 Respond</button>
+                <button class="btn-secondary" *ngIf="!feedback.read" (click)="markAsRead(feedback)">✓ Mark as Read</button>
+              </div>
+            </div>
+            
+            <div class="empty-state" *ngIf="clientFeedback.length === 0">
+              <span class="empty-icon">💬</span>
+              <h3>No Feedback Yet</h3>
+              <p>Client feedback will appear here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interviews Tab -->
+      <div *ngIf="activeTab === 'interviews'">
+        <div class="section">
+          <div class="section-header">
+            <h2>Shared Interviews</h2>
+            <button class="btn-primary" (click)="scheduleInterview()">📅 Schedule Interview</button>
+          </div>
+          
+          <div class="interviews-list">
+            <div class="interview-card" *ngFor="let interview of sharedInterviews">
+              <div class="interview-header">
+                <div class="interview-datetime">
+                  <div class="date">{{ interview.date }}</div>
+                  <div class="time">{{ interview.time }}</div>
+                </div>
+                <div class="interview-info">
+                  <h3>{{ interview.candidateName }}</h3>
+                  <p>{{ interview.position }} • {{ interview.round }}</p>
+                </div>
+                <span class="status-badge" [class]="interview.status.toLowerCase()">{{ interview.status }}</span>
+              </div>
+              
+              <div class="interview-details">
+                <div class="detail-item">
+                  <span class="label">Interviewer:</span>
+                  <span class="value">{{ interview.interviewer }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Duration:</span>
+                  <span class="value">{{ interview.duration }}</span>
+                </div>
+                <div class="detail-item" *ngIf="interview.meetingLink">
+                  <span class="label">Meeting:</span>
+                  <a [href]="interview.meetingLink" target="_blank" class="meeting-link">{{ interview.platform }}</a>
+                </div>
+              </div>
+              
+              <div class="interview-actions">
+                <button class="btn-secondary" (click)="editInterview(interview)">✏️ Edit</button>
+                <button class="btn-secondary" (click)="notifyClient(interview)">🔔 Notify Client</button>
+                <button class="btn-secondary danger" (click)="cancelInterview(interview)">✗ Cancel</button>
+              </div>
+            </div>
+            
+            <div class="empty-state" *ngIf="sharedInterviews.length === 0">
+              <span class="empty-icon">📅</span>
+              <h3>No Interviews Scheduled</h3>
+              <p>Schedule interviews to share with client</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

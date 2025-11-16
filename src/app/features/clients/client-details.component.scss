@@ -584,3 +584,336 @@
     opacity: 1;
   }
 }
+
+// Tabs
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  &:hover {
+    color: #0066ff;
+  }
+  
+  &.active {
+    color: #0066ff;
+    border-bottom-color: #0066ff;
+  }
+}
+
+.tab-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+// Job Requests
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  
+  button {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    
+    &.active {
+      background: #0066ff;
+      color: white;
+      border-color: #0066ff;
+    }
+  }
+}
+
+.job-requests-list, .submissions-list, .feedback-list, .interviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.job-request-card, .submission-card, .feedback-card, .interview-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border-left: 4px solid #0066ff;
+}
+
+.request-header, .submission-header, .feedback-header, .interview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 0.25rem 0;
+  }
+}
+
+.request-meta {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  
+  &.pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  &.approved {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  
+  &.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+  
+  &.scheduled {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+}
+
+.request-details, .submission-details, .interview-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.detail-row, .detail-item {
+  display: flex;
+  gap: 8px;
+  
+  .label {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+  
+  .value {
+    color: #0f172a;
+    font-size: 0.875rem;
+    
+    &.priority {
+      font-weight: 600;
+      
+      &.high {
+        color: #dc2626;
+      }
+      
+      &.medium {
+        color: #f59e0b;
+      }
+      
+      &.low {
+        color: #10b981;
+      }
+    }
+  }
+}
+
+.request-description, .request-requirements, .recruiter-notes, .feedback-message {
+  margin-bottom: 1rem;
+  
+  strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #0f172a;
+    font-size: 0.875rem;
+  }
+  
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+}
+
+.request-actions, .submission-actions, .feedback-actions, .interview-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  
+  .danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
+    
+    &:hover {
+      background: #fecaca;
+    }
+  }
+}
+
+.candidate-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0066ff, #00d4ff);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.125rem;
+  }
+  
+  h3 {
+    margin: 0 0 0.25rem 0;
+  }
+  
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+}
+
+.client-response {
+  background: #f0f9ff;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  
+  .response-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    
+    strong {
+      color: #0f172a;
+      font-size: 0.875rem;
+    }
+    
+    .response-date {
+      color: #64748b;
+      font-size: 0.75rem;
+    }
+  }
+  
+  p {
+    margin: 0;
+    color: #374151;
+    font-size: 0.875rem;
+  }
+}
+
+.feedback-type {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  
+  &.candidate {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  
+  &.position {
+    background: #e0e7ff;
+    color: #4338ca;
+  }
+}
+
+.feedback-context {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.feedback-date {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.interview-datetime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  min-width: 120px;
+  
+  .date {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 0.875rem;
+    margin-bottom: 4px;
+  }
+  
+  .time {
+    color: #0066ff;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+}
+
+.interview-info {
+  flex: 1;
+}
+
+.meeting-link {
+  color: #0066ff;
+  text-decoration: none;
+  font-weight: 600;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.empty-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}

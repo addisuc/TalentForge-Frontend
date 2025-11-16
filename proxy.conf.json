@@ -19,8 +19,33 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/clients/login": {
+    "target": "http://localhost:8088",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/clients/register": {
+    "target": "http://localhost:8088",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/clients/invite": {
+    "target": "http://localhost:8088",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/clients/approvals": {
+    "target": "http://localhost:8088",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api/clients": {
     "target": "http://localhost:8083",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/job-requests": {
+    "target": "http://localhost:8088",
     "secure": false,
     "changeOrigin": true
   },

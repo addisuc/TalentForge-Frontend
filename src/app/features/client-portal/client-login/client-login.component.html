@@ -76,6 +76,10 @@
         <span *ngIf="isLoading">Signing in...</span>
       </button>
 
+      <div class="forgot-password">
+        <a routerLink="/auth/forgot-password" class="forgot-link">Forgot your password?</a>
+      </div>
+
       <div class="help-section">
         <button type="button" class="help-link" (click)="showHelp = !showHelp">
           <span class="help-icon">❓</span>

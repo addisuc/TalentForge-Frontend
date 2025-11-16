@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ClientService } from '../../../core/services/client.service';
 import { MaterialModule } from '../../../shared/material/material.module';
@@ -9,7 +9,7 @@ import { MaterialModule } from '../../../shared/material/material.module';
 @Component({
   selector: 'app-client-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, MaterialModule],
   templateUrl: './client-login.component.html',
   styleUrls: ['./client-login.component.scss']
 })
@@ -47,17 +47,24 @@ export class ClientLoginComponent implements OnInit {
       console.log('Attempting login with:', loginRequest, 'tenantId:', this.tenantId);
       
       this.clientService.login(loginRequest, this.tenantId).subscribe({
-        next: (response) => {
+        next: (response: any) => {
           console.log('Login response:', response);
           
-          // Decode JWT to get user ID
-          const tokenPayload = JSON.parse(atob(response.token.split('.')[1]));
+          // Decode JWT to get user info
+          const tokenPayload = JSON.parse(atob(response.accessToken.split('.')[1]));
           const clientUserId = tokenPayload.sub;
+          const email = tokenPayload.email;
           
           // Store token and user info
-          localStorage.setItem('clientToken', response.token);
+          localStorage.setItem('clientToken', response.accessToken);
           localStorage.setItem('tenantId', this.tenantId);
           localStorage.setItem('clientUserId', clientUserId);
+          localStorage.setItem('clientUser', JSON.stringify({
+            id: clientUserId,
+            email: email,
+            companyName: (response as any).companyName || 'Client Company',
+            contactPerson: (response as any).contactPerson || email
+          }));
           
           this.isLoading = false;
           

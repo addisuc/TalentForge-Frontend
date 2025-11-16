@@ -30,6 +30,14 @@ The TalentForge Frontend application has successfully completed MVP development 
 - [x] Reference Check Automation
 - [x] Offer Management System
 
+#### 1.1 Recruiter-Client Workflows (IN PROGRESS)
+- [x] Phase 0: Preparation (models, services, documentation)
+- [ ] Feature 1: Job Request Workflow (Frontend ✅ | Backend ⏳)
+- [ ] Feature 2: Candidate Submission Workflow
+- [ ] Feature 3: Interview Scheduling Workflow
+- [ ] Feature 4: Feedback & Communication Workflow
+- [ ] Feature 5: Notification System
+
 #### 2. Testing
 - [x] 73/73 unit tests passing (100%)
 - [x] Services: 36 tests ✅
