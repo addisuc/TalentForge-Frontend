@@ -62,9 +62,15 @@ export class ClientLoginComponent implements OnInit {
           localStorage.setItem('clientUser', JSON.stringify({
             id: clientUserId,
             email: email,
-            companyName: (response as any).companyName || 'Client Company',
-            contactPerson: (response as any).contactPerson || email
+            companyName: response.clientCompanyName || 'Client Company',
+            contactPerson: response.firstName + ' ' + response.lastName || email
           }));
+          
+          // Store client company name separately
+          localStorage.setItem('clientCompanyName', response.clientCompanyName || 'Client Company');
+          
+          // Store tenant name separately for easy access
+          localStorage.setItem('tenantName', response.tenantName || 'Client Portal');
           
           this.isLoading = false;
           
@@ -118,5 +124,10 @@ export class ClientLoginComponent implements OnInit {
       return 'Password must be at least 8 characters long';
     }
     return '';
+  }
+
+  getClientName(): string {
+    const tenantName = localStorage.getItem('tenantName');
+    return tenantName || 'Client Portal';
   }
 }

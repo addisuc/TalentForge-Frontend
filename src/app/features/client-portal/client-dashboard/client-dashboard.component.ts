@@ -644,4 +644,9 @@ export class ClientDashboardComponent implements OnInit {
       default: return 'help';
     }
   }
+
+  getTenantName(): string {
+    const clientCompanyName = localStorage.getItem('clientCompanyName');
+    return clientCompanyName || 'Client Company';
+  }
 }

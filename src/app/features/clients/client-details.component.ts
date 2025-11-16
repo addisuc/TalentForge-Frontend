@@ -27,6 +27,8 @@ export class ClientDetailsComponent implements OnInit {
   activities: any[] = [];
   showEmailModal = false;
   showNoteModal = false;
+  showJobRequestModal = false;
+  selectedJobRequest: any = null;
   emailSubject = '';
   emailBody = '';
   noteText = '';
@@ -54,6 +56,15 @@ export class ClientDetailsComponent implements OnInit {
   
   get pendingJobRequests(): number {
     return this.jobRequests.filter(r => r.status === 'PENDING').length;
+  }
+  
+  get approvedJobRequests(): number {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return this.jobRequests.filter(r => 
+      r.status === 'COMPLETED' && 
+      new Date(r.updatedAt) >= sevenDaysAgo
+    ).length;
   }
   
   get pendingApprovals(): number {
@@ -334,15 +345,41 @@ export class ClientDetailsComponent implements OnInit {
   getFilteredJobRequests() {
     if (this.jobRequestFilter === 'all') return this.jobRequests;
     if (this.jobRequestFilter === 'pending') return this.jobRequests.filter(r => r.status === 'PENDING');
-    if (this.jobRequestFilter === 'approved') return this.jobRequests.filter(r => r.status === 'IN_PROGRESS');
+    if (this.jobRequestFilter === 'approved') return this.jobRequests.filter(r => r.status === 'COMPLETED');
     return this.jobRequests;
   }
   
   approveJobRequest(request: JobRequest) {
-    this.jobRequestService.updateJobRequestStatus(request.id, 'IN_PROGRESS').subscribe({
+    // First update status to COMPLETED
+    this.jobRequestService.updateJobRequestStatus(request.id, 'COMPLETED').subscribe({
       next: (updated) => {
-        this.showNotification(`Job request "${request.title}" approved`, 'success');
-        request.status = 'IN_PROGRESS';
+        // Then create actual job posting
+        const jobData = {
+          title: request.title,
+          description: request.description,
+          requirements: request.requirements,
+          location: request.location,
+          department: request.department,
+          employmentType: request.employmentType,
+          salaryRange: request.salaryRange,
+          clientId: request.clientId,
+          clientName: request.clientName,
+          jobRequestId: request.id,
+          status: 'DRAFT',
+          jobType: request.employmentType, // Use employment type as job type
+          companyId: request.clientId
+        } as any;
+        
+        this.jobService.createJob(jobData).subscribe({
+          next: (job) => {
+            this.showNotification(`Job "${request.title}" created as draft. Activate it when ready to go live.`, 'success');
+            (request as any).status = 'COMPLETED';
+          },
+          error: (err) => {
+            console.error('Error creating job:', err);
+            this.showNotification('Request approved but failed to create job posting', 'error');
+          }
+        });
       },
       error: (err) => {
         console.error('Error approving job request:', err);
@@ -351,12 +388,32 @@ export class ClientDetailsComponent implements OnInit {
     });
   }
   
+  sendJobLiveNotification(request: JobRequest, job: any) {
+    const clientName = this.client.contactPerson || this.client.name;
+    
+    this.emailService.sendEmail(
+      this.client.email,
+      `Your Job Request "${request.title}" Has Been Approved!`,
+      `Hi ${clientName},\n\nGreat news! Your job request "${request.title}" (${request.requestId}) has been approved and is now active.\n\nWe have published the job posting and will begin sourcing qualified candidates immediately. You'll receive candidate submissions through your client portal as we find suitable matches.\n\nJob Details:\n- Title: ${request.title}\n- Department: ${request.department}\n- Location: ${request.location}\n- Priority: ${request.priority}\n\nWe'll keep you updated on our progress. Thank you for choosing our recruiting services!\n\nBest regards,\nYour Recruiting Team`
+    ).subscribe({
+      next: () => console.log('Job live notification sent to client'),
+      error: (err) => console.error('Failed to send notification email:', err)
+    });
+  }
+  
   rejectJobRequest(request: JobRequest) {
-    if (confirm(`Decline job request for "${request.title}"?`)) {
-      this.jobRequestService.updateJobRequestStatus(request.id, 'REJECTED').subscribe({
+    const reason = prompt(`Please provide a reason for declining "${request.title}":`);
+    
+    if (reason !== null) { // User didn't cancel
+      const declineReason = reason.trim() || 'No reason provided';
+      
+      this.jobRequestService.updateJobRequestStatus(request.id, 'REJECTED', declineReason).subscribe({
         next: (updated) => {
           this.showNotification(`Job request "${request.title}" declined`, 'success');
-          request.status = 'REJECTED';
+          (request as any).status = 'REJECTED';
+          
+          // Send decline notification to client
+          this.sendJobDeclineNotification(request, declineReason);
         },
         error: (err) => {
           console.error('Error rejecting job request:', err);
@@ -366,8 +423,27 @@ export class ClientDetailsComponent implements OnInit {
     }
   }
   
+  sendJobDeclineNotification(request: JobRequest, reason: string) {
+    const clientName = this.client.contactPerson || this.client.name;
+    
+    this.emailService.sendEmail(
+      this.client.email,
+      `Job Request "${request.title}" Update`,
+      `Hi ${clientName},\n\nWe've reviewed your job request "${request.title}" (${request.requestId}).\n\nUnfortunately, we're unable to proceed with this request at this time.\n\nReason: ${reason}\n\nJob Details:\n- Title: ${request.title}\n- Department: ${request.department}\n- Location: ${request.location}\n\nIf you have any questions or would like to discuss alternative approaches, please don't hesitate to reach out.\n\nBest regards,\nYour Recruiting Team`
+    ).subscribe({
+      next: () => console.log('Job decline notification sent to client'),
+      error: (err) => console.error('Failed to send decline notification email:', err)
+    });
+  }
+  
   viewJobRequestDetails(request: any) {
-    alert(`Full details for: ${request.title}\n\nDescription: ${request.description}\n\nRequirements: ${request.requirements}`);
+    this.selectedJobRequest = request;
+    this.showJobRequestModal = true;
+  }
+  
+  closeJobRequestModal() {
+    this.showJobRequestModal = false;
+    this.selectedJobRequest = null;
   }
   
   viewCreatedJob(request: any) {

@@ -128,7 +128,7 @@
             <h2>Job Requests from Client</h2>
             <div class="filter-tabs">
               <button [class.active]="jobRequestFilter === 'pending'" (click)="jobRequestFilter = 'pending'">Pending ({{ getPendingJobRequests().length }})</button>
-              <button [class.active]="jobRequestFilter === 'approved'" (click)="jobRequestFilter = 'approved'">Approved</button>
+              <button [class.active]="jobRequestFilter === 'approved'" (click)="jobRequestFilter = 'approved'">Approved ({{ approvedJobRequests }})</button>
               <button [class.active]="jobRequestFilter === 'all'" (click)="jobRequestFilter = 'all'">All</button>
             </div>
           </div>
@@ -173,7 +173,7 @@
                 <p>{{ request.requirements }}</p>
               </div>
               
-              <div class="request-actions" *ngIf="request.status === 'Pending'">
+              <div class="request-actions" *ngIf="request.status === 'PENDING'">
                 <button class="btn-primary" (click)="approveJobRequest(request)">✓ Approve & Create Job</button>
                 <button class="btn-secondary" (click)="viewJobRequestDetails(request)">View Full Details</button>
                 <button class="btn-secondary danger" (click)="rejectJobRequest(request)">✗ Decline</button>
@@ -434,6 +434,108 @@
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeNoteModal()">Cancel</button>
         <button class="btn-primary" (click)="saveNote()">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Request Details Modal -->
+  <div class="modal-overlay" *ngIf="showJobRequestModal" (click)="closeJobRequestModal()">
+    <div class="modal large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Job Request Details</h2>
+        <button class="close-btn" (click)="closeJobRequestModal()">✕</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedJobRequest">
+        <div class="job-request-details">
+          <div class="detail-section">
+            <div class="section-header">
+              <span class="section-icon">💼</span>
+              <h3>Basic Information</h3>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>Job Title:</label>
+                <span class="value-highlight">{{ selectedJobRequest.title }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Department:</label>
+                <span>{{ selectedJobRequest.department }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Location:</label>
+                <span>{{ selectedJobRequest.location }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Employment Type:</label>
+                <span>{{ selectedJobRequest.employmentType }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Priority:</label>
+                <span class="priority" [class]="selectedJobRequest.priority?.toLowerCase()">{{ selectedJobRequest.priority }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Number of Openings:</label>
+                <span>{{ selectedJobRequest.numberOfOpenings || selectedJobRequest.openings }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Salary Range:</label>
+                <span>{{ selectedJobRequest.salaryRange }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Request ID:</label>
+                <span><code>{{ selectedJobRequest.requestId }}</code></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <div class="section-header">
+              <span class="section-icon">📋</span>
+              <h3>Job Description</h3>
+            </div>
+            <div class="description-content">
+              {{ selectedJobRequest.description }}
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <div class="section-header">
+              <span class="section-icon">✅</span>
+              <h3>Requirements</h3>
+            </div>
+            <div class="requirements-content">
+              {{ selectedJobRequest.requirements }}
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <div class="section-header">
+              <span class="section-icon">📄</span>
+              <h3>Request Information</h3>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>Status:</label>
+                <span class="status-badge" [class]="selectedJobRequest.status?.toLowerCase()">{{ selectedJobRequest.status }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Requested Date:</label>
+                <span>{{ selectedJobRequest.createdAt | date:'MMM d, yyyy h:mm a' }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Client:</label>
+                <span>{{ selectedJobRequest.clientName }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeJobRequestModal()">Close</button>
+        <div class="action-buttons" *ngIf="selectedJobRequest?.status === 'PENDING'">
+          <button class="btn-primary" (click)="approveJobRequest(selectedJobRequest); closeJobRequestModal()">✓ Approve & Create Job</button>
+          <button class="btn-secondary danger" (click)="rejectJobRequest(selectedJobRequest); closeJobRequestModal()">✗ Decline</button>
+        </div>
       </div>
     </div>
   </div>

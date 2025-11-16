@@ -14,32 +14,48 @@ export class JobRequestService {
 
   // Client creates job request
   createJobRequest(request: Partial<JobRequest>): Observable<JobRequest> {
-    const tenantId = localStorage.getItem('tenantId');
-    const userId = localStorage.getItem('clientUserId');
+    const token = localStorage.getItem('token');
     const headers = {
-      'X-Tenant-ID': tenantId || '',
-      'X-User-ID': userId || ''
+      'Authorization': `Bearer ${token}`
     };
     return this.http.post<JobRequest>(`${this.baseUrl}`, request, { headers });
   }
 
   // Client gets their job requests
   getClientJobRequests(clientId: string): Observable<JobRequest[]> {
-    const tenantId = localStorage.getItem('tenantId');
+    const token = localStorage.getItem('token');
     const headers = {
-      'X-Tenant-ID': tenantId || ''
+      'Authorization': `Bearer ${token}`
     };
     return this.http.get<JobRequest[]>(`${this.baseUrl}/client/${clientId}`, { headers });
   }
 
   // Recruiter gets job requests for their clients
   getJobRequestsForRecruiter(): Observable<JobRequest[]> {
-    return this.http.get<JobRequest[]>(`${this.baseUrl}/recruiter`);
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Authorization': `Bearer ${token}`
+    };
+    return this.http.get<JobRequest[]>(`${this.baseUrl}/recruiter`, { headers });
+  }
+
+  private getTenantIdFromToken(token: string | null): string {
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.tenantId || '';
+    } catch {
+      return '';
+    }
   }
 
   // Recruiter updates job request status
   updateJobRequestStatus(id: string, status: string, notes?: string): Observable<JobRequest> {
-    return this.http.patch<JobRequest>(`${this.baseUrl}/${id}/status`, { status, notes });
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Authorization': `Bearer ${token}`
+    };
+    return this.http.patch<JobRequest>(`${this.baseUrl}/${id}/status`, { status, notes }, { headers });
   }
 
   // Recruiter converts job request to job posting
