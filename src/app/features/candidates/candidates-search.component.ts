@@ -29,13 +29,16 @@ export class CandidatesSearchComponent implements OnInit {
         console.log('Loaded candidates from API:', response);
         this.candidates = (response.content || response).map((candidate: any) => {
           console.log('Mapping candidate:', candidate.id, candidate.userId, candidate.resumeUrl);
+          const role = candidate.headline || 
+                      (candidate.experience && candidate.experience.length > 0 ? candidate.experience[0].title : null) ||
+                      'Candidate';
           return {
             id: candidate.userId,
             name: `${candidate.firstName || ''} ${candidate.lastName || ''}`.trim() || 'Unknown',
             initials: `${(candidate.firstName || 'U')[0]}${(candidate.lastName || 'N')[0]}`,
-            role: 'Candidate',
+            role: role,
             location: candidate.location || 'N/A',
-            experience: candidate.experience || 0,
+            experience: candidate.experienceYears || 0,
             salary: candidate.expectedSalary || 'N/A',
             status: 'Available',
             skills: candidate.skills || [],

@@ -847,3 +847,33 @@
     opacity: 1;
   }
 }
+
+// Client Feedback Section
+.client-feedback-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid #e2e8f0;
+  
+  h4 {
+    margin: 0 0 16px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  
+  .feedback-box {
+    background: #f0f9ff;
+    border-left: 4px solid #0066ff;
+    padding: 16px;
+    border-radius: 8px;
+    
+    pre {
+      margin: 0;
+      font-family: inherit;
+      font-size: 0.875rem;
+      color: #374151;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  }
+}

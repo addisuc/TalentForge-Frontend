@@ -54,6 +54,7 @@ import { AuthService } from '../../core/auth/auth.service';
             <p class="job-description" *ngIf="viewMode === 'cards'">{{ job.description }}</p>
           </div>
           <div class="job-actions">
+            <button class="btn-details" (click)="viewJobDetails(job)">View Details</button>
             <button class="btn-apply" 
                     [disabled]="hasApplied(job.id)"
                     (click)="applyToJob(job)">
@@ -226,6 +227,46 @@ import { AuthService } from '../../core/auth/auth.service';
       </div>
     </div>
 
+    <!-- Job Details Modal -->
+    <div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+      <div class="modal details-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Job Details</h2>
+          <button class="close-btn" (click)="closeDetailsModal()">✕</button>
+        </div>
+        <div class="modal-body" *ngIf="selectedJob">
+          <div class="details-header">
+            <h3>{{ selectedJob.title }}</h3>
+            <p class="company">{{ getCompanyName(selectedJob) }}</p>
+            <div class="job-meta">
+              <span>📍 {{ getLocationString(selectedJob) }}</span>
+              <span>💰 {{ getSalaryRange(selectedJob) }}</span>
+              <span>⏰ {{ getJobTypeDisplay(selectedJob) }}</span>
+              <span>📅 Posted {{ getPostedDate(selectedJob) }}</span>
+            </div>
+          </div>
+          
+          <div class="details-section">
+            <h4>Job Description</h4>
+            <div class="details-content" [innerHTML]="selectedJob.description"></div>
+          </div>
+          
+          <div class="details-section" *ngIf="selectedJob.requirements">
+            <h4>Requirements</h4>
+            <div class="details-content" [innerHTML]="selectedJob.requirements"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeDetailsModal()">Close</button>
+          <button class="btn-primary" 
+                  [disabled]="hasApplied(selectedJob!.id)"
+                  (click)="applyFromDetails()">
+            {{ hasApplied(selectedJob!.id) ? 'Applied' : 'Apply Now' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="toast" *ngIf="showToastFlag" [class]="'toast-' + toastType">
       <div class="toast-content">
@@ -261,9 +302,14 @@ import { AuthService } from '../../core/auth/auth.service';
     .job-company { color: #64748b; font-weight: 500; margin-bottom: 0.75rem; }
     .job-details { display: flex; gap: 1rem; font-size: 0.875rem; color: #64748b; margin-bottom: 1rem; }
     .job-description { color: #475569; font-size: 0.875rem; line-height: 1.5; margin-bottom: 1rem; }
+    .job-actions { display: flex; gap: 0.5rem; }
+    .btn-details { background: white; color: #0066ff; border: 1px solid #0066ff; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .btn-details:hover { background: #f0f7ff; }
     .btn-apply { background: #0066ff; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .job-card .btn-apply { width: 100%; }
-    .job-row .btn-apply { width: auto; }
+    .job-card .job-actions { flex-direction: column; }
+    .job-card .btn-details, .job-card .btn-apply { width: 100%; }
+    .job-row .job-actions { flex-direction: row; }
+    .job-row .btn-details, .job-row .btn-apply { width: auto; }
     .pagination { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: white; border-radius: 12px; border: 1px solid #e2e8f0; }
     .pagination-left { display: flex; align-items: center; gap: 1rem; }
     .pagination-info { color: #64748b; font-size: 0.875rem; }
@@ -276,6 +322,13 @@ import { AuthService } from '../../core/auth/auth.service';
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
     .modal { background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); }
     .preview-modal { max-width: 700px; }
+    .details-modal { max-width: 800px; }
+    .details-header { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+    .details-header h3 { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0 0 8px 0; }
+    .details-header .company { color: #64748b; font-weight: 500; margin: 0 0 12px 0; font-size: 1.125rem; }
+    .details-section { margin-bottom: 24px; }
+    .details-section h4 { font-size: 1.125rem; font-weight: 600; color: #0f172a; margin: 0 0 12px 0; }
+    .details-content { color: #475569; line-height: 1.6; white-space: pre-wrap; }
     .preview-section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
     .preview-section:last-child { border-bottom: none; }
     .preview-section h3 { font-size: 1.125rem; font-weight: 600; color: #0f172a; margin: 0 0 12px 0; }
@@ -353,6 +406,7 @@ export class CandidateJobsComponent implements OnInit {
   toastType = '';
   showToastFlag = false;
   showPreviewModal = false;
+  showDetailsModal = false;
   viewMode: 'cards' | 'list' = 'list';
   searchTerm = '';
   locationFilter = 'all';
@@ -678,5 +732,30 @@ export class CandidateJobsComponent implements OnInit {
     return this.getValidReferences().length;
   }
 
+  viewJobDetails(job: Job) {
+    this.selectedJob = job;
+    this.showDetailsModal = true;
+  }
 
+  closeDetailsModal() {
+    this.showDetailsModal = false;
+  }
+
+  applyFromDetails() {
+    this.showDetailsModal = false;
+    this.applyToJob(this.selectedJob!);
+  }
+
+  getPostedDate(job: Job): string {
+    const posted = new Date(job.createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - posted.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return `${Math.floor(diffDays / 30)} months ago`;
+  }
 }

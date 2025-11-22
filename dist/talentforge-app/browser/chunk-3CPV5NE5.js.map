@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/environments/environment.ts"],
+  "sourcesContent": ["// Local development environment\nexport const environment = {\n  production: false,\n  apiUrl: '/api',\n  recaptchaSiteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',\n  sentryDsn: '',\n  gaTrackingId: ''\n};\n\n// Local development environment\n"],
+  "mappings": ";AACO,IAAM,cAAc;EACzB,YAAY;EACZ,QAAQ;EACR,kBAAkB;EAClB,WAAW;EACX,cAAc;;",
+  "names": []
+}

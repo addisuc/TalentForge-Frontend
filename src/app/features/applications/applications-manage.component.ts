@@ -58,8 +58,8 @@ export class ApplicationsManageComponent implements OnInit {
     { name: 'Applied', status: 'APPLIED', visibleCount: 25, applications: [] as any[] },
     { name: 'Screening', status: 'SCREENING', visibleCount: 25, applications: [] as any[] },
     { name: 'Phone Screen', status: 'PHONE_INTERVIEW', visibleCount: 25, applications: [] as any[] },
-    { name: 'Technical', status: 'TECHNICAL_INTERVIEW', visibleCount: 25, applications: [] as any[] },
-    { name: 'Final Interview', status: 'FINAL_INTERVIEW', visibleCount: 25, applications: [] as any[] },
+    { name: 'Submitted to Client', status: 'SUBMITTED_TO_CLIENT', visibleCount: 25, applications: [] as any[] },
+    { name: 'Client Interview', status: 'CLIENT_INTERVIEW', visibleCount: 25, applications: [] as any[] },
     { name: 'Reference Check', status: 'REFERENCE_CHECK', visibleCount: 25, applications: [] as any[] },
     { name: 'Background Check', status: 'BACKGROUND_CHECK', visibleCount: 25, applications: [] as any[] },
     { name: 'Offer', status: 'OFFER_PENDING', visibleCount: 25, applications: [] as any[] },
@@ -72,8 +72,8 @@ export class ApplicationsManageComponent implements OnInit {
     { value: 'APPLIED', label: 'Applied' },
     { value: 'SCREENING', label: 'Screening' },
     { value: 'PHONE_INTERVIEW', label: 'Phone Interview' },
-    { value: 'TECHNICAL_INTERVIEW', label: 'Technical Interview' },
-    { value: 'FINAL_INTERVIEW', label: 'Final Interview' },
+    { value: 'SUBMITTED_TO_CLIENT', label: 'Submitted to Client' },
+    { value: 'CLIENT_INTERVIEW', label: 'Client Interview' },
     { value: 'REFERENCE_CHECK', label: 'Reference Check' },
     { value: 'BACKGROUND_CHECK', label: 'Background Check' },
     { value: 'OFFER_PENDING', label: 'Offer Pending' },
@@ -218,7 +218,7 @@ export class ApplicationsManageComponent implements OnInit {
   }
 
   handleStatusChange(newStatus: string) {
-    const isInterviewStatus = ['PHONE_INTERVIEW', 'TECHNICAL_INTERVIEW', 'FINAL_INTERVIEW'].includes(newStatus);
+    const isInterviewStatus = ['PHONE_INTERVIEW', 'CLIENT_INTERVIEW'].includes(newStatus);
     const isBackgroundCheck = newStatus === 'BACKGROUND_CHECK';
     const isReferenceCheck = newStatus === 'REFERENCE_CHECK';
     const isOfferPending = newStatus === 'OFFER_PENDING';
@@ -395,7 +395,7 @@ export class ApplicationsManageComponent implements OnInit {
     } else {
       const app = event.previousContainer.data[event.previousIndex];
       const newStatus = this.getStatusForStage(targetStage.status);
-      const isInterviewStage = ['PHONE_INTERVIEW', 'TECHNICAL_INTERVIEW', 'FINAL_INTERVIEW'].includes(newStatus);
+      const isInterviewStage = ['PHONE_INTERVIEW', 'CLIENT_INTERVIEW'].includes(newStatus);
       
       if (isInterviewStage) {
         // Don't move the item yet, show schedule modal first
@@ -542,8 +542,8 @@ export class ApplicationsManageComponent implements OnInit {
       { name: 'Applied', status: 'APPLIED', date: application.appliedAt },
       { name: 'Screening', status: 'SCREENING', date: null },
       { name: 'Phone Interview', status: 'PHONE_INTERVIEW', date: null },
-      { name: 'Technical Interview', status: 'TECHNICAL_INTERVIEW', date: null },
-      { name: 'Final Interview', status: 'FINAL_INTERVIEW', date: null },
+      { name: 'Submitted to Client', status: 'SUBMITTED_TO_CLIENT', date: null },
+      { name: 'Client Interview', status: 'CLIENT_INTERVIEW', date: null },
       { name: 'Reference Check', status: 'REFERENCE_CHECK', date: null },
       { name: 'Background Check', status: 'BACKGROUND_CHECK', date: null },
       { name: 'Offer Pending', status: 'OFFER_PENDING', date: null },
@@ -601,5 +601,30 @@ export class ApplicationsManageComponent implements OnInit {
       if (client) return client.name;
     }
     return 'Company';
+  }
+  
+  getClientFeedback(stageNotes: string): string {
+    if (!stageNotes) return '';
+    const clientActions = stageNotes.split('\n').filter(line => line.includes('CLIENT ACTION'));
+    return clientActions.join('\n\n');
+  }
+
+  scheduleClientInterview() {
+    if (!this.selectedApplication) return;
+    
+    this.pendingStatusChange = {
+      app: { originalApp: this.selectedApplication },
+      status: 'CLIENT_INTERVIEW'
+    };
+    this.interviewType = 'CLIENT_INTERVIEW';
+    this.interviewDateTime = '';
+    this.meetingLink = '';
+    this.duration = 60;
+    this.location = '';
+    this.interviewerName = '';
+    this.interviewerEmail = '';
+    this.notes = '';
+    this.closeStatusModal();
+    this.showScheduleModal = true;
   }
 }

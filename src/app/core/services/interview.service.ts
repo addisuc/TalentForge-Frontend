@@ -70,6 +70,10 @@ export class InterviewService {
     return this.http.get<Interview[]>(`${this.apiUrl}/my-interviews`);
   }
 
+  getInterviewsByClient(clientId: string): Observable<Interview[]> {
+    return this.http.get<Interview[]>(`${this.apiUrl}/client/${clientId}`);
+  }
+
   createInterview(request: InterviewRequest): Observable<Interview> {
     return this.http.post<Interview>(this.apiUrl, request);
   }

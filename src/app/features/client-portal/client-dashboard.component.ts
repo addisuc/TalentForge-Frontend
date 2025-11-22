@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { ApplicationService } from '../../core/services/application.service';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -9,23 +10,59 @@ import { RouterModule } from '@angular/router';
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss']
 })
-export class ClientDashboardComponent {
+export class ClientDashboardComponent implements OnInit {
   stats = [
-    { label: 'Active Jobs', value: '8', icon: '💼' },
-    { label: 'Candidates Submitted', value: '45', icon: '👥' },
-    { label: 'Interviews Scheduled', value: '12', icon: '📅' },
-    { label: 'Hires Made', value: '3', icon: '✅' }
+    { label: 'Active Jobs', value: '0', icon: '💼' },
+    { label: 'Candidates Submitted', value: '0', icon: '👥' },
+    { label: 'Interviews Scheduled', value: '0', icon: '📅' },
+    { label: 'Hires Made', value: '0', icon: '✅' }
   ];
 
-  myJobs = [
-    { id: 1, title: 'Senior Developer', candidates: 12, status: 'Active', posted: '2024-01-15' },
-    { id: 2, title: 'Product Manager', candidates: 8, status: 'Active', posted: '2024-01-20' },
-    { id: 3, title: 'UX Designer', candidates: 15, status: 'Active', posted: '2024-01-22' }
-  ];
+  myJobs: any[] = [];
+  recentCandidates: any[] = [];
+  companyId = 'd5ffee58-f341-41ce-b2a8-4458f175ab33'; // TODO: Get from auth
 
-  recentCandidates = [
-    { id: 1, name: 'Sarah Johnson', position: 'Senior Developer', status: 'Interview', submittedDays: 2 },
-    { id: 2, name: 'Michael Chen', position: 'Product Manager', status: 'Review', submittedDays: 1 },
-    { id: 3, name: 'Emily Davis', position: 'UX Designer', status: 'Shortlisted', submittedDays: 3 }
-  ];
+  constructor(private applicationService: ApplicationService) {}
+
+  ngOnInit() {
+    this.loadCandidates();
+  }
+
+  loadCandidates() {
+    this.applicationService.getClientSubmissions(this.companyId, 0, 100).subscribe({
+      next: (data) => {
+        const candidates = data.content;
+        this.stats[1].value = candidates.length.toString();
+        
+        // Get recent 5 candidates
+        this.recentCandidates = candidates.slice(0, 5).map(app => ({
+          id: app.id,
+          name: app.candidateName || 'Unknown',
+          position: app.jobTitle || 'Unknown Position',
+          status: this.formatStatus(app.status),
+          submittedDays: this.getDaysAgo(app.updatedAt)
+        }));
+        
+        // Count interviews and hires
+        this.stats[2].value = candidates.filter(c => c.status === 'CLIENT_INTERVIEW').length.toString();
+        this.stats[3].value = candidates.filter(c => c.status === 'HIRED').length.toString();
+      },
+      error: (err) => console.error('Failed to load candidates:', err)
+    });
+  }
+
+  formatStatus(status: string): string {
+    if (status === 'SUBMITTED_TO_CLIENT') return 'Review';
+    if (status === 'CLIENT_INTERVIEW') return 'Interview';
+    if (status === 'OFFER_PENDING') return 'Offer';
+    if (status === 'HIRED') return 'Hired';
+    return status.replace(/_/g, ' ');
+  }
+
+  getDaysAgo(dateString: string): number {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
 }

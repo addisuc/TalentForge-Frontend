@@ -31,10 +31,14 @@
         <span>Candidate Submissions</span>
         <span class="badge" *ngIf="dashboard.totalPending > 0">{{ dashboard.totalPending }}</span>
       </a>
+      <a class="nav-item" [class.active]="activeSection === 'approved'" (click)="setActiveSection('approved')">
+        <span class="icon">✅</span>
+        <span>Approved Candidates</span>
+      </a>
       <a class="nav-item" [class.active]="activeSection === 'interviews'" (click)="setActiveSection('interviews')">
         <span class="icon">📅</span>
         <span>My Interviews</span>
-        <span class="badge">3</span>
+        <span class="badge" *ngIf="scheduledInterviews.length > 0">{{ scheduledInterviews.length }}</span>
       </a>
       <a class="nav-item" [class.active]="activeSection === 'positions'" (click)="setActiveSection('positions')">
         <span class="icon">💼</span>
@@ -139,7 +143,7 @@
             <div class="stat-header">
               <span class="stat-icon">⏳</span>
             </div>
-            <div class="stat-value">{{ dashboard.totalPending }}</div>
+            <div class="stat-value">{{ getPendingReviewsCount() }}</div>
             <div class="stat-label">Pending Reviews</div>
           </div>
           
@@ -147,7 +151,7 @@
             <div class="stat-header">
               <span class="stat-icon">💼</span>
             </div>
-            <div class="stat-value">5</div>
+            <div class="stat-value">{{ jobRequests.length }}</div>
             <div class="stat-label">Active Positions</div>
           </div>
           
@@ -155,7 +159,7 @@
             <div class="stat-header">
               <span class="stat-icon">👥</span>
             </div>
-            <div class="stat-value">8</div>
+            <div class="stat-value">{{ scheduledInterviews.length }}</div>
             <div class="stat-label">Scheduled Interviews</div>
           </div>
           
@@ -163,7 +167,7 @@
             <div class="stat-header">
               <span class="stat-icon">✅</span>
             </div>
-            <div class="stat-value">3</div>
+            <div class="stat-value">{{ getHiredCount() }}</div>
             <div class="stat-label">Recent Hires</div>
           </div>
         </div>
@@ -231,19 +235,19 @@
               <div class="candidate-summary">
                 <div class="summary-grid">
                   <div class="summary-item">
-                    <span class="label">Experience</span>
+                    <span class="label">Experience:</span>
                     <span class="value">{{ submission.experience }}</span>
                   </div>
                   <div class="summary-item">
-                    <span class="label">Current Company</span>
+                    <span class="label">Current Company:</span>
                     <span class="value">{{ submission.currentCompany }}</span>
                   </div>
                   <div class="summary-item">
-                    <span class="label">Education</span>
+                    <span class="label">Education:</span>
                     <span class="value">{{ submission.education }}</span>
                   </div>
                   <div class="summary-item">
-                    <span class="label">Expected Salary</span>
+                    <span class="label">Expected Salary:</span>
                     <span class="value">{{ submission.expectedSalary }}</span>
                   </div>
                 </div>
@@ -263,10 +267,10 @@
               
               <div class="candidate-actions">
                 <div class="document-actions">
-                  <button class="btn-document" (click)="viewResume(submission)">
-                    📄 Resume
+                  <button class="btn-document" (click)="previewResume(submission); $event.preventDefault()">
+                    📄 View Resume
                   </button>
-                  <button class="btn-document" *ngIf="submission.portfolioUrl" (click)="viewPortfolio(submission)">
+                  <button class="btn-document" *ngIf="submission.portfolioUrl" (click)="viewPortfolio(submission); $event.preventDefault()">
                     🔗 Portfolio
                   </button>
                 </div>
@@ -283,17 +287,36 @@
                 </div>
               </div>
               
-              <div class="submission-feedback" *ngIf="submission.status !== 'PENDING_REVIEW'">
-                <div class="feedback-section">
-                  <strong>Your Decision:</strong> {{ submission.clientDecision }}
-                  <p *ngIf="submission.clientFeedback">{{ submission.clientFeedback }}</p>
-                </div>
-                <div class="next-steps" *ngIf="submission.status === 'APPROVED_FOR_INTERVIEW'">
-                  <p>✅ Recruiter will coordinate interview scheduling</p>
-                </div>
-              </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Approved Candidates Section -->
+      <div *ngIf="activeSection === 'approved'" class="content-section">
+        <div class="page-header">
+          <div>
+            <h1>Approved Candidates</h1>
+            <p class="page-subtitle">Track candidates you approved for interview</p>
+          </div>
+        </div>
+        <div *ngIf="approvedCandidates.length === 0" class="empty-state">
+          <span class="empty-icon">✅</span>
+          <h3>No Approved Candidates</h3>
+          <p>Candidates you approve will appear here</p>
+        </div>
+        <div *ngIf="approvedCandidates.length > 0" class="table-container">
+          <table class="data-table">
+            <thead><tr><th>Candidate</th><th>Position</th><th>Status</th><th>Approved Date</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let candidate of approvedCandidates">
+                <td><strong>{{ candidate.candidateName }}</strong></td>
+                <td>{{ candidate.jobTitle }}</td>
+                <td><span class="status-badge" [ngClass]="getStatusClass(candidate.status)">{{ formatStatus(candidate.status) }}</span></td>
+                <td>{{ candidate.updatedAt | date:'MMM d, yyyy' }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -1070,4 +1093,107 @@
       </div>
     </div>
   </main>
+</div>
+<!-- Approve Modal -->
+<div *ngIf="showApproveModal" class="modal-overlay" (click)="closeActionModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>✓ Approve Candidate</h2>
+      <button class="close-btn" (click)="closeActionModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p><strong>{{ selectedSubmission?.candidateName }}</strong> for <strong>{{ selectedSubmission?.position }}</strong></p>
+      
+      <div class="form-group">
+        <label>Why are you approving this candidate? *</label>
+        <select [(ngModel)]="actionReason" class="form-control">
+          <option value="">Select reason</option>
+          <option value="Strong technical skills">Strong technical skills</option>
+          <option value="Great culture fit">Great culture fit</option>
+          <option value="Relevant experience">Relevant experience</option>
+          <option value="Impressive background">Impressive background</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Additional notes (optional)</label>
+        <textarea [(ngModel)]="actionNotes" rows="3" placeholder="Any specific areas to focus on during interview..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeActionModals()">Cancel</button>
+      <button class="btn-approve" (click)="confirmApprove()">Approve & Move to Interview</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hold Modal -->
+<div *ngIf="showHoldModal" class="modal-overlay" (click)="closeActionModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>⏸ Put on Hold</h2>
+      <button class="close-btn" (click)="closeActionModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p><strong>{{ selectedSubmission?.candidateName }}</strong> for <strong>{{ selectedSubmission?.position }}</strong></p>
+      
+      <div class="form-group">
+        <label>Reason for hold *</label>
+        <select [(ngModel)]="actionReason" class="form-control">
+          <option value="">Select reason</option>
+          <option value="Reviewing other candidates">Reviewing other candidates</option>
+          <option value="Need more information">Need more information</option>
+          <option value="Budget pending approval">Budget pending approval</option>
+          <option value="Hiring timeline changed">Hiring timeline changed</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Additional notes (optional)</label>
+        <textarea [(ngModel)]="actionNotes" rows="3" placeholder="Any additional context..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeActionModals()">Cancel</button>
+      <button class="btn-hold" (click)="confirmHold()">Put on Hold</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div *ngIf="showRejectModal" class="modal-overlay" (click)="closeActionModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>✗ Reject Candidate</h2>
+      <button class="close-btn" (click)="closeActionModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p><strong>{{ selectedSubmission?.candidateName }}</strong> for <strong>{{ selectedSubmission?.position }}</strong></p>
+      
+      <div class="form-group">
+        <label>Reason for rejection *</label>
+        <select [(ngModel)]="actionReason" class="form-control">
+          <option value="">Select reason</option>
+          <option value="Not qualified">Not qualified for the role</option>
+          <option value="Overqualified">Overqualified</option>
+          <option value="Salary expectations too high">Salary expectations too high</option>
+          <option value="Culture fit concerns">Culture fit concerns</option>
+          <option value="Found better candidate">Found a better candidate</option>
+          <option value="Position filled">Position already filled</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Feedback for recruiter (optional but recommended)</label>
+        <textarea [(ngModel)]="actionNotes" rows="3" placeholder="This feedback helps the recruiter understand your requirements better..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeActionModals()">Cancel</button>
+      <button class="btn-reject" (click)="confirmReject()">Reject Candidate</button>
+    </div>
+  </div>
 </div>

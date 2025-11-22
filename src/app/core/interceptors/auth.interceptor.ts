@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler } from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler) {
     // Skip auth for public endpoints
@@ -44,6 +47,39 @@ export class AuthInterceptor implements HttpInterceptor {
       return next.handle(authReq);
     }
     
-    return next.handle(req);
+    return next.handle(req).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401 || error.status === 403) {
+          // Token expired or unauthorized
+          const isClientPortal = req.url.includes('/client/');
+          
+          if (isClientPortal) {
+            localStorage.removeItem('clientToken');
+            localStorage.removeItem('tenantId');
+            localStorage.removeItem('clientUserId');
+            localStorage.removeItem('clientUser');
+            this.router.navigate(['/client-login']);
+          } else {
+            this.authService.logout();
+            this.router.navigate(['/auth/login']);
+          }
+          
+          // Show warning and auto-logout after 5 seconds
+          if (confirm('Your session has expired. Click OK to login again or Cancel to stay (you will be logged out in 5 seconds).')) {
+            // User clicked OK - logout immediately
+          } else {
+            // User clicked Cancel - logout after 5 seconds
+            setTimeout(() => {
+              if (isClientPortal) {
+                this.router.navigate(['/client-login']);
+              } else {
+                this.router.navigate(['/auth/login']);
+              }
+            }, 5000);
+          }
+        }
+        return throwError(() => error);
+      })
+    );
   }
 }

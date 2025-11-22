@@ -2,10 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ClientService, ClientDashboard, ClientApproval } from '../../../core/services/client.service';
 import { JobRequestService } from '../../../core/services/job-request.service';
+import { ApplicationService } from '../../../core/services/application.service';
+import { InterviewService } from '../../../core/services/interview.service';
 import { JobRequest } from '../../../core/models/client.model';
 import { MaterialModule } from '../../../shared/material/material.module';
 
@@ -26,7 +29,7 @@ export class ClientDashboardComponent implements OnInit {
   };
   isLoading = true;
   displayedColumns: string[] = ['candidate', 'job', 'appliedDate', 'status', 'actions'];
-  activeSection = 'overview';
+  activeSection: any = 'overview';
 
 
 
@@ -133,20 +136,93 @@ export class ClientDashboardComponent implements OnInit {
   };
 
   candidateSubmissions: any[] = [];
+  approvedCandidates: any[] = [];
+  companyId = 'd5ffee58-f341-41ce-b2a8-4458f175ab33'; // TODO: Get from auth
+  
+  // Action modals
+  showApproveModal = false;
+  showHoldModal = false;
+  showRejectModal = false;
+  selectedSubmission: any = null;
+  actionReason = '';
+  actionNotes = '';
 
   constructor(
     private clientService: ClientService,
     private jobRequestService: JobRequestService,
+    private applicationService: ApplicationService,
+    private interviewService: InterviewService,
     private router: Router,
+    private http: HttpClient,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private datePipe: DatePipe
   ) {}
 
+  loadApprovedCandidates(): void {
+    console.log('loadApprovedCandidates called with companyId:', this.companyId);
+    this.applicationService.getClientApprovedCandidates(this.companyId, 0, 100).subscribe({
+      next: (data) => {
+        this.approvedCandidates = data.content;
+        console.log('Loaded approved candidates:', this.approvedCandidates.length);
+      },
+      error: (err) => {
+        console.error('Failed to load approved candidates:', err);
+      }
+    });
+  }
+  
+  loadCandidateSubmissions(): void {
+    console.log('loadCandidateSubmissions called with companyId:', this.companyId);
+    this.applicationService.getClientSubmissions(this.companyId, 0, 100).subscribe({
+      next: (data) => {
+        this.candidateSubmissions = data.content.map(app => {
+          const submission = {
+            id: app.id,
+            candidateId: app.candidateId,
+            candidateName: app.candidateName || 'Unknown Candidate',
+            position: app.jobTitle || 'Position Not Specified',
+            status: app.status === 'SUBMITTED_TO_CLIENT' ? 'SUBMITTED' : app.status,
+            recruiterName: 'Your Recruiter',
+            experience: '5+ years',
+            currentCompany: 'Previous Company',
+            education: 'Bachelor\'s Degree',
+            expectedSalary: 'Competitive',
+            keyStrengths: ['Skills not provided'],
+            recruiterRating: this.formatRating(0),
+            resumeUrl: null,
+            coverLetter: app.coverLetter || null,
+            portfolioUrl: null
+          };
+          
+          // Fetch candidate details to get resume URL and skills
+          this.http.get<any>(`/api/candidates/user/${app.candidateId}`).subscribe({
+            next: (candidate) => {
+              submission.resumeUrl = candidate.resumeUrl;
+              submission.keyStrengths = candidate.skills || ['Skills not provided'];
+              submission.portfolioUrl = candidate.portfolioUrl;
+            },
+            error: (err) => console.error('Failed to load candidate details:', err)
+          });
+          
+          return submission;
+        });
+        console.log('Loaded candidate submissions:', this.candidateSubmissions.length);
+      },
+      error: (err) => {
+        console.error('Failed to load candidate submissions:', err);
+      }
+    });
+  }
+
   ngOnInit(): void {
+    console.log('ClientDashboardComponent ngOnInit called');
     this.loadUserProfile();
     this.loadDashboard();
     this.loadJobRequests();
+    this.loadCandidateSubmissions();
+    this.loadApprovedCandidates();
+    this.loadInterviews();
   }
 
   loadUserProfile(): void {
@@ -525,28 +601,99 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   moveToInterview(submission: any): void {
-    submission.status = 'INTERVIEW_STAGE';
-    submission.stage = 'Interview Scheduling';
-    
-    this.sendDecisionToRecruiter(submission.id, 'MOVE_TO_INTERVIEW', 'Client approved - schedule interview');
-    
-    this.snackBar.open(`${submission.candidateName} moved to interview stage`, 'Close', { 
-      duration: 3000,
-      panelClass: ['success-snackbar']
-    });
+    this.selectedSubmission = submission;
+    this.actionReason = '';
+    this.actionNotes = '';
+    this.showApproveModal = true;
   }
 
   putOnHold(submission: any): void {
-    const reason = prompt('Reason for hold (optional):');
-    submission.status = 'ON_HOLD';
-    submission.stage = 'On Hold';
+    this.selectedSubmission = submission;
+    this.actionReason = '';
+    this.actionNotes = '';
+    this.showHoldModal = true;
+  }
+  
+  confirmApprove(): void {
+    if (!this.actionReason) {
+      this.snackBar.open('Please select a reason', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
     
-    this.sendDecisionToRecruiter(submission.id, 'ON_HOLD', reason || 'Client requested hold');
+    const request = {
+      action: 'APPROVE',
+      reason: this.actionReason,
+      notes: this.actionNotes
+    };
     
-    this.snackBar.open(`${submission.candidateName} put on hold`, 'Close', { duration: 3000 });
+    this.applicationService.handleClientAction(this.selectedSubmission.id, request).subscribe({
+      next: () => {
+        this.snackBar.open(`${this.selectedSubmission.candidateName} approved for interview!`, 'Close', { 
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
+        this.showApproveModal = false;
+        this.loadCandidateSubmissions();
+      },
+      error: (err) => {
+        console.error('Failed to approve candidate:', err);
+        this.snackBar.open('Failed to approve candidate', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      }
+    });
+  }
+  
+  confirmHold(): void {
+    if (!this.actionReason) {
+      this.snackBar.open('Please select a reason', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
+    
+    const request = {
+      action: 'HOLD',
+      reason: this.actionReason,
+      notes: this.actionNotes
+    };
+    
+    this.applicationService.handleClientAction(this.selectedSubmission.id, request).subscribe({
+      next: () => {
+        this.snackBar.open(`${this.selectedSubmission.candidateName} put on hold`, 'Close', { duration: 3000 });
+        this.showHoldModal = false;
+        this.loadCandidateSubmissions();
+      },
+      error: (err) => {
+        console.error('Failed to put candidate on hold:', err);
+        this.snackBar.open('Failed to update status', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      }
+    });
   }
 
   viewResume(submission: any): void {
+    if (!submission.resumeUrl || submission.resumeUrl === '#') {
+      this.snackBar.open('Resume not available', 'Close', { duration: 3000 });
+      return;
+    }
+    this.http.get(submission.resumeUrl, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${submission.candidateName.replace(/\s+/g, '_')}_Resume.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.snackBar.open('Failed to download resume', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  previewResume(submission: any): void {
+    if (!submission.resumeUrl || submission.resumeUrl === '#') {
+      this.snackBar.open('Resume not available', 'Close', { duration: 3000 });
+      return;
+    }
     window.open(submission.resumeUrl, '_blank');
   }
 
@@ -583,20 +730,64 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   rejectCandidate(submission: any): void {
-    // Open feedback dialog
-    const feedback = prompt('Please provide feedback for the recruiter (optional):');
+    this.selectedSubmission = submission;
+    this.actionReason = '';
+    this.actionNotes = '';
+    this.showRejectModal = true;
+  }
+  
+  confirmReject(): void {
+    if (!this.actionReason) {
+      this.snackBar.open('Please select a reason', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
     
-    submission.status = 'REJECTED';
-    submission.clientDecision = 'Not Interested';
-    submission.clientFeedback = feedback || 'No additional feedback provided';
+    const request = {
+      action: 'REJECT',
+      reason: this.actionReason,
+      notes: this.actionNotes
+    };
     
-    // Send decision to recruiter dashboard
-    this.sendDecisionToRecruiter(submission.id, 'REJECTED', feedback || 'Client not interested in this candidate');
-    
-    this.snackBar.open(`${submission.candidateName} marked as not interested. Feedback sent to recruiter.`, 'Close', { 
-      duration: 4000,
-      panelClass: ['info-snackbar']
+    this.applicationService.handleClientAction(this.selectedSubmission.id, request).subscribe({
+      next: () => {
+        this.snackBar.open(`Feedback sent to recruiter`, 'Close', { 
+          duration: 3000,
+          panelClass: ['info-snackbar']
+        });
+        this.showRejectModal = false;
+        this.loadCandidateSubmissions();
+      },
+      error: (err) => {
+        console.error('Failed to reject candidate:', err);
+        this.snackBar.open('Failed to update status', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      }
     });
+  }
+  
+  closeActionModals(): void {
+    this.showApproveModal = false;
+    this.showHoldModal = false;
+    this.showRejectModal = false;
+    this.selectedSubmission = null;
+    this.actionReason = '';
+    this.actionNotes = '';
+  }
+  
+  formatStatus(status: string): string {
+    const statusMap: any = {
+      'CLIENT_INTERVIEW': 'Interview',
+      'OFFER_PENDING': 'Offer Pending',
+      'OFFER_ACCEPTED': 'Offer Accepted',
+      'HIRED': 'Hired'
+    };
+    return statusMap[status] || status;
+  }
+  
+  getStatusClass(status: string): string {
+    if (status === 'CLIENT_INTERVIEW') return 'interview';
+    if (status === 'OFFER_PENDING') return 'pending';
+    if (status === 'OFFER_ACCEPTED' || status === 'HIRED') return 'active';
+    return '';
   }
 
   private sendDecisionToRecruiter(submissionId: string, decision: string, feedback: string): void {
@@ -617,7 +808,7 @@ export class ClientDashboardComponent implements OnInit {
     this.snackBar.open('Reports and analytics feature coming soon', 'Close', { duration: 3000 });
   }
 
-  setActiveSection(section: string): void {
+  setActiveSection(section: any): void {
     this.activeSection = section;
   }
 
@@ -648,5 +839,45 @@ export class ClientDashboardComponent implements OnInit {
   getTenantName(): string {
     const clientCompanyName = localStorage.getItem('clientCompanyName');
     return clientCompanyName || 'Client Company';
+  }
+
+  formatRating(rating: number): string {
+    if (!rating || rating === 0) return 'Not rated';
+    return '⭐'.repeat(Math.min(Math.max(Math.round(rating), 1), 5));
+  }
+
+  getPendingReviewsCount(): number {
+    return this.candidateSubmissions.filter(s => s.status === 'SUBMITTED').length;
+  }
+
+  getHiredCount(): number {
+    return this.approvedCandidates.filter(c => c.status === 'HIRED').length;
+  }
+
+  loadInterviews(): void {
+    this.interviewService.getInterviewsByClient(this.companyId).subscribe({
+      next: (interviews) => {
+        console.log('My interviews:', interviews);
+        this.scheduledInterviews = interviews.map((interview: any) => ({
+          candidateName: interview.candidateName || 'Unknown',
+          position: interview.jobTitle || 'Position',
+          date: this.datePipe.transform(interview.scheduledAt, 'MMM d, yyyy') || '',
+          time: this.datePipe.transform(interview.scheduledAt, 'h:mm a') || '',
+          duration: interview.durationMinutes ? `${interview.durationMinutes} min` : '60 min',
+          type: interview.interviewType || 'VIDEO',
+          round: 'Client Interview',
+          interviewers: interview.interviewerName ? [interview.interviewerName] : ['Hiring Manager'],
+          location: interview.location,
+          meetingLink: interview.meetingLink,
+          meetingId: interview.meetingId,
+          passcode: interview.passcode,
+          status: interview.status || 'SCHEDULED'
+        }));
+      },
+      error: (err) => {
+        console.error('Failed to load interviews:', err);
+        this.scheduledInterviews = [];
+      }
+    });
   }
 }

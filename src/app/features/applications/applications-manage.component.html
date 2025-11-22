@@ -163,7 +163,24 @@
             </div>
           </div>
         </div>
+
+            <!-- Client Feedback Section -->
+            <div class="client-feedback-section" *ngIf="selectedApplication.stageNotes && selectedApplication.stageNotes.includes('CLIENT ACTION')">
+              <h4>📋 Client Feedback</h4>
+              <div class="feedback-box">
+                <pre>{{ getClientFeedback(selectedApplication.stageNotes) }}</pre>
+              </div>
+            </div>
         
+        <div class="verification-actions" *ngIf="selectedApplication.status === 'CLIENT_INTERVIEW'">
+          <h4>Interview Actions</h4>
+          <div class="verification-buttons">
+            <button class="btn-primary" (click)="scheduleClientInterview()">
+              📅 Schedule Client Interview
+            </button>
+          </div>
+        </div>
+
         <div class="verification-actions" *ngIf="selectedApplication.status === 'REFERENCE_CHECK' || selectedApplication.status === 'BACKGROUND_CHECK' || selectedApplication.status === 'OFFER_PENDING'">
           <h4>Verification Status</h4>
           <div class="verification-buttons">

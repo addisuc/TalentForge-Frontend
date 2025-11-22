@@ -8,8 +8,8 @@ export type ApplicationStatus =
   | 'APPLIED'
   | 'SCREENING'
   | 'PHONE_INTERVIEW'
-  | 'TECHNICAL_INTERVIEW'
-  | 'FINAL_INTERVIEW'
+  | 'SUBMITTED_TO_CLIENT'
+  | 'CLIENT_INTERVIEW'
   | 'REFERENCE_CHECK'
   | 'BACKGROUND_CHECK'
   | 'OFFER_PENDING'
@@ -33,6 +33,7 @@ export interface JobApplication {
   coverLetter?: string;
   clientId?: number;
   resumeUrl?: string;
+  stageNotes?: string;
   backgroundCheckStatus?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
   backgroundCheckProvider?: 'CHECKR' | 'HIRERIGHT' | 'STERLING';
   referenceCheckStatus?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
@@ -170,6 +171,24 @@ export class ApplicationService {
 
   getApplicationTimeline(applicationId: string): Observable<ApplicationActivity[]> {
     return this.http.get<ApplicationActivity[]>(`${this.apiUrl}/${applicationId}/timeline`);
+  }
+
+  getClientSubmissions(companyId: string, page: number = 0, size: number = 20): Observable<ApplicationPage> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<ApplicationPage>(`${this.apiUrl}/client/${companyId}/submissions`, { params });
+  }
+
+  handleClientAction(applicationId: string, request: { action: string, reason: string, notes: string }): Observable<JobApplication> {
+    return this.http.post<JobApplication>(`${this.apiUrl}/${applicationId}/client-action`, request);
+  }
+
+  getClientApprovedCandidates(companyId: string, page: number = 0, size: number = 20): Observable<ApplicationPage> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<ApplicationPage>(`${this.apiUrl}/client/${companyId}/approved`, { params });
   }
 }
 
