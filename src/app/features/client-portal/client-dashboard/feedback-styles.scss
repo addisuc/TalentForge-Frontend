@@ -1,14 +1,14 @@
 // Feedback & Messages Styling
 .feedback-threads {
+  max-width: 900px;
   background: white;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .thread-card {
-  display: flex;
-  gap: 12px;
   padding: 16px 20px;
   cursor: pointer;
   transition: background 0.2s;
@@ -20,6 +20,11 @@
   
   &:hover {
     background: #f8fafc;
+  }
+  
+  &.has-unread {
+    background: #f0f9ff;
+    border-left: 4px solid #0066ff;
   }
   
   .thread-avatar {
@@ -43,37 +48,53 @@
   
   .thread-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
     
     .thread-info {
+      flex: 1;
+      min-width: 0;
+      
       h3 {
         margin: 0;
         font-size: 1rem;
         font-weight: 700;
         color: #0f172a;
+        text-align: left;
       }
       
       .thread-subtitle {
         margin: 2px 0 0 0;
         font-size: 0.8125rem;
         color: #64748b;
+        text-align: left;
       }
     }
     
     .thread-meta {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      flex-shrink: 0;
       
       .message-count {
         background: #f1f5f9;
         color: #64748b;
-        padding: 2px 8px;
+        padding: 4px 10px;
         border-radius: 12px;
         font-size: 0.75rem;
         font-weight: 600;
+      }
+      
+      .unread-badge {
+        background: #0066ff;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.625rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
       }
     }
   }
@@ -85,6 +106,8 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    text-align: left;
+    padding-left: 60px;
     
     .preview-sender {
       font-weight: 600;
@@ -100,6 +123,7 @@
     justify-content: space-between;
     align-items: center;
     margin-top: 6px;
+    padding-left: 60px;
     
     .thread-date {
       font-size: 0.75rem;
@@ -164,40 +188,48 @@
   }
   
   .messages-container {
-    padding: 24px;
+    padding: 16px;
     max-height: 600px;
     overflow-y: auto;
     background: #fafbfc;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     
     .message-bubble {
-      margin-bottom: 16px;
-      max-width: 70%;
+      max-width: 60%;
+      display: flex;
+      flex-direction: column;
       
       &.sent {
-        margin-left: auto;
+        align-self: flex-end;
         
         .message-header {
-          text-align: right;
+          flex-direction: row-reverse;
           
-          .sender-name {
-            color: #0066ff;
+          .sender-name,
+          .message-time {
+            color: #64748b;
           }
         }
         
         .message-content {
-          background: linear-gradient(135deg, #0066ff 0%, #00d4ff 100%);
-          color: white;
+          background: #0066ff;
+          color: white !important;
           border-radius: 18px 18px 4px 18px;
+          
+          p {
+            color: white !important;
+          }
         }
       }
       
       &.received {
-        margin-right: auto;
+        align-self: flex-start;
         
         .message-content {
-          background: white;
+          background: #e5e7eb;
           color: #0f172a;
-          border: 1px solid #e2e8f0;
           border-radius: 18px 18px 18px 4px;
         }
       }
@@ -205,7 +237,7 @@
       .message-header {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         padding: 0 4px;
         
         .sender-name {
@@ -221,13 +253,13 @@
       }
       
       .message-content {
-        padding: 12px 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 10px 14px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         
         p {
           margin: 0;
-          font-size: 0.9375rem;
-          line-height: 1.6;
+          font-size: 0.875rem;
+          line-height: 1.5;
           white-space: pre-wrap;
         }
       }

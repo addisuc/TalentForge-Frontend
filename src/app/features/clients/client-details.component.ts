@@ -18,7 +18,7 @@ import { FeedbackResponseModalComponent } from '../applications/feedback-respons
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, FeedbackResponseModalComponent],
   templateUrl: './client-details.component.html',
-  styleUrls: ['./client-details.component.scss']
+  styleUrls: ['./client-details.component.scss', './client-details-feedback.scss']
 })
 export class ClientDetailsComponent implements OnInit {
   client: any = null;
@@ -52,6 +52,9 @@ export class ClientDetailsComponent implements OnInit {
   
   // Client Feedback
   clientFeedback: any[] = [];
+  feedbackThreads: any[] = [];
+  showThreadView = false;
+  selectedThread: any = null;
   
   // Shared Interviews
   sharedInterviews: any[] = [];
@@ -120,13 +123,64 @@ export class ClientDetailsComponent implements OnInit {
           priority: f.priority || 'Normal',
           type: f.feedbackType || 'General',
           applicationId: f.applicationId,
-          jobId: f.jobId
+          jobId: f.jobId,
+          timestamp: new Date(f.createdAt).getTime()
         }));
+        this.groupFeedbackIntoThreads();
       },
       error: (err) => {
         console.error('Failed to load client feedback:', err);
       }
     });
+  }
+  
+  groupFeedbackIntoThreads() {
+    const grouped = new Map<string, any[]>();
+    
+    this.clientFeedback.forEach(f => {
+      const key = f.applicationId || f.jobId || 'general';
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
+      }
+      grouped.get(key)!.push(f);
+    });
+    
+    this.feedbackThreads = Array.from(grouped.entries()).map(([key, messages]) => {
+      const sortedMessages = messages.sort((a, b) => b.timestamp - a.timestamp);
+      const latestMsg = sortedMessages[0];
+      const hasUnread = sortedMessages.some(m => !m.read && m.senderType === 'CLIENT');
+      
+      return {
+        threadId: key,
+        candidateName: latestMsg.candidateName,
+        jobTitle: latestMsg.jobTitle,
+        type: latestMsg.type,
+        messageCount: messages.length,
+        lastMessage: latestMsg,
+        messages: sortedMessages,
+        hasUnread: hasUnread
+      };
+    }).sort((a, b) => b.lastMessage.timestamp - a.lastMessage.timestamp);
+  }
+  
+  openThread(thread: any) {
+    this.selectedThread = thread;
+    this.showThreadView = true;
+    
+    // Mark unread messages as read
+    thread.messages.forEach((msg: any) => {
+      if (!msg.read && msg.senderType === 'CLIENT') {
+        this.feedbackService.markAsRead(msg.id).subscribe();
+      }
+    });
+    
+    // Update thread to remove unread indicator
+    thread.hasUnread = false;
+  }
+  
+  closeThreadView() {
+    this.showThreadView = false;
+    this.selectedThread = null;
   }
 
   loadClient(id: string) {
@@ -497,6 +551,12 @@ export class ClientDetailsComponent implements OnInit {
   respondToFeedback(feedback: any) {
     this.selectedFeedback = feedback;
     this.showFeedbackResponseModal = true;
+  }
+  
+  replyToThread() {
+    if (this.selectedThread && this.selectedThread.messages.length > 0) {
+      this.respondToFeedback(this.selectedThread.messages[0]);
+    }
   }
   
   closeFeedbackResponseModal() {

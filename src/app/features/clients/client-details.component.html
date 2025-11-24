@@ -260,35 +260,57 @@
             <h2>Feedback from Client</h2>
           </div>
           
-          <div class="feedback-list">
-            <div class="feedback-card" *ngFor="let feedback of clientFeedback">
-              <div class="feedback-header">
-                <div>
-                  <span class="feedback-type" [class]="feedback.type.toLowerCase()">{{ feedback.type }}</span>
-                  <h3>{{ feedback.subject }}</h3>
+          <div *ngIf="!showThreadView" class="feedback-threads">
+            <div class="thread-card" *ngFor="let thread of feedbackThreads" (click)="openThread(thread)" [class.has-unread]="thread.hasUnread">
+              <div class="thread-header">
+                <div class="thread-avatar">{{ getInitials(thread.candidateName) }}</div>
+                <div class="thread-info">
+                  <h3>{{ thread.candidateName }}</h3>
+                  <p class="thread-subtitle" *ngIf="thread.jobTitle">{{ thread.jobTitle }}</p>
                 </div>
-                <span class="feedback-date">{{ feedback.date }}</span>
+                <div class="thread-meta">
+                  <span class="message-count">{{ thread.messageCount }}</span>
+                  <span class="unread-badge" *ngIf="thread.hasUnread">NEW</span>
+                </div>
               </div>
-              
-              <div class="feedback-context" *ngIf="feedback.candidateName || feedback.positionTitle">
-                <span *ngIf="feedback.candidateName">👤 {{ feedback.candidateName }}</span>
-                <span *ngIf="feedback.positionTitle">💼 {{ feedback.positionTitle }}</span>
+              <div class="thread-preview">
+                <span class="preview-sender" [class.you]="thread.lastMessage.senderType === 'RECRUITER'">
+                  {{ thread.lastMessage.senderType === 'RECRUITER' ? 'You' : thread.lastMessage.senderName }}:
+                </span>
+                <span class="preview-text">{{ thread.lastMessage.message }}</span>
               </div>
-              
-              <div class="feedback-message">
-                <p>{{ feedback.message }}</p>
-              </div>
-              
-              <div class="feedback-actions">
-                <button class="btn-secondary" (click)="respondToFeedback(feedback)">💬 Respond</button>
-                <button class="btn-secondary" *ngIf="!feedback.read" (click)="markAsRead(feedback)">✓ Mark as Read</button>
+              <div class="thread-footer">
+                <span class="thread-date">{{ thread.lastMessage.date }} {{ thread.lastMessage.time }}</span>
               </div>
             </div>
             
-            <div class="empty-state" *ngIf="clientFeedback.length === 0">
+            <div class="empty-state" *ngIf="feedbackThreads.length === 0">
               <span class="empty-icon">💬</span>
               <h3>No Feedback Yet</h3>
               <p>Client feedback will appear here</p>
+            </div>
+          </div>
+          
+          <div *ngIf="showThreadView && selectedThread" class="thread-view">
+            <div class="thread-view-header">
+              <button class="back-btn" (click)="closeThreadView()">← Back</button>
+              <div class="thread-title">
+                <h2>{{ selectedThread.candidateName }}</h2>
+                <p *ngIf="selectedThread.jobTitle">{{ selectedThread.jobTitle }}</p>
+              </div>
+              <button class="btn-primary" (click)="replyToThread()">Reply</button>
+            </div>
+            
+            <div class="messages-container">
+              <div class="message-bubble" *ngFor="let msg of selectedThread.messages" [class.sent]="msg.senderType === 'RECRUITER'" [class.received]="msg.senderType === 'CLIENT'">
+                <div class="message-header">
+                  <span class="sender-name">{{ msg.senderType === 'RECRUITER' ? 'You' : msg.senderName }}</span>
+                  <span class="message-time">{{ msg.date }} {{ msg.time }}</span>
+                </div>
+                <div class="message-content">
+                  <p>{{ msg.message }}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

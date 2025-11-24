@@ -474,6 +474,16 @@ export class ClientDashboardComponent implements OnInit {
   openThread(thread: any): void {
     this.selectedThread = thread;
     this.showThreadView = true;
+    
+    // Mark unread messages as read
+    thread.messages.forEach((msg: any) => {
+      if (msg.status === 'Pending' && msg.senderType === 'RECRUITER') {
+        this.feedbackService.markAsRead(msg.id).subscribe();
+      }
+    });
+    
+    // Update thread to remove unread indicator
+    thread.hasUnread = false;
   }
   
   closeThreadView(): void {
@@ -578,23 +588,29 @@ export class ClientDashboardComponent implements OnInit {
             positionTitle: f.jobTitle,
             senderName: f.senderName || 'Unknown',
             status: f.status === 'READ' ? 'Read' : 'Pending',
-            senderType: f.senderType
+            senderType: f.senderType,
+            timestamp: new Date(f.createdAt).getTime()
           });
         });
         
         // Convert to array of threads
         this.feedbackHistory = Array.from(grouped.entries()).map(([key, messages]) => {
-          const firstMsg = messages[0];
+          // Sort messages by timestamp descending (latest first)
+          const sortedMessages = messages.sort((a, b) => b.timestamp - a.timestamp);
+          const latestMsg = sortedMessages[0];
+          const hasUnread = sortedMessages.some(m => m.status === 'Pending' && m.senderType === 'RECRUITER');
+          
           return {
             threadId: key,
-            candidateName: firstMsg.candidateName,
-            positionTitle: firstMsg.positionTitle,
-            type: firstMsg.type,
+            candidateName: latestMsg.candidateName,
+            positionTitle: latestMsg.positionTitle,
+            type: latestMsg.type,
             messageCount: messages.length,
-            lastMessage: messages[messages.length - 1],
-            messages: messages.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            lastMessage: latestMsg,
+            messages: sortedMessages,
+            hasUnread: hasUnread
           };
-        }).sort((a, b) => new Date(b.lastMessage.date).getTime() - new Date(a.lastMessage.date).getTime());
+        }).sort((a, b) => b.lastMessage.timestamp - a.lastMessage.timestamp);
       },
       error: (err) => {
         console.error('Failed to load feedback history:', err);

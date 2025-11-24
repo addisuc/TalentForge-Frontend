@@ -696,14 +696,17 @@
         </div>
 
         <div *ngIf="!showFeedbackForm && !showThreadView" class="feedback-threads">
-          <div class="thread-card" *ngFor="let thread of feedbackHistory" (click)="openThread(thread)">
+          <div class="thread-card" *ngFor="let thread of feedbackHistory" (click)="openThread(thread)" [class.has-unread]="thread.hasUnread">
             <div class="thread-header">
               <div class="thread-avatar">{{ getInitials(thread.candidateName || 'General') }}</div>
               <div class="thread-info">
                 <h3>{{ thread.candidateName || 'General Discussion' }}</h3>
                 <p class="thread-subtitle" *ngIf="thread.positionTitle">{{ thread.positionTitle }}</p>
               </div>
-              <span class="message-count">{{ thread.messageCount }}</span>
+              <div class="thread-meta">
+                <span class="message-count">{{ thread.messageCount }}</span>
+                <span class="unread-badge" *ngIf="thread.hasUnread">NEW</span>
+              </div>
             </div>
             <div class="thread-preview">
               <span class="preview-sender" [class.you]="thread.lastMessage.senderType === 'CLIENT'">
@@ -712,8 +715,7 @@
               <span class="preview-text">{{ thread.lastMessage.message }}</span>
             </div>
             <div class="thread-footer">
-              <span class="thread-date">{{ thread.lastMessage.date }}</span>
-              <span class="unread-indicator" *ngIf="thread.lastMessage.status === 'Pending' && thread.lastMessage.senderType === 'RECRUITER'">●</span>
+              <span class="thread-date">{{ thread.lastMessage.date }} {{ thread.lastMessage.time }}</span>
             </div>
           </div>
           
