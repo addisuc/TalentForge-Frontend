@@ -53,13 +53,14 @@
         <span class="icon">📈</span>
         <span>Hiring Progress</span>
       </a>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="nav-divider"></div>
       <a class="nav-item" [class.active]="activeSection === 'settings'" (click)="setActiveSection('settings')">
         <span class="icon">⚙️</span>
         <span>Settings</span>
       </a>
-    </nav>
-    
-    <div class="sidebar-footer">
       <a class="nav-item" (click)="logout()">
         <span class="icon">🚪</span>
         <span>Logout</span>

@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MessageService, Conversation } from '../../core/services/message.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-candidate-messages',
@@ -95,53 +97,112 @@ import { FormsModule } from '@angular/forms';
     .empty-state { flex: 1; display: flex; align-items: center; justify-content: center; color: #94a3b8; }
   `]
 })
-export class CandidateMessagesComponent {
+export class CandidateMessagesComponent implements OnInit, OnDestroy {
   newMessage = '';
   selectedConversation: any = null;
+  private pollingInterval: any;
 
-  conversations = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      company: 'TechCorp Recruiting',
-      initials: 'SJ',
-      lastMessage: 'Great! Let\'s schedule an interview for next week.',
-      lastMessageTime: '10:30 AM',
-      unread: 2,
-      messages: [
-        { content: 'Hi John, I reviewed your application for the Senior Developer position.', time: 'Yesterday 2:15 PM', sent: false },
-        { content: 'Thank you! I\'m very interested in this opportunity.', time: 'Yesterday 2:20 PM', sent: true },
-        { content: 'Great! Let\'s schedule an interview for next week.', time: '10:30 AM', sent: false }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      company: 'StartupXYZ',
-      initials: 'MC',
-      lastMessage: 'Thanks for applying. We\'ll review your profile.',
-      lastMessageTime: 'Yesterday',
-      unread: 0,
-      messages: [
-        { content: 'Thanks for applying. We\'ll review your profile.', time: 'Yesterday 4:30 PM', sent: false },
-        { content: 'Looking forward to hearing from you!', time: 'Yesterday 4:35 PM', sent: true }
-      ]
-    }
-  ];
+  constructor(
+    private messageService: MessageService,
+    private authService: AuthService
+  ) {}
+
+  conversations: any[] = [];
 
   selectConversation(conv: any) {
     this.selectedConversation = conv;
     conv.unread = 0;
+    
+    // Mark messages as read
+    this.messageService.markAsRead(conv.id).subscribe();
+  }
+
+  ngOnInit() {
+    console.log('[INIT] Component initialized');
+    
+    // Load conversations immediately
+    this.loadConversations();
+
+    // Connect to WebSocket
+    const user = this.authService.getCurrentUserValue();
+    if (user?.id) {
+      this.messageService.connectWebSocket(user.id);
+      
+      // Subscribe to new messages
+      this.messageService.onNewMessage().subscribe(message => {
+        console.log('[INIT] New message via WebSocket:', message);
+        this.loadConversations();
+      });
+    }
+
+    // Backup polling every 5 seconds
+    this.pollingInterval = setInterval(() => {
+      this.loadConversations();
+    }, 5000);
+  }
+
+  ngOnDestroy() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
+    this.messageService.disconnectWebSocket();
+  }
+
+  loadConversations() {
+    const user = this.authService.getCurrentUserValue();
+    if (!user?.id) {
+      console.log('[LOAD] No user ID found');
+      return;
+    }
+    
+    console.log('[LOAD] Fetching messages for user:', user.id);
+    this.messageService.getUserMessages(user.id).subscribe({
+      next: (messages) => {
+        console.log('[LOAD] Received messages:', messages);
+        this.conversations = messages;
+      },
+      error: (err) => {
+        console.error('[LOAD] API Error:', err);
+      }
+    });
+  }
+
+  handleNewMessage(message: any) {
+    this.loadConversations();
   }
 
   sendMessage() {
     if (this.newMessage.trim() && this.selectedConversation) {
-      this.selectedConversation.messages.push({
-        content: this.newMessage,
-        time: 'Just now',
-        sent: true
-      });
+      const content = this.newMessage;
       this.newMessage = '';
+      
+      const user = this.authService.getCurrentUserValue();
+      if (!user?.id || !user?.tenantId) {
+        console.error('User not logged in');
+        return;
+      }
+      
+      console.log('Sending message:', {
+        senderId: user.id,
+        recipientId: this.selectedConversation.id,
+        content
+      });
+      
+      // Send via API
+      this.messageService.sendMessage(
+        this.selectedConversation.id,
+        content,
+        user.id,
+        user.tenantId
+      ).subscribe({
+        next: (message) => {
+          console.log('Message sent successfully:', message);
+          this.loadConversations();
+        },
+        error: (err) => {
+          console.error('Failed to send message:', err);
+        }
+      });
     }
   }
 }
