@@ -170,6 +170,9 @@
               <div class="feedback-box">
                 <pre>{{ getClientFeedback(selectedApplication.stageNotes) }}</pre>
               </div>
+              <button type="button" class="btn-primary" (click)="respondToFeedback(); $event.preventDefault()">
+                💬 Respond to Client
+              </button>
             </div>
         
         <div class="verification-actions" *ngIf="selectedApplication.status === 'CLIENT_INTERVIEW'">
@@ -298,6 +301,16 @@
       </div>
     </div>
   </div>
+
+  <!-- Feedback Response Modal -->
+  <app-feedback-response-modal
+    *ngIf="showFeedbackResponseModal && selectedApplication"
+    [applicationId]="selectedApplication.id"
+    [clientFeedback]="clientFeedbackText"
+    [clientId]="selectedApplication.clientId?.toString() || ''"
+    (closed)="closeFeedbackResponseModal()"
+    (submitted)="onFeedbackResponseSubmitted()">
+  </app-feedback-response-modal>
 
   <!-- Toast Notification -->
   <div class="toast" *ngIf="showToastFlag" [class]="'toast-' + toastType">

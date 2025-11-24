@@ -64,6 +64,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/feedback": {
+    "target": "http://localhost:8084",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api/background-checks": {
     "target": "http://localhost:8087",
     "secure": false,

@@ -305,18 +305,73 @@
           <h3>No Approved Candidates</h3>
           <p>Candidates you approve will appear here</p>
         </div>
-        <div *ngIf="approvedCandidates.length > 0" class="table-container">
-          <table class="data-table">
-            <thead><tr><th>Candidate</th><th>Position</th><th>Status</th><th>Approved Date</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let candidate of approvedCandidates">
-                <td><strong>{{ candidate.candidateName }}</strong></td>
-                <td>{{ candidate.jobTitle }}</td>
-                <td><span class="status-badge" [ngClass]="getStatusClass(candidate.status)">{{ formatStatus(candidate.status) }}</span></td>
-                <td>{{ candidate.updatedAt | date:'MMM d, yyyy' }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div *ngIf="approvedCandidates.length > 0" class="approved-candidates-list">
+          <div class="candidate-progress-card" *ngFor="let candidate of approvedCandidates">
+            <div class="candidate-header">
+              <div class="candidate-info">
+                <div class="candidate-avatar">{{ getInitials(candidate.candidateName) }}</div>
+                <div>
+                  <h3>{{ candidate.candidateName }}</h3>
+                  <p class="position">{{ candidate.jobTitle }}</p>
+                </div>
+              </div>
+              <span class="status-badge" [ngClass]="getStatusClass(candidate.status)">{{ formatStatus(candidate.status) }}</span>
+            </div>
+            
+            <div class="progress-timeline">
+              <div class="timeline-step" [class.completed]="isStepCompleted(candidate.status, 'CLIENT_INTERVIEW')" [class.current]="candidate.status === 'CLIENT_INTERVIEW'">
+                <div class="step-icon">📅</div>
+                <div class="step-info">
+                  <div class="step-label">Interview</div>
+                  <div class="step-date" *ngIf="candidate.status === 'CLIENT_INTERVIEW'">{{ candidate.updatedAt | date:'MMM d' }}</div>
+                </div>
+              </div>
+              
+              <div class="timeline-connector" [class.completed]="isStepCompleted(candidate.status, 'REFERENCE_CHECK')"></div>
+              
+              <div class="timeline-step" [class.completed]="isStepCompleted(candidate.status, 'REFERENCE_CHECK')" [class.current]="candidate.status === 'REFERENCE_CHECK'">
+                <div class="step-icon">📋</div>
+                <div class="step-info">
+                  <div class="step-label">References</div>
+                  <div class="step-date" *ngIf="candidate.status === 'REFERENCE_CHECK'">{{ candidate.updatedAt | date:'MMM d' }}</div>
+                </div>
+              </div>
+              
+              <div class="timeline-connector" [class.completed]="isStepCompleted(candidate.status, 'BACKGROUND_CHECK')"></div>
+              
+              <div class="timeline-step" [class.completed]="isStepCompleted(candidate.status, 'BACKGROUND_CHECK')" [class.current]="candidate.status === 'BACKGROUND_CHECK'">
+                <div class="step-icon">🔍</div>
+                <div class="step-info">
+                  <div class="step-label">Background</div>
+                  <div class="step-date" *ngIf="candidate.status === 'BACKGROUND_CHECK'">{{ candidate.updatedAt | date:'MMM d' }}</div>
+                </div>
+              </div>
+              
+              <div class="timeline-connector" [class.completed]="isStepCompleted(candidate.status, 'OFFER_PENDING')"></div>
+              
+              <div class="timeline-step" [class.completed]="isStepCompleted(candidate.status, 'OFFER_PENDING')" [class.current]="candidate.status === 'OFFER_PENDING'">
+                <div class="step-icon">📄</div>
+                <div class="step-info">
+                  <div class="step-label">Offer</div>
+                  <div class="step-date" *ngIf="candidate.status === 'OFFER_PENDING'">{{ candidate.updatedAt | date:'MMM d' }}</div>
+                </div>
+              </div>
+              
+              <div class="timeline-connector" [class.completed]="candidate.status === 'HIRED'"></div>
+              
+              <div class="timeline-step" [class.completed]="candidate.status === 'HIRED'" [class.current]="candidate.status === 'HIRED'">
+                <div class="step-icon">✅</div>
+                <div class="step-info">
+                  <div class="step-label">Hired</div>
+                  <div class="step-date" *ngIf="candidate.status === 'HIRED'">{{ candidate.updatedAt | date:'MMM d' }}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="candidate-footer">
+              <span class="last-update">Last updated: {{ candidate.updatedAt | date:'MMM d, yyyy' }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -640,43 +695,55 @@
           </button>
         </div>
 
-        <div *ngIf="!showFeedbackForm" class="feedback-list">
-          <div class="feedback-card" *ngFor="let feedback of feedbackHistory">
-            <div class="feedback-header">
-              <div class="feedback-subject">
-                <span class="feedback-type-badge" [class]="feedback.type.toLowerCase()">{{ feedback.type }}</span>
-                <h3>{{ feedback.subject }}</h3>
+        <div *ngIf="!showFeedbackForm && !showThreadView" class="feedback-threads">
+          <div class="thread-card" *ngFor="let thread of feedbackHistory" (click)="openThread(thread)">
+            <div class="thread-header">
+              <div class="thread-avatar">{{ getInitials(thread.candidateName || 'General') }}</div>
+              <div class="thread-info">
+                <h3>{{ thread.candidateName || 'General Discussion' }}</h3>
+                <p class="thread-subtitle" *ngIf="thread.positionTitle">{{ thread.positionTitle }}</p>
               </div>
-              <span class="feedback-date">{{ feedback.date }}</span>
+              <span class="message-count">{{ thread.messageCount }}</span>
             </div>
-            
-            <div class="feedback-context" *ngIf="feedback.candidateName || feedback.positionTitle">
-              <div *ngIf="feedback.candidateName" class="context-item">
-                <span class="icon">👤</span>
-                <span>{{ feedback.candidateName }}</span>
-              </div>
-              <div *ngIf="feedback.positionTitle" class="context-item">
-                <span class="icon">💼</span>
-                <span>{{ feedback.positionTitle }}</span>
-              </div>
-            </div>
-            
-            <div class="feedback-content">
-              <p>{{ feedback.message }}</p>
-            </div>
-            
-            <div class="feedback-footer">
-              <span class="sent-to">Sent to: {{ feedback.recruiterName }}</span>
-              <span class="status-indicator" [class]="feedback.status.toLowerCase()">
-                {{ feedback.status === 'Read' ? '✓ Read' : '⏳ Pending' }}
+            <div class="thread-preview">
+              <span class="preview-sender" [class.you]="thread.lastMessage.senderType === 'CLIENT'">
+                {{ thread.lastMessage.senderType === 'CLIENT' ? 'You' : thread.lastMessage.senderName }}:
               </span>
+              <span class="preview-text">{{ thread.lastMessage.message }}</span>
+            </div>
+            <div class="thread-footer">
+              <span class="thread-date">{{ thread.lastMessage.date }}</span>
+              <span class="unread-indicator" *ngIf="thread.lastMessage.status === 'Pending' && thread.lastMessage.senderType === 'RECRUITER'">●</span>
             </div>
           </div>
           
           <div *ngIf="feedbackHistory.length === 0" class="empty-state">
             <span class="empty-icon">💬</span>
-            <h3>No Feedback Sent Yet</h3>
-            <p>Send feedback to your recruiter about candidates or positions</p>
+            <h3>No Messages Yet</h3>
+            <p>Start a conversation with your recruiter</p>
+          </div>
+        </div>
+        
+        <div *ngIf="showThreadView && selectedThread" class="thread-view">
+          <div class="thread-view-header">
+            <button class="back-btn" (click)="closeThreadView()">← Back</button>
+            <div class="thread-title">
+              <h2>{{ selectedThread.candidateName || 'General Discussion' }}</h2>
+              <p *ngIf="selectedThread.positionTitle">{{ selectedThread.positionTitle }}</p>
+            </div>
+            <button class="btn-primary" (click)="replyToThread()">Reply</button>
+          </div>
+          
+          <div class="messages-container">
+            <div class="message-bubble" *ngFor="let msg of selectedThread.messages" [class.sent]="msg.senderType === 'CLIENT'" [class.received]="msg.senderType === 'RECRUITER'">
+              <div class="message-header">
+                <span class="sender-name">{{ msg.senderType === 'CLIENT' ? 'You' : msg.senderName }}</span>
+                <span class="message-time">{{ msg.date }} {{ msg.time }}</span>
+              </div>
+              <div class="message-content">
+                <p>{{ msg.message }}</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -704,9 +771,16 @@
                   <label>Select Candidate *</label>
                   <select [(ngModel)]="feedbackData.candidateId" name="candidateId" (change)="onCandidateSelect()" required>
                     <option value="">Choose a candidate</option>
-                    <option *ngFor="let candidate of candidateSubmissions" [value]="candidate.id">
-                      {{ candidate.candidateName }} - {{ candidate.position }}
-                    </option>
+                    <optgroup label="Pending Review" *ngIf="candidateSubmissions.length > 0">
+                      <option *ngFor="let candidate of candidateSubmissions" [value]="candidate.id">
+                        {{ candidate.candidateName }} - {{ candidate.position }}
+                      </option>
+                    </optgroup>
+                    <optgroup label="Approved Candidates" *ngIf="approvedCandidates.length > 0">
+                      <option *ngFor="let candidate of approvedCandidates" [value]="candidate.id">
+                        {{ candidate.candidateName }} - {{ candidate.jobTitle }}
+                      </option>
+                    </optgroup>
                   </select>
                 </div>
 
@@ -755,7 +829,7 @@
 
               <div class="form-actions">
                 <button type="button" class="btn-secondary" (click)="closeFeedbackForm()">Cancel</button>
-                <button type="submit" class="btn-primary" (click)="submitFeedback($event)">Send Feedback</button>
+                <button type="button" class="btn-primary" (click)="submitFeedback($event)">Send Feedback</button>
               </div>
             </form>
           </div>

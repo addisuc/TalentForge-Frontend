@@ -6,15 +6,17 @@ import { EmailService } from '../../core/services/email.service';
 import { JobService } from '../../core/services/job.service';
 import { ApplicationService } from '../../core/services/application.service';
 import { JobRequestService } from '../../core/services/job-request.service';
+import { FeedbackService } from '../../core/services/feedback.service';
 import { JobRequest } from '../../core/models/client.model';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { FeedbackResponseModalComponent } from '../applications/feedback-response-modal.component';
 
 @Component({
   selector: 'app-client-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, FeedbackResponseModalComponent],
   templateUrl: './client-details.component.html',
   styleUrls: ['./client-details.component.scss']
 })
@@ -54,6 +56,10 @@ export class ClientDetailsComponent implements OnInit {
   // Shared Interviews
   sharedInterviews: any[] = [];
   
+  // Feedback Response Modal
+  showFeedbackResponseModal = false;
+  selectedFeedback: any = null;
+  
   get pendingJobRequests(): number {
     return this.jobRequests.filter(r => r.status === 'PENDING').length;
   }
@@ -82,7 +88,8 @@ export class ClientDetailsComponent implements OnInit {
     private emailService: EmailService,
     private jobService: JobService,
     private applicationService: ApplicationService,
-    private jobRequestService: JobRequestService
+    private jobRequestService: JobRequestService,
+    private feedbackService: FeedbackService
   ) {}
 
   ngOnInit() {
@@ -91,6 +98,33 @@ export class ClientDetailsComponent implements OnInit {
       if (clientId) {
         this.loadClient(clientId);
         this.loadJobRequests();
+        this.loadClientFeedback(clientId);
+      }
+    });
+  }
+  
+  loadClientFeedback(clientId: string) {
+    this.feedbackService.getClientFeedback(clientId).subscribe({
+      next: (feedbacks) => {
+        this.clientFeedback = feedbacks.map(f => ({
+          id: f.id,
+          subject: f.subject,
+          message: f.message,
+          date: new Date(f.createdAt).toLocaleDateString(),
+          time: new Date(f.createdAt).toLocaleTimeString(),
+          candidateName: f.candidateName || 'General',
+          jobTitle: f.jobTitle || '',
+          senderType: f.senderType,
+          senderName: f.senderName || 'Client',
+          read: f.status === 'READ',
+          priority: f.priority || 'Normal',
+          type: f.feedbackType || 'General',
+          applicationId: f.applicationId,
+          jobId: f.jobId
+        }));
+      },
+      error: (err) => {
+        console.error('Failed to load client feedback:', err);
       }
     });
   }
@@ -461,12 +495,32 @@ export class ClientDetailsComponent implements OnInit {
   
   // Client Feedback Methods
   respondToFeedback(feedback: any) {
-    this.showNotification('Opening response form...', 'success');
+    this.selectedFeedback = feedback;
+    this.showFeedbackResponseModal = true;
+  }
+  
+  closeFeedbackResponseModal() {
+    this.showFeedbackResponseModal = false;
+    this.selectedFeedback = null;
+  }
+  
+  onFeedbackResponseSubmitted() {
+    this.showFeedbackResponseModal = false;
+    this.showNotification('Response sent successfully', 'success');
+    this.loadClientFeedback(this.client.id);
+    this.selectedFeedback = null;
   }
   
   markAsRead(feedback: any) {
-    feedback.read = true;
-    this.showNotification('Marked as read', 'success');
+    this.feedbackService.markAsRead(feedback.id).subscribe({
+      next: () => {
+        feedback.read = true;
+        this.showNotification('Marked as read', 'success');
+      },
+      error: (err) => {
+        console.error('Failed to mark as read:', err);
+      }
+    });
   }
   
   // Interview Methods

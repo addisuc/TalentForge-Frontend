@@ -866,6 +866,7 @@
     border-left: 4px solid #0066ff;
     padding: 16px;
     border-radius: 8px;
+    margin-bottom: 16px;
     
     pre {
       margin: 0;
@@ -875,5 +876,11 @@
       white-space: pre-wrap;
       word-wrap: break-word;
     }
+  }
+  
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
 }

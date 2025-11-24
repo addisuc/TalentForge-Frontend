@@ -540,6 +540,16 @@
     </div>
   </div>
 
+  <!-- Feedback Response Modal -->
+  <app-feedback-response-modal
+    *ngIf="showFeedbackResponseModal && selectedFeedback"
+    [applicationId]="selectedFeedback.applicationId || ''"
+    [clientFeedback]="selectedFeedback.message"
+    [clientId]="client.id"
+    (closed)="closeFeedbackResponseModal()"
+    (submitted)="onFeedbackResponseSubmitted()">
+  </app-feedback-response-modal>
+
   <!-- Toast Notification -->
   <div class="toast" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
     {{ toastMessage }}

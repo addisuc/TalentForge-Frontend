@@ -9,6 +9,7 @@ import { ClientService, ClientDashboard, ClientApproval } from '../../../core/se
 import { JobRequestService } from '../../../core/services/job-request.service';
 import { ApplicationService } from '../../../core/services/application.service';
 import { InterviewService } from '../../../core/services/interview.service';
+import { FeedbackService } from '../../../core/services/feedback.service';
 import { JobRequest } from '../../../core/models/client.model';
 import { MaterialModule } from '../../../shared/material/material.module';
 
@@ -123,6 +124,8 @@ export class ClientDashboardComponent implements OnInit {
   };
 
   feedbackHistory: any[] = [];
+  selectedThread: any = null;
+  showThreadView = false;
 
   showFeedbackForm = false;
   feedbackData: any = {
@@ -152,6 +155,7 @@ export class ClientDashboardComponent implements OnInit {
     private jobRequestService: JobRequestService,
     private applicationService: ApplicationService,
     private interviewService: InterviewService,
+    private feedbackService: FeedbackService,
     private router: Router,
     private http: HttpClient,
     private snackBar: MatSnackBar,
@@ -223,6 +227,7 @@ export class ClientDashboardComponent implements OnInit {
     this.loadCandidateSubmissions();
     this.loadApprovedCandidates();
     this.loadInterviews();
+    this.loadFeedbackHistory();
   }
 
   loadUserProfile(): void {
@@ -465,6 +470,24 @@ export class ClientDashboardComponent implements OnInit {
     this.showFeedbackForm = false;
     this.resetFeedbackForm();
   }
+  
+  openThread(thread: any): void {
+    this.selectedThread = thread;
+    this.showThreadView = true;
+  }
+  
+  closeThreadView(): void {
+    this.showThreadView = false;
+    this.selectedThread = null;
+  }
+  
+  replyToThread(): void {
+    this.showThreadView = false;
+    this.feedbackData.candidateId = this.selectedThread.messages[0].candidateName ? this.selectedThread.threadId : '';
+    this.feedbackData.type = this.selectedThread.type;
+    this.feedbackData.subject = 'Re: ' + this.selectedThread.messages[0].subject;
+    this.openFeedbackForm();
+  }
 
   resetFeedbackForm(): void {
     this.feedbackData = {
@@ -485,9 +508,12 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   onCandidateSelect(): void {
-    const candidate = this.candidateSubmissions.find(c => c.id === this.feedbackData.candidateId);
+    let candidate = this.candidateSubmissions.find(c => c.id === this.feedbackData.candidateId);
+    if (!candidate) {
+      candidate = this.approvedCandidates.find(c => c.id === this.feedbackData.candidateId);
+    }
     if (candidate) {
-      this.feedbackData.subject = `Feedback on ${candidate.candidateName}`;
+      this.feedbackData.subject = `Feedback on ${candidate.candidateName || candidate.candidateName}`;
     }
   }
 
@@ -503,14 +529,77 @@ export class ClientDashboardComponent implements OnInit {
       return;
     }
 
-    console.log('Submitting feedback:', this.feedbackData);
+    const request = {
+      clientId: this.companyId,
+      recruiterId: undefined,
+      applicationId: this.feedbackData.candidateId || undefined,
+      jobId: this.feedbackData.positionId || undefined,
+      feedbackType: this.feedbackData.type,
+      subject: this.feedbackData.subject,
+      message: this.feedbackData.message,
+      priority: this.feedbackData.priority || 'Normal'
+    };
     
-    this.snackBar.open('Feedback sent successfully! Your recruiter will be notified.', 'Close', { 
-      duration: 4000,
-      panelClass: ['success-snackbar']
+    this.feedbackService.sendClientFeedback(request).subscribe({
+      next: () => {
+        this.snackBar.open('Feedback sent successfully! Your recruiter will be notified.', 'Close', { 
+          duration: 4000,
+          panelClass: ['success-snackbar']
+        });
+        this.closeFeedbackForm();
+        this.loadFeedbackHistory();
+      },
+      error: (err) => {
+        console.error('Failed to send feedback:', err);
+        this.snackBar.open('Failed to send feedback', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      }
     });
-    
-    this.closeFeedbackForm();
+  }
+  
+  loadFeedbackHistory(): void {
+    this.feedbackService.getClientFeedback(this.companyId).subscribe({
+      next: (feedbacks) => {
+        // Group by application or job or general
+        const grouped = new Map<string, any[]>();
+        
+        feedbacks.forEach(f => {
+          const key = f.applicationId || f.jobId || 'general';
+          if (!grouped.has(key)) {
+            grouped.set(key, []);
+          }
+          grouped.get(key)!.push({
+            id: f.id,
+            type: f.feedbackType || 'General',
+            subject: f.subject,
+            message: f.message,
+            date: new Date(f.createdAt).toLocaleDateString(),
+            time: new Date(f.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            candidateName: f.candidateName,
+            positionTitle: f.jobTitle,
+            senderName: f.senderName || 'Unknown',
+            status: f.status === 'READ' ? 'Read' : 'Pending',
+            senderType: f.senderType
+          });
+        });
+        
+        // Convert to array of threads
+        this.feedbackHistory = Array.from(grouped.entries()).map(([key, messages]) => {
+          const firstMsg = messages[0];
+          return {
+            threadId: key,
+            candidateName: firstMsg.candidateName,
+            positionTitle: firstMsg.positionTitle,
+            type: firstMsg.type,
+            messageCount: messages.length,
+            lastMessage: messages[messages.length - 1],
+            messages: messages.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          };
+        }).sort((a, b) => new Date(b.lastMessage.date).getTime() - new Date(a.lastMessage.date).getTime());
+      },
+      error: (err) => {
+        console.error('Failed to load feedback history:', err);
+      }
+    });
   }
   
 
@@ -852,6 +941,13 @@ export class ClientDashboardComponent implements OnInit {
 
   getHiredCount(): number {
     return this.approvedCandidates.filter(c => c.status === 'HIRED').length;
+  }
+
+  isStepCompleted(currentStatus: string, stepStatus: string): boolean {
+    const stages = ['CLIENT_INTERVIEW', 'REFERENCE_CHECK', 'BACKGROUND_CHECK', 'OFFER_PENDING', 'HIRED'];
+    const currentIndex = stages.indexOf(currentStatus);
+    const stepIndex = stages.indexOf(stepStatus);
+    return currentIndex > stepIndex;
   }
 
   loadInterviews(): void {

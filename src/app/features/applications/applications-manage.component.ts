@@ -9,11 +9,12 @@ import { InterviewService, InterviewRequest } from '../../core/services/intervie
 import { BackgroundCheckModalComponent } from './background-check-modal.component';
 import { ReferenceCheckModalComponent } from './reference-check-modal.component';
 import { OfferModalComponent } from './offer-modal.component';
+import { FeedbackResponseModalComponent } from './feedback-response-modal.component';
 
 @Component({
   selector: 'app-applications-manage',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, DragDropModule, BackgroundCheckModalComponent, ReferenceCheckModalComponent, OfferModalComponent],
+  imports: [CommonModule, RouterModule, FormsModule, DragDropModule, BackgroundCheckModalComponent, ReferenceCheckModalComponent, OfferModalComponent, FeedbackResponseModalComponent],
   templateUrl: './applications-manage.component.html',
   styleUrls: ['./applications-manage.component.scss']
 })
@@ -51,6 +52,8 @@ export class ApplicationsManageComponent implements OnInit {
   showToastFlag = false;
   timelineActivities: any[] = [];
   loadingTimeline = false;
+  showFeedbackResponseModal = false;
+  clientFeedbackText = '';
 
   cardsPerColumn = 25;
   applications: JobApplication[] = [];
@@ -286,7 +289,7 @@ export class ApplicationsManageComponent implements OnInit {
 
   confirmScheduleInterview() {
     if (!this.interviewDateTime) {
-      alert('Please select interview date and time');
+      this.showToast('warning', 'Required Field', 'Please select interview date and time');
       return;
     }
 
@@ -607,6 +610,29 @@ export class ApplicationsManageComponent implements OnInit {
     if (!stageNotes) return '';
     const clientActions = stageNotes.split('\n').filter(line => line.includes('CLIENT ACTION'));
     return clientActions.join('\n\n');
+  }
+
+  respondToFeedback(): void {
+    if (!this.selectedApplication) return;
+    this.clientFeedbackText = this.getClientFeedback(this.selectedApplication.stageNotes || '');
+    if (!this.clientFeedbackText) {
+      this.showToast('warning', 'No Feedback', 'No client feedback found to respond to.');
+      return;
+    }
+    this.showFeedbackResponseModal = true;
+  }
+
+  closeFeedbackResponseModal(): void {
+    this.showFeedbackResponseModal = false;
+    this.clientFeedbackText = '';
+  }
+
+  onFeedbackResponseSubmitted(): void {
+    this.showFeedbackResponseModal = false;
+    this.showToast('success', 'Response Sent', 'Your response has been sent to the client.');
+    if (this.selectedApplication) {
+      this.loadTimeline(this.selectedApplication.id);
+    }
   }
 
   scheduleClientInterview() {
