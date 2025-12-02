@@ -1,0 +1,91 @@
+name: Frontend Deploy Production
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: PROD
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm run test -- --watch=false --browsers=ChromeHeadless
+      
+      - name: Run linting
+        run: npm run lint
+      
+      - name: Security audit
+        run: npm audit --audit-level high
+      
+      - name: Build for production
+        env:
+          NODE_ENV: production
+        run: |
+          cat > src/environments/environment.prod.ts << EOF
+          export const environment = {
+            production: true,
+            apiUrl: 'https://${{ secrets.PROD_DOMAIN_NAME }}/api',
+            recaptchaSiteKey: '${{ secrets.RECAPTCHA_SITE_KEY }}'
+          };
+          EOF
+          
+          npm run build -- --configuration production
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Deploy to Production S3
+        run: |
+          aws s3 sync s3://talentforge-prod-frontend s3://talentforge-prod-frontend-backup-$(date +%Y%m%d-%H%M%S) || true
+          
+          aws s3 sync dist/ s3://talentforge-prod-frontend --delete \
+            --cache-control "public, max-age=31536000" \
+            --exclude "*.html" \
+            --exclude "*.json"
+          
+          aws s3 sync dist/ s3://talentforge-prod-frontend \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --include "*.html" \
+            --include "*.json"
+      
+      - name: Invalidate CloudFront
+        run: |
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[0].DomainName=='talentforge-prod-frontend.s3.amazonaws.com'].Id" --output text)
+          
+          if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
+            echo "Invalidating CloudFront distribution: $DISTRIBUTION_ID"
+            INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*" --query 'Invalidation.Id' --output text)
+            echo "Invalidation created: $INVALIDATION_ID"
+            
+            aws cloudfront wait invalidation-completed --distribution-id $DISTRIBUTION_ID --id $INVALIDATION_ID
+            echo "✅ CloudFront invalidation completed"
+          else
+            echo "⚠️ No CloudFront distribution found"
+          fi
+      
+      - name: Health check
+        run: |
+          sleep 30
+          
+          if curl -f https://${{ secrets.PROD_DOMAIN_NAME }}; then
+            echo "✅ Production site is accessible"
+          else
+            echo "❌ Production site health check failed"
+            exit 1
+          fi
