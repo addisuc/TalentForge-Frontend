@@ -1,4 +1,14 @@
-<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
-  <rect width="64" height="64" fill="#2563eb" rx="8"/>
-  <text x="32" y="45" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="white" text-anchor="middle">TF</text>
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" fill="url(#grad)" rx="12"/>
+  <!-- Hammer icon representing "Forge" -->
+  <path d="M 20 28 L 28 20 L 32 24 L 24 32 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+  <rect x="26" y="30" width="4" height="16" fill="#78716c" rx="1"/>
+  <!-- Letter T -->
+  <path d="M 36 22 L 52 22 L 52 26 L 46 26 L 46 46 L 42 46 L 42 26 L 36 26 Z" fill="white"/>
 </svg>
