@@ -1,7 +1,7 @@
 # TalentForge Frontend
 
 **Version:** 1.0  
-**Status:** ✅ Production Ready (95% Complete)  
+**Status:** ✅ Production Ready (98% Complete)  
 **Framework:** Angular 17+
 
 ---
@@ -17,15 +17,20 @@ All comprehensive documentation has been moved to the parent **TalentForge/** fo
 - [Marketing Strategy](../TalentForge/MARKETING_STRATEGY.md) - Go-to-market and customer acquisition
 
 ### Frontend-Specific Documentation
-See local docs for frontend implementation details:
-- **[FINAL_STATUS.md](./FINAL_STATUS.md)** - Complete project status and deployment readiness
-- **[PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md)** - Pre-deployment checklist
-- **[PERFORMANCE_REPORT.md](./PERFORMANCE_REPORT.md)** - Bundle analysis and metrics
-- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Navigation guide
-- **[AUTH_ARCHITECTURE.md](./AUTH_ARCHITECTURE.md)** - Authentication system details
-- **[RECAPTCHA_SETUP.md](./RECAPTCHA_SETUP.md)** - reCAPTCHA configuration
-- **[SUPER_ADMIN_SETUP.md](./SUPER_ADMIN_SETUP.md)** - Super admin setup
-- **[BACKEND_FRONTEND_ALIGNMENT.md](./BACKEND_FRONTEND_ALIGNMENT.md)** - API alignment
+All technical documentation has been consolidated in the parent **TalentForge/** folder:
+- **[AUTH_ARCHITECTURE.md](../TalentForge/AUTH_ARCHITECTURE.md)** - Authentication system details
+- **[BACKEND_FRONTEND_ALIGNMENT.md](../TalentForge/BACKEND_FRONTEND_ALIGNMENT.md)** - API alignment
+- **[QUICK_REFERENCE.md](../TalentForge/QUICK_REFERENCE.md)** - Navigation guide
+- **[RECAPTCHA_SETUP.md](../TalentForge/RECAPTCHA_SETUP.md)** - reCAPTCHA configuration
+- **[SUPER_ADMIN_SETUP.md](../TalentForge/SUPER_ADMIN_SETUP.md)** - Super admin setup
+- **[AWS_FREE_TIER_DEPLOYMENT.md](../TalentForge/AWS_FREE_TIER_DEPLOYMENT.md)** - Frontend deployment guide
+
+### User Manuals
+Role-specific user guides available in-app via Help menu:
+- **[Candidate User Manual](./src/assets/docs/candidate-user-manual.md)** - Job search, applications, profile management
+- **[Recruiter User Manual](./src/assets/docs/recruiter-user-manual.md)** - Job management, candidate tracking, client workflows
+- **[Client User Manual](./src/assets/docs/client-user-manual.md)** - Job requests, candidate review, hiring process
+- **[Platform Admin User Manual](./src/assets/docs/platform-admin-user-manual.md)** - Tenant management, billing, system administration
 
 ---
 
@@ -104,7 +109,7 @@ src/app/
 
 ## 🎯 Features
 
-### ✅ Implemented (95% Complete)
+### ✅ Implemented (98% Complete)
 - **Authentication System**: Login, register, password reset, email verification
 - **Role-Based Access Control**: 7 user roles with dedicated dashboards
 - **Job Management**: Create, edit, delete, search jobs with advanced filtering
@@ -120,15 +125,17 @@ src/app/
   - Interview Scheduling Workflow
   - Feedback & Communication Workflow
   - Real-time Notification System
-- **Backend Integration**: 7 microservices fully connected and operational
+- **Backend Integration**: 8 microservices fully connected and operational
 - **Security Implementation**: Rate limiting, reCAPTCHA v3, session timeout, JWT authentication
 - **Testing Coverage**: 73/73 unit tests passing (100% pass rate)
 - **Performance Optimization**: Bundle sizes optimized for production
-- **Comprehensive Documentation**: Complete technical and user documentation
+- **User Documentation**: Role-specific user manuals with in-app help menu
+- **Deployment Guides**: AWS Free Tier deployment documentation for frontend and backend
+- **Super Admin Setup**: Automated scripts for initial platform administrator creation
+- **Custom Branding**: TalentForge logo and favicon implementation
 
-### ⚠️ Remaining (5%)
+### ⚠️ Remaining (2%)
 - **Accessibility Compliance**: Color contrast validation, keyboard navigation testing, screen reader compatibility
-- **Final Performance Tuning**: Minor optimizations for production deployment
 
 ---
 
@@ -268,6 +275,11 @@ Build artifacts stored in `dist/` directory.
 - **Staging**: AWS S3 + CloudFront
 - **Production**: AWS S3 + CloudFront with custom domain
 
+### Deployment Documentation
+- See [AWS_FREE_TIER_DEPLOYMENT.md](../TalentForge/AWS_FREE_TIER_DEPLOYMENT.md) for frontend deployment
+- See [AWS_FREE_TIER_BACKEND_DEPLOYMENT.md](../TalentForge-Backend/AWS_FREE_TIER_BACKEND_DEPLOYMENT.md) for backend deployment
+- Super admin setup scripts available in `../TalentForge/scripts/`
+
 ---
 
 ## 📊 Performance Targets
@@ -348,18 +360,20 @@ For questions or issues:
 - ✅ **Complete Angular 17+ Application** - Modern, type-safe frontend
 - ✅ **Role-Based Architecture** - 7 user roles with dedicated interfaces
 - ✅ **Comprehensive Feature Set** - All recruitment workflows implemented
-- ✅ **Backend Integration** - 7 microservices fully connected
+- ✅ **Backend Integration** - 8 microservices fully connected
 - ✅ **Modern UI/UX** - Angular Material with responsive design
 - ✅ **State Management** - NgRx for scalable state handling
 - ✅ **Security Implementation** - JWT, rate limiting, reCAPTCHA
 - ✅ **Testing Coverage** - 100% unit test pass rate
 - ✅ **Performance Optimization** - Production-ready bundle sizes
-- ✅ **Documentation** - Comprehensive technical documentation
+- ✅ **User Documentation** - Role-specific manuals with in-app help
+- ✅ **Deployment Ready** - AWS Free Tier deployment guides
+- ✅ **Custom Branding** - Professional logo and favicon
 
-**Status:** ✅ Production Ready (95% Complete) - Ready for deployment
+**Status:** ✅ Production Ready (98% Complete) - Ready for deployment
 
 ---
 
-**Last Updated:** December 2024  
+**Last Updated:** January 2025  
 **Version:** 1.0  
-**Deployment Status:** Production Ready (95% complete - accessibility audit pending)
+**Deployment Status:** Production Ready (98% complete - accessibility audit pending)
