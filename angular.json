@@ -97,10 +97,12 @@
           },
           "configurations": {
             "production": {
-              "buildTarget": "talentforge-app:build:production"
+              "buildTarget": "talentforge-app:build:production",
+              "proxyConfig": "proxy.conf.prod.json"
             },
             "demo": {
-              "buildTarget": "talentforge-app:build:demo"
+              "buildTarget": "talentforge-app:build:demo",
+              "proxyConfig": "proxy.conf.demo.json"
             },
             "development": {
               "buildTarget": "talentforge-app:build:development"
