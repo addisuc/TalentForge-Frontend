@@ -17,12 +17,14 @@ export class NavigationService {
       { label: 'Dashboard', route: '/platform-admin', icon: '📊' },
       { label: 'Tenants', route: '/platform-admin/tenants', icon: '🏢' },
       { label: 'Billing', route: '/platform-admin/billing', icon: '💳' },
+      { label: 'Analytics', route: '/platform-admin/analytics', icon: '📈' },
       { label: 'System', route: '/platform-admin/system', icon: '⚙️' }
     ],
     [UserRole.PLATFORM_ADMIN]: [
       { label: 'Dashboard', route: '/platform-admin', icon: '📊' },
       { label: 'Tenants', route: '/platform-admin/tenants', icon: '🏢' },
       { label: 'Billing', route: '/platform-admin/billing', icon: '💳' },
+      { label: 'Analytics', route: '/platform-admin/analytics', icon: '📈' },
       { label: 'System', route: '/platform-admin/system', icon: '⚙️' }
     ],
     [UserRole.BILLING_MANAGER]: [

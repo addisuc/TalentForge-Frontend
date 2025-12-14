@@ -17,7 +17,9 @@ import { FormsModule } from '@angular/forms';
           </div>
           <div class="header-actions">
             <button class="btn-secondary" (click)="showInvoiceModal = true">Generate Invoice</button>
-            <button class="btn-primary">Export Report</button>
+            <button class="btn-secondary" (click)="viewPendingRefunds()">Refunds ({{ pendingRefundsCount }})</button>
+            <button class="btn-secondary" (click)="manageSubscriptions()">Subscriptions</button>
+            <button class="btn-primary" (click)="exportReport()">Export Report</button>
           </div>
         </div>
 
@@ -209,6 +211,7 @@ export class BillingDashboardComponent {
   billingPeriod = 'current';
   invoiceType = 'subscription';
   invoiceNotes = '';
+  pendingRefundsCount = 0;
 
   stats = [
     { icon: '💰', value: '$45,230', label: 'Monthly Revenue', change: 12 },
@@ -238,4 +241,46 @@ export class BillingDashboardComponent {
     { tenant: 'Acme Corp', placements: 5, amount: 2500 },
     { tenant: 'Tech Solutions', placements: 3, amount: 1500 }
   ];
+
+  viewPendingRefunds(): void {
+    console.log('View pending refunds');
+  }
+
+  manageSubscriptions(): void {
+    console.log('Navigate to subscriptions management');
+  }
+
+  exportReport(): void {
+    const reportData = {
+      stats: this.stats,
+      transactions: this.transactions,
+      subscriptions: this.subscriptions,
+      pendingPayments: this.pendingPayments,
+      payouts: this.payouts,
+      generatedAt: new Date().toISOString()
+    };
+    
+    const csv = this.generateCSV(reportData);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `billing-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  }
+
+  private generateCSV(data: any): string {
+    const headers = ['Type', 'Description', 'Amount', 'Date', 'Status'];
+    const rows: string[][] = [];
+    
+    data.transactions.forEach((t: any) => {
+      rows.push(['Transaction', t.description, t.amount.toString(), t.date, 'Completed']);
+    });
+    
+    data.subscriptions.forEach((s: any) => {
+      rows.push(['Subscription', s.tenant + ' - ' + s.plan, s.amount.toString(), 'Monthly', s.status]);
+    });
+    
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  }
 }

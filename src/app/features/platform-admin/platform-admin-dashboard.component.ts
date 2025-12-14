@@ -214,7 +214,6 @@ export class PlatformAdminDashboardComponent implements OnInit {
   quickActions = [
     { icon: '🏢', label: 'Manage Tenants', action: 'tenants' },
     { icon: '💳', label: 'Billing Overview', action: 'billing' },
-    { icon: '📊', label: 'System Reports', action: 'reports' },
     { icon: '⚙️', label: 'System Health', action: 'system' },
     { icon: '👥', label: 'User Management', action: 'users' },
     { icon: '🔔', label: 'Send Announcement', action: 'announcement' }
@@ -240,9 +239,7 @@ export class PlatformAdminDashboardComponent implements OnInit {
       case 'system':
         this.router.navigate(['/platform-admin/system']);
         break;
-      case 'reports':
-        this.showSystemReports();
-        break;
+
       case 'users':
         this.showUserManagement();
         break;
@@ -252,14 +249,10 @@ export class PlatformAdminDashboardComponent implements OnInit {
     }
   }
 
-  showSystemReports() {
-    // Navigate to system reports (to be implemented)
-    console.log('System Reports - Platform analytics, usage metrics, performance data');
-  }
+
 
   showUserManagement() {
-    // Navigate to user management (to be implemented)
-    console.log('User Management - Manage platform users across all tenants');
+    this.router.navigate(['/platform-admin/users']);
   }
 
   showAnnouncementModal() {

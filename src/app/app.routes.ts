@@ -109,6 +109,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/platform-admin/system.component').then(m => m.SystemComponent)
   },
   {
+    path: 'platform-admin/users',
+    canActivate: [AuthGuard, roleGuard([UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_SUPER_ADMIN, UserRole.BILLING_MANAGER])],
+    loadComponent: () => import('./features/users/users-manage.component').then(m => m.UsersManageComponent)
+  },
+  {
     path: 'admin',
     canActivate: [AuthGuard, roleGuard([UserRole.TENANT_ADMIN])],
     loadComponent: () => import('./features/admin/admin-dashboard.component').then(m => m.AdminDashboardComponent)

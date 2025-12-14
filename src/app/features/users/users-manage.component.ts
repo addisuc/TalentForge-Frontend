@@ -16,10 +16,13 @@ import { UserService, User as ApiUser } from '../../core/services/user.service';
 export class UsersManageComponent implements OnInit {
   showInviteModal = false;
   inviteEmail = '';
+  inviteRole = 'PLATFORM_ADMIN';
   emailTouched = false;
   currentUserRole: UserRole | null = null;
   isRecruiter = false;
   isTenantAdmin = false;
+  isPlatformAdmin = false;
+  isPlatformAdminContext = false;
   showActionMenu: number | null = null;
   showDeactivateModal = false;
   showEditRoleModal = false;
@@ -27,6 +30,9 @@ export class UsersManageComponent implements OnInit {
   showMessageModal = false;
   showPerformanceModal = false;
   showResetPasswordModal = false;
+  showAddUserModal = false;
+  showEditUserModal = false;
+  showDeleteModal = false;
   selectedUser: any = null;
   newRole = '';
   messageSubject = '';
@@ -34,6 +40,14 @@ export class UsersManageComponent implements OnInit {
   users: any[] = [];
   loading = false;
   error = '';
+  
+  newUser = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: 'PLATFORM_ADMIN',
+    status: 'ACTIVE'
+  };
 
   searchQuery = '';
   selectedRole = 'all';
@@ -50,16 +64,31 @@ export class UsersManageComponent implements OnInit {
       this.currentUserRole = user.role;
       this.isRecruiter = user.role === UserRole.RECRUITER;
       this.isTenantAdmin = user.role === UserRole.TENANT_ADMIN;
+      this.isPlatformAdmin = user.role === UserRole.PLATFORM_ADMIN || user.role === UserRole.PLATFORM_SUPER_ADMIN || user.role === UserRole.BILLING_MANAGER;
     }
+    
+    this.isPlatformAdminContext = window.location.pathname.includes('/platform-admin/');
     this.loadUsers();
   }
   
   loadUsers() {
     this.loading = true;
     this.error = '';
-    this.userService.getAllUsers(0, 100).subscribe({
+    
+    const userService$ = this.isPlatformAdminContext 
+      ? this.userService.getPlatformAdmins(0, 100)
+      : this.userService.getAllUsers(0, 100);
+    
+    userService$.subscribe({
       next: (response) => {
-        this.users = response.content.map(user => ({
+        let users = response.content || response;
+        
+        if (!this.isPlatformAdminContext) {
+          const tenantRoles = ['TENANT_ADMIN', 'RECRUITER', 'RECRUITING_MANAGER', 'CANDIDATE'];
+          users = users.filter((user: any) => tenantRoles.includes(user.role));
+        }
+        
+        this.users = users.map((user: any) => ({
           id: user.id,
           name: `${user.firstName} ${user.lastName}`,
           email: user.email,
@@ -74,7 +103,7 @@ export class UsersManageComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load users:', err);
-        this.error = 'Failed to load team members';
+        this.error = 'Failed to load users';
         this.loading = false;
         this.users = [];
       }
@@ -83,6 +112,9 @@ export class UsersManageComponent implements OnInit {
   
   getAvatarForRole(role: string): string {
     const avatars: any = {
+      'PLATFORM_SUPER_ADMIN': '👑',
+      'PLATFORM_ADMIN': '🛡️',
+      'BILLING_MANAGER': '💳',
       'TENANT_ADMIN': '👨🏫',
       'RECRUITER': '👨💻',
       'RECRUITING_MANAGER': '👩💼',
@@ -103,6 +135,9 @@ export class UsersManageComponent implements OnInit {
 
   getRoleLabel(role: string): string {
     const labels: any = {
+      'PLATFORM_SUPER_ADMIN': 'Super Admin',
+      'PLATFORM_ADMIN': 'Platform Admin',
+      'BILLING_MANAGER': 'Billing Manager',
       'TENANT_ADMIN': 'Admin',
       'RECRUITING_MANAGER': 'Manager',
       'RECRUITER': 'Recruiter'
@@ -110,21 +145,57 @@ export class UsersManageComponent implements OnInit {
     return labels[role] || role;
   }
 
+  // Role-based permissions
+  canInviteUsers(): boolean {
+    return this.isPlatformAdmin;
+  }
+
+  canEditRole(user: any): boolean {
+    return this.isPlatformAdmin;
+  }
+
+  canDeactivateUser(user: any): boolean {
+    return this.isPlatformAdmin;
+  }
+
+  canViewProfile(): boolean {
+    return true;
+  }
+
+  canSendMessage(): boolean {
+    return true;
+  }
+
+  canViewPerformance(user: any): boolean {
+    return this.isTenantAdmin || user.role === 'RECRUITER';
+  }
+
+  canResetPassword(user: any): boolean {
+    return this.isPlatformAdmin;
+  }
+
+  canDeleteUser(user: any): boolean {
+    return this.isPlatformAdmin;
+  }
+
+  // Invite Modal
   openInviteModal() {
     this.showInviteModal = true;
     this.inviteEmail = '';
+    this.inviteRole = this.isPlatformAdminContext ? 'PLATFORM_ADMIN' : 'RECRUITER';
     this.emailTouched = false;
   }
 
   closeInviteModal() {
     this.showInviteModal = false;
     this.inviteEmail = '';
+    this.inviteRole = this.isPlatformAdminContext ? 'PLATFORM_ADMIN' : 'RECRUITER';
     this.emailTouched = false;
   }
 
   sendInvite() {
     if (this.isValidEmail()) {
-      console.log('Sending invite to:', this.inviteEmail);
+      console.log('Sending invite to:', this.inviteEmail, 'with role:', this.inviteRole);
       this.closeInviteModal();
     }
   }
@@ -138,36 +209,161 @@ export class UsersManageComponent implements OnInit {
     this.emailTouched = true;
   }
 
-  // Role-based permissions
-  canInviteUsers(): boolean {
-    return this.isTenantAdmin;
+  // Add User Modal
+  openAddUserModal(): void {
+    this.newUser = {
+      firstName: '',
+      lastName: '',
+      email: '',
+      role: this.isPlatformAdminContext ? 'PLATFORM_ADMIN' : 'RECRUITER',
+      status: 'ACTIVE'
+    };
+    this.showAddUserModal = true;
   }
 
-  canEditRole(user: any): boolean {
-    return this.isTenantAdmin && user.role !== 'TENANT_ADMIN';
+  closeAddUserModal(): void {
+    this.showAddUserModal = false;
   }
 
-  canDeactivateUser(user: any): boolean {
-    return this.isTenantAdmin && user.role !== 'TENANT_ADMIN';
+  saveNewUser(): void {
+    if (this.newUser.firstName && this.newUser.lastName && this.newUser.email) {
+      this.userService.createUser(this.newUser).subscribe({
+        next: (createdUser) => {
+          console.log('User created successfully:', createdUser);
+          this.loadUsers();
+          this.closeAddUserModal();
+        },
+        error: (err) => {
+          console.error('Failed to create user:', err);
+          this.error = 'Failed to create user';
+        }
+      });
+    }
   }
 
-  canViewProfile(): boolean {
-    return true; // All users can view profiles
+  // Edit User Modal
+  openEditUserModal(user: any): void {
+    this.selectedUser = user;
+    this.newUser = {
+      firstName: user.name.split(' ')[0],
+      lastName: user.name.split(' ').slice(1).join(' '),
+      email: user.email,
+      role: user.role,
+      status: user.status === 'Active' ? 'ACTIVE' : 'INACTIVE'
+    };
+    this.showEditUserModal = true;
+    this.closeActionMenu();
   }
 
-  canSendMessage(): boolean {
-    return true; // All users can send messages
+  closeEditUserModal(): void {
+    this.showEditUserModal = false;
+    this.selectedUser = null;
   }
 
-  canViewPerformance(user: any): boolean {
-    return this.isTenantAdmin || user.role === 'RECRUITER';
+  saveEditUser(): void {
+    if (this.selectedUser && this.newUser.firstName && this.newUser.lastName && this.newUser.email) {
+      this.userService.updateUser(this.selectedUser.id, {
+        firstName: this.newUser.firstName,
+        lastName: this.newUser.lastName,
+        email: this.newUser.email
+      }).subscribe({
+        next: (updatedUser) => {
+          console.log('User updated successfully:', updatedUser);
+          this.loadUsers();
+          this.closeEditUserModal();
+        },
+        error: (err) => {
+          console.error('Failed to update user:', err);
+          this.error = 'Failed to update user';
+        }
+      });
+    }
   }
 
-  canResetPassword(user: any): boolean {
-    return this.isTenantAdmin;
+  // Delete User Modal
+  openDeleteModal(user: any): void {
+    this.selectedUser = user;
+    this.showDeleteModal = true;
+    this.closeActionMenu();
   }
 
-  // Action handlers
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.selectedUser = null;
+  }
+
+  confirmDeleteUser(): void {
+    if (this.selectedUser) {
+      this.userService.deleteUser(this.selectedUser.id).subscribe({
+        next: () => {
+          console.log('User deleted successfully');
+          this.loadUsers();
+          this.closeDeleteModal();
+        },
+        error: (err) => {
+          console.error('Failed to delete user:', err);
+          this.error = 'Failed to delete user';
+        }
+      });
+    }
+  }
+
+  // Deactivate User Modal
+  openDeactivateModal(user: any) {
+    this.selectedUser = user;
+    this.showDeactivateModal = true;
+    this.closeActionMenu();
+  }
+
+  closeDeactivateModal() {
+    this.showDeactivateModal = false;
+    this.selectedUser = null;
+  }
+
+  confirmDeactivate() {
+    if (this.selectedUser) {
+      this.userService.suspendUser(this.selectedUser.id).subscribe({
+        next: () => {
+          console.log('User deactivated successfully');
+          this.loadUsers();
+          this.closeDeactivateModal();
+        },
+        error: (err) => {
+          console.error('Failed to deactivate user:', err);
+          this.error = 'Failed to deactivate user';
+        }
+      });
+    }
+  }
+
+  // Reset Password Modal
+  openResetPasswordModal(user: any) {
+    this.selectedUser = user;
+    this.showResetPasswordModal = true;
+    this.closeActionMenu();
+  }
+
+  closeResetPasswordModal() {
+    this.showResetPasswordModal = false;
+    this.selectedUser = null;
+  }
+
+  confirmResetPassword() {
+    if (this.selectedUser) {
+      this.userService.resetUserPassword(this.selectedUser.id).subscribe({
+        next: () => {
+          console.log('Password reset successfully');
+          this.closeResetPasswordModal();
+        },
+        error: (err) => {
+          console.error('Failed to reset password:', err);
+          this.error = 'Failed to reset password';
+        }
+      });
+    }
+  }
+
+  // Action Menu
   toggleActionMenu(userId: number, event: Event) {
     event.stopPropagation();
     this.showActionMenu = this.showActionMenu === userId ? null : userId;
@@ -175,6 +371,21 @@ export class UsersManageComponent implements OnInit {
 
   closeActionMenu() {
     this.showActionMenu = null;
+  }
+
+  // User Actions
+  reactivateUser(user: any) {
+    this.userService.activateUser(user.id).subscribe({
+      next: () => {
+        console.log('User reactivated successfully');
+        this.loadUsers();
+      },
+      error: (err) => {
+        console.error('Failed to reactivate user:', err);
+        this.error = 'Failed to reactivate user';
+      }
+    });
+    this.closeActionMenu();
   }
 
   viewProfile(user: any) {
@@ -242,51 +453,7 @@ export class UsersManageComponent implements OnInit {
     }
   }
 
-  openDeactivateModal(user: any) {
-    this.selectedUser = user;
-    this.showDeactivateModal = true;
-    this.closeActionMenu();
-  }
-
-  closeDeactivateModal() {
-    this.showDeactivateModal = false;
-    this.selectedUser = null;
-  }
-
-  confirmDeactivate() {
-    if (this.selectedUser) {
-      console.log('Deactivate user:', this.selectedUser.id);
-      this.selectedUser.status = 'Inactive';
-      this.closeDeactivateModal();
-    }
-  }
-
-  reactivateUser(user: any) {
-    console.log('Reactivate user:', user.id);
-    user.status = 'Active';
-    this.closeActionMenu();
-  }
-
   resetPassword(user: any) {
-    this.selectedUser = user;
-    this.showResetPasswordModal = true;
-    this.closeActionMenu();
-  }
-
-  closeResetPasswordModal() {
-    this.showResetPasswordModal = false;
-    this.selectedUser = null;
-  }
-
-  confirmResetPassword() {
-    if (this.selectedUser) {
-      console.log('Reset password for:', this.selectedUser.id);
-      this.closeResetPasswordModal();
-    }
-  }
-
-  resendInvite(user: any) {
-    console.log('Resend invite to:', user);
-    this.closeActionMenu();
+    this.openResetPasswordModal(user);
   }
 }

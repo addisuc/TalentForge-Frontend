@@ -19,10 +19,14 @@ export class TenantsManageComponent implements OnInit {
   showDetailsModal = false;
   showDeleteModal = false;
   showEditModal = false;
+  showMessageModal = false;
+  showUsersModal = false;
   selectedTenant: Tenant | null = null;
   tenantToDelete: Tenant | null = null;
   editTenantForm!: FormGroup;
   addTenantForm!: FormGroup;
+  messageForm!: FormGroup;
+  tenantUsers: any[] = [];
   Math = Math;
   
   searchQuery = '';
@@ -62,6 +66,12 @@ export class TenantsManageComponent implements OnInit {
       name: ['', Validators.required],
       subdomain: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
       plan: ['', Validators.required]
+    });
+
+    this.messageForm = this.fb.group({
+      subject: ['', Validators.required],
+      message: ['', Validators.required],
+      priority: ['normal']
     });
   }
 
@@ -219,5 +229,68 @@ export class TenantsManageComponent implements OnInit {
   onItemsPerPageChange(): void {
     this.currentPage = 0;
     this.loadTenants();
+  }
+
+  // Non-billing actions
+  sendMessage(tenant: Tenant): void {
+    this.selectedTenant = tenant;
+    this.messageForm.reset({ priority: 'normal' });
+    this.showMessageModal = true;
+  }
+
+  closeMessageModal(): void {
+    this.showMessageModal = false;
+    this.selectedTenant = null;
+  }
+
+  sendTenantMessage(): void {
+    if (this.messageForm.invalid || !this.selectedTenant) return;
+    
+    const messageData = {
+      ...this.messageForm.value,
+      tenantId: this.selectedTenant.id,
+      recipientEmail: this.selectedTenant.adminEmail
+    };
+    
+    // TODO: Implement message service
+    console.log('Sending message:', messageData);
+    alert('Message sent successfully!');
+    this.closeMessageModal();
+  }
+
+  viewUsers(tenant: Tenant): void {
+    this.selectedTenant = tenant;
+    this.loadTenantUsers(tenant.id);
+    this.showUsersModal = true;
+  }
+
+  closeUsersModal(): void {
+    this.showUsersModal = false;
+    this.selectedTenant = null;
+    this.tenantUsers = [];
+  }
+
+  loadTenantUsers(tenantId: string): void {
+    // TODO: Implement user service call
+    this.tenantUsers = [
+      { name: 'John Admin', email: 'admin@company.com', role: 'TENANT_ADMIN', status: 'Active' },
+      { name: 'Jane Recruiter', email: 'jane@company.com', role: 'RECRUITER', status: 'Active' }
+    ];
+  }
+
+  exportData(tenant: Tenant): void {
+    const data = {
+      tenant: tenant,
+      exportDate: new Date().toISOString(),
+      users: this.tenantUsers.length || tenant.users,
+      jobs: tenant.jobs
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${tenant.subdomain}-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
   }
 }

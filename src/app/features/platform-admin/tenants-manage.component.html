@@ -57,6 +57,9 @@
             <div class="action-buttons">
               <button class="btn-action" (click)="viewDetails(tenant)">View</button>
               <button class="btn-action" (click)="openEditModal(tenant)">Edit</button>
+              <button class="btn-action" (click)="sendMessage(tenant)">Message</button>
+              <button class="btn-action" (click)="viewUsers(tenant)">Users</button>
+              <button class="btn-action" (click)="exportData(tenant)">Export</button>
               <button class="btn-action secondary" *ngIf="tenant.status === 'Active'" (click)="suspendTenant(tenant)">Suspend</button>
               <button class="btn-action secondary" *ngIf="tenant.status === 'Suspended'" (click)="activateTenant(tenant)">Activate</button>
               <button class="btn-action danger" (click)="deleteTenant(tenant)">Delete</button>
@@ -246,6 +249,71 @@
     <div class="modal-footer">
       <button type="button" class="btn-secondary" (click)="closeDeleteModal()">Cancel</button>
       <button type="button" class="btn-primary danger" (click)="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Send Message Modal -->
+<div class="modal-overlay" *ngIf="showMessageModal" (click)="closeMessageModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()" role="dialog">
+    <div class="modal-header">
+      <h2>Send Message to {{ selectedTenant?.name }}</h2>
+      <button class="close-btn" (click)="closeMessageModal()" aria-label="Close">&times;</button>
+    </div>
+    <form [formGroup]="messageForm" (ngSubmit)="sendTenantMessage()">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="subject">Subject *</label>
+          <input id="subject" type="text" formControlName="subject" class="form-control" placeholder="Message subject">
+        </div>
+        <div class="form-group">
+          <label for="priority">Priority</label>
+          <select id="priority" formControlName="priority" class="form-control">
+            <option value="low">Low</option>
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="message">Message *</label>
+          <textarea id="message" formControlName="message" class="form-control" rows="5" placeholder="Type your message..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeMessageModal()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="messageForm.invalid">Send Message</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View Users Modal -->
+<div class="modal-overlay" *ngIf="showUsersModal" (click)="closeUsersModal()">
+  <div class="modal-content large" (click)="$event.stopPropagation()" role="dialog">
+    <div class="modal-header">
+      <h2>{{ selectedTenant?.name }} - Users</h2>
+      <button class="close-btn" (click)="closeUsersModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="users-list">
+        <div class="user-item" *ngFor="let user of tenantUsers">
+          <div class="user-info">
+            <strong>{{ user.name }}</strong>
+            <span class="user-email">{{ user.email }}</span>
+          </div>
+          <div class="user-meta">
+            <span class="badge">{{ user.role }}</span>
+            <span class="status" [class]="user.status.toLowerCase()">{{ user.status }}</span>
+          </div>
+        </div>
+        <div *ngIf="tenantUsers.length === 0" class="no-users">
+          No users found for this tenant.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeUsersModal()">Close</button>
     </div>
   </div>
 </div>

@@ -6,6 +6,7 @@
     </div>
     <div class="header-actions">
       <button class="btn-secondary" (click)="createManualInvoice()">+ Manual Invoice</button>
+      <button class="btn-secondary" (click)="manageSubscriptions()">📋 Subscriptions</button>
       <button class="btn-secondary" (click)="viewPendingRefunds()">
         ⚠️ Pending Refunds
         <span class="badge-count" *ngIf="pendingRefundsCount > 0">{{ pendingRefundsCount }}</span>
@@ -316,6 +317,61 @@
     <div class="modal-footer">
       <button class="btn-secondary" (click)="closeRejectModal()">Cancel</button>
       <button class="btn-danger" (click)="confirmRejectRefund()">Reject Refund</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subscription Management Modal -->
+<div class="modal-overlay" *ngIf="showSubscriptionsModal" (click)="closeSubscriptionsModal()">
+  <div class="modal-content large" (click)="$event.stopPropagation()" role="dialog">
+    <div class="modal-header">
+      <h2>Subscription Management</h2>
+      <button class="close-btn" (click)="closeSubscriptionsModal()" aria-label="Close">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div *ngIf="subscriptions.length === 0" class="empty-state">
+        <p>No active subscriptions</p>
+      </div>
+
+      <div class="subscriptions-table" *ngIf="subscriptions.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tenant</th>
+              <th>Current Plan</th>
+              <th>Status</th>
+              <th>Amount</th>
+              <th>Next Billing</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sub of subscriptions">
+              <td><strong>{{ sub.tenantName }}</strong></td>
+              <td>{{ sub.plan }}</td>
+              <td><span class="badge" [class]="sub.status.toLowerCase()">{{ sub.status }}</span></td>
+              <td>${{ sub.amount }}/month</td>
+              <td>{{ sub.nextBilling | date:'MMM d, yyyy' }}</td>
+              <td>
+                <div class="action-buttons">
+                  <select class="plan-select" (change)="updateSubscription(sub, $any($event.target).value)">
+                    <option value="">Change Plan...</option>
+                    <option value="Starter" [disabled]="sub.plan === 'Starter'">Starter ($99)</option>
+                    <option value="Professional" [disabled]="sub.plan === 'Professional'">Professional ($199)</option>
+                    <option value="Enterprise" [disabled]="sub.plan === 'Enterprise'">Enterprise ($299)</option>
+                  </select>
+                  <button class="btn-action danger" (click)="cancelSubscription(sub)" *ngIf="sub.status === 'ACTIVE'">Cancel</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeSubscriptionsModal()">Close</button>
     </div>
   </div>
 </div>

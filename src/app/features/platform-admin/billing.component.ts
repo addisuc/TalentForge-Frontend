@@ -21,10 +21,12 @@ export class BillingComponent implements OnInit {
   selectedInvoice: Invoice | null = null;
   showRefundsModal = false;
   showRejectModal = false;
+  showSubscriptionsModal = false;
   pendingRefunds: any[] = [];
   pendingRefundsCount = 0;
   selectedRefund: any = null;
   rejectionReason = '';
+  subscriptions: any[] = [];
   Math = Math;
   
   notification = {
@@ -73,7 +75,8 @@ export class BillingComponent implements OnInit {
     this.loadInvoices();
     this.loadTenants();
     this.loadCurrentTenant();
-    this.loadPendingRefunds(); // Always load for testing
+    this.loadPendingRefunds();
+    this.loadSubscriptions();
   }
 
   loadCurrentTenant(): void {
@@ -559,5 +562,55 @@ export class BillingComponent implements OnInit {
       },
       error: () => this.showNotification('Failed to reject refund', 'error')
     });
+  }
+
+  manageSubscriptions(): void {
+    this.loadSubscriptions();
+    this.showSubscriptionsModal = true;
+  }
+
+  closeSubscriptionsModal(): void {
+    this.showSubscriptionsModal = false;
+  }
+
+  loadSubscriptions(): void {
+    // Mock subscription data - replace with actual service call
+    this.subscriptions = [
+      { id: '1', tenantName: 'Acme Corp', plan: 'Enterprise', status: 'ACTIVE', amount: 299, nextBilling: '2024-02-15' },
+      { id: '2', tenantName: 'Tech Solutions', plan: 'Professional', status: 'ACTIVE', amount: 199, nextBilling: '2024-02-20' },
+      { id: '3', tenantName: 'StartupXYZ', plan: 'Starter', status: 'TRIAL', amount: 99, nextBilling: '2024-02-10' }
+    ];
+  }
+
+  updateSubscription(subscription: any, newPlan: string): void {
+    this.showConfirmation(
+      'Update Subscription',
+      `Change ${subscription.tenantName} from ${subscription.plan} to ${newPlan}?`,
+      () => {
+        this.tenantService.updateSubscription(subscription.id, newPlan).subscribe({
+          next: () => {
+            this.showNotification('Subscription updated successfully', 'success');
+            this.loadSubscriptions();
+          },
+          error: () => this.showNotification('Failed to update subscription', 'error')
+        });
+      }
+    );
+  }
+
+  cancelSubscription(subscription: any): void {
+    this.showConfirmation(
+      'Cancel Subscription',
+      `Cancel ${subscription.tenantName}'s subscription? This will take effect at the end of the current billing period.`,
+      () => {
+        this.tenantService.cancelSubscription(subscription.id).subscribe({
+          next: () => {
+            this.showNotification('Subscription cancelled', 'success');
+            this.loadSubscriptions();
+          },
+          error: () => this.showNotification('Failed to cancel subscription', 'error')
+        });
+      }
+    );
   }
 }
