@@ -37,7 +37,7 @@ export interface UserPage {
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = '/api/users';
+  private apiUrl = '/api/users'; // Use proxy
 
   constructor(private http: HttpClient) {}
 

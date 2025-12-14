@@ -74,11 +74,27 @@ export class NavigationService {
   };
 
   getNavigationForRole(role: UserRole): NavigationItem[] {
-    return this.navigationMap[role] || [];
+    console.log('Getting navigation for role:', role);
+    console.log('Available roles:', Object.keys(this.navigationMap));
+    
+    // Handle SUPER_ADMIN as PLATFORM_SUPER_ADMIN
+    let actualRole = role;
+    if (role === 'SUPER_ADMIN' as any) {
+      actualRole = UserRole.PLATFORM_SUPER_ADMIN;
+    }
+    
+    const items = this.navigationMap[actualRole] || [];
+    console.log('Navigation items:', items);
+    return items;
   }
 
   getDashboardRoute(role: UserRole): string {
-    return this.dashboardRoutes[role] || '/dashboard';
+    // Handle SUPER_ADMIN as PLATFORM_SUPER_ADMIN
+    let actualRole = role;
+    if (role === 'SUPER_ADMIN' as any) {
+      actualRole = UserRole.PLATFORM_SUPER_ADMIN;
+    }
+    return this.dashboardRoutes[actualRole] || '/dashboard';
   }
 
   isPlatformRole(role: UserRole): boolean {

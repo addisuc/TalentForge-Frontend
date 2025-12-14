@@ -32,7 +32,7 @@ export interface Conversation {
   providedIn: 'root'
 })
 export class MessageService {
-  private apiUrl = 'http://localhost:8086/api/messages';
+  private apiUrl = '/api/messages';
   private stompClient?: Client;
   private messageSubject = new Subject<Message>();
 
@@ -43,7 +43,7 @@ export class MessageService {
     console.log('[WS] Connecting for user:', userId);
     
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8086/ws') as any,
+      webSocketFactory: () => new SockJS('/ws') as any,
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,

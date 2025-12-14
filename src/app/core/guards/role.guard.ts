@@ -17,7 +17,13 @@ export const roleGuard = (allowedRoles: UserRole[]): CanActivateFn => {
       return false;
     }
 
-    if (allowedRoles.includes(user.role)) {
+    // Handle SUPER_ADMIN as PLATFORM_SUPER_ADMIN
+    let userRole = user.role;
+    if (user.role === 'SUPER_ADMIN' as any) {
+      userRole = UserRole.PLATFORM_SUPER_ADMIN;
+    }
+    
+    if (allowedRoles.includes(userRole)) {
       return true;
     }
 

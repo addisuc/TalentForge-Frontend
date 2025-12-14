@@ -64,13 +64,13 @@ export interface ApprovalRequest {
 })
 export class ClientService {
   private readonly baseUrl = `${environment.apiUrl}/clients`;
-  private readonly clientServiceUrl = `http://localhost:8088/api/clients`;
+  private readonly clientServiceUrl = `/api/clients`;
 
   constructor(private http: HttpClient) {}
 
   login(request: ClientLoginRequest, tenantId: string): Observable<ClientLoginResponse> {
     // Use auth service for login, same as regular users
-    return this.http.post<ClientLoginResponse>(`http://localhost:8081/api/auth/login`, request);
+    return this.http.post<ClientLoginResponse>(`/api/auth/login`, request);
   }
 
   getDashboard(tenantId: string, clientUserId: string): Observable<ClientDashboard> {

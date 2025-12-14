@@ -35,9 +35,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Initialize with current user value immediately
     const currentUser = this.authService.getCurrentUserValue();
+    console.log('Initial current user:', currentUser);
     if (currentUser) {
       this.currentUser = currentUser;
+      console.log('Setting navigation for role:', currentUser.role);
       this.navigationItems = this.navigationService.getNavigationForRole(currentUser.role);
+      console.log('Navigation items after setting:', this.navigationItems);
       this.loadNotifications();
     }
 
@@ -45,9 +48,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
+        console.log('Main layout received user:', user);
         this.currentUser = user;
         if (user) {
+          console.log('User role:', user.role);
           this.navigationItems = this.navigationService.getNavigationForRole(user.role);
+          console.log('Navigation items set:', this.navigationItems);
           this.loadNotifications();
         } else {
           this.navigationItems = [];

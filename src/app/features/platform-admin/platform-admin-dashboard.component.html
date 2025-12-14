@@ -1,80 +1,107 @@
 <div class="platform-admin-dashboard">
-  <div class="page-header">
-    <div>
-      <h1>Platform Administration</h1>
-      <p>Manage tenants, monitor system health, and oversee platform operations</p>
-    </div>
-    <div class="header-actions">
-      <button class="btn-secondary" routerLink="/platform-admin/tenants">📊 View All Tenants</button>
-      <button class="btn-primary" routerLink="/platform-admin/tenants">➕ Add Tenant</button>
-    </div>
-  </div>
-
-  <div class="stats-grid">
-    <div class="stat-card" *ngFor="let stat of stats">
-      <span class="icon">{{ stat.icon }}</span>
-      <div class="stat-content">
-        <div class="value">{{ stat.value }}</div>
-        <div class="label">{{ stat.label }}</div>
-        <div class="trend positive">{{ stat.trend }}</div>
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div class="header-content">
+        <h1>Platform Administration</h1>
+        <p>System overview and tenant management</p>
       </div>
-    </div>
-  </div>
-
-  <div class="content-grid">
-    <div class="section">
-      <div class="section-header">
-        <h2>Recent Tenants</h2>
-        <a routerLink="/platform-admin/tenants" class="btn-link">View All →</a>
-      </div>
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Tenant Name</th>
-              <th>Plan</th>
-              <th>Users</th>
-              <th>Status</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let tenant of recentTenants" [routerLink]="['/platform-admin/tenants', tenant.id]">
-              <td><strong>{{ tenant.name }}</strong></td>
-              <td>{{ tenant.plan }}</td>
-              <td>{{ tenant.users }}</td>
-              <td><span class="badge" [class]="tenant.status.toLowerCase()">{{ tenant.status }}</span></td>
-              <td>{{ tenant.created | date:'MMM d, yyyy' }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="header-actions">
+        <button class="btn btn-outline" routerLink="/platform-admin/system">
+          <span class="icon">⚙️</span> System Health
+        </button>
+        <button class="btn btn-primary" routerLink="/platform-admin/tenants">
+          <span class="icon">➕</span> Add Tenant
+        </button>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-header">
-        <h2>System Alerts</h2>
-      </div>
-      <div class="alerts-list">
-        <div class="alert-item" *ngFor="let alert of systemAlerts" [class]="alert.type">
-          <div class="alert-content">
-            <div class="alert-message">{{ alert.message }}</div>
-            <div class="alert-time">{{ alert.time }}</div>
-          </div>
+    <!-- Stats Cards -->
+    <div class="stats-section">
+      <div class="stat-card" *ngFor="let stat of stats">
+        <div class="stat-icon">{{ stat.icon }}</div>
+        <div class="stat-details">
+          <div class="stat-value">{{ stat.value }}</div>
+          <div class="stat-label">{{ stat.label }}</div>
+          <div class="stat-trend" [class.positive]="stat.trend.startsWith('+')">{{ stat.trend }}</div>
         </div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-header">
-        <h2>Quick Actions</h2>
+    <!-- Main Content -->
+    <div class="dashboard-content">
+      <!-- Recent Tenants -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Recent Tenants</h3>
+          <a routerLink="/platform-admin/tenants" class="view-all">View All →</a>
+        </div>
+        <div class="card-body">
+          <div class="tenant-list">
+            <div class="tenant-item" *ngFor="let tenant of recentTenants">
+              <div class="tenant-info">
+                <div class="tenant-name">{{ tenant.name }}</div>
+                <div class="tenant-meta">{{ tenant.plan }} • {{ tenant.users }} users</div>
+              </div>
+              <div class="tenant-status">
+                <span class="status-badge" [class]="tenant.status.toLowerCase()">{{ tenant.status }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="actions-grid">
-        <button class="action-card" *ngFor="let action of quickActions">
-          <span class="action-icon">{{ action.icon }}</span>
-          <span class="action-label">{{ action.label }}</span>
-        </button>
+
+      <!-- System Alerts -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>System Alerts</h3>
+          <span class="alert-count">{{ systemAlerts.length }}</span>
+        </div>
+        <div class="card-body">
+          <div class="alert-list">
+            <div class="alert-item" *ngFor="let alert of systemAlerts" [class]="alert.type">
+              <div class="alert-icon">{{ getAlertIcon(alert.type) }}</div>
+              <div class="alert-content">
+                <div class="alert-message">{{ alert.message }}</div>
+                <div class="alert-time">{{ alert.time }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Recent Activity</h3>
+          <span class="activity-count">{{ recentActivity.length }}</span>
+        </div>
+        <div class="card-body">
+          <div class="activity-list">
+            <div class="activity-item" *ngFor="let activity of recentActivity">
+              <div class="activity-icon">{{ activity.icon }}</div>
+              <div class="activity-content">
+                <div class="activity-action">{{ activity.action }}</div>
+                <div class="activity-details">{{ activity.details }}</div>
+                <div class="activity-time">{{ activity.time }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="content-card full-width">
+        <div class="card-header">
+          <h3>Platform Administration</h3>
+        </div>
+        <div class="card-body">
+          <div class="quick-actions">
+            <button class="action-btn" *ngFor="let action of quickActions" (click)="executeAction(action)">
+              <span class="action-icon">{{ action.icon }}</span>
+              <span class="action-text">{{ action.label }}</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 </div>
