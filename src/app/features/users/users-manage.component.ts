@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 import { UserRole } from '../../core/models/user.model';
 import { UserService, User as ApiUser } from '../../core/services/user.service';
+import { ToastService } from '../../shared/components/toast/toast.service';
 
 @Component({
   selector: 'app-users-manage',
@@ -30,7 +31,7 @@ export class UsersManageComponent implements OnInit {
   showMessageModal = false;
   showPerformanceModal = false;
   showResetPasswordModal = false;
-  showAddUserModal = false;
+  showInviteUserModal = false;
   showEditUserModal = false;
   showDeleteModal = false;
   selectedUser: any = null;
@@ -55,7 +56,8 @@ export class UsersManageComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private userService: UserService
+    private userService: UserService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -195,8 +197,25 @@ export class UsersManageComponent implements OnInit {
 
   sendInvite() {
     if (this.isValidEmail()) {
-      console.log('Sending invite to:', this.inviteEmail, 'with role:', this.inviteRole);
-      this.closeInviteModal();
+      const invitationRequest = {
+        email: this.inviteEmail,
+        role: this.inviteRole
+      };
+      
+      this.userService.inviteUser(invitationRequest).subscribe({
+        next: (response) => {
+          this.toastService.success('Invitation sent successfully!');
+          this.closeInviteModal();
+        },
+        error: (err) => {
+          console.error('Failed to send invitation:', err);
+          if (err.error?.code === 'USER_EXISTS') {
+            this.toastService.error('A user with this email already exists in the system');
+          } else {
+            this.toastService.error('Failed to send invitation. Please try again.');
+          }
+        }
+      });
     }
   }
 
@@ -209,8 +228,8 @@ export class UsersManageComponent implements OnInit {
     this.emailTouched = true;
   }
 
-  // Add User Modal
-  openAddUserModal(): void {
+  // Invite User Modal
+  openInviteUserModal(): void {
     this.newUser = {
       firstName: '',
       lastName: '',
@@ -218,24 +237,34 @@ export class UsersManageComponent implements OnInit {
       role: this.isPlatformAdminContext ? 'PLATFORM_ADMIN' : 'RECRUITER',
       status: 'ACTIVE'
     };
-    this.showAddUserModal = true;
+    this.showInviteUserModal = true;
   }
 
-  closeAddUserModal(): void {
-    this.showAddUserModal = false;
+  closeInviteUserModal(): void {
+    this.showInviteUserModal = false;
   }
 
-  saveNewUser(): void {
+  inviteNewUser(): void {
     if (this.newUser.firstName && this.newUser.lastName && this.newUser.email) {
-      this.userService.createUser(this.newUser).subscribe({
-        next: (createdUser) => {
-          console.log('User created successfully:', createdUser);
-          this.loadUsers();
-          this.closeAddUserModal();
+      const invitationRequest = {
+        email: this.newUser.email,
+        firstName: this.newUser.firstName,
+        lastName: this.newUser.lastName,
+        role: this.newUser.role
+      };
+      
+      this.userService.inviteUser(invitationRequest).subscribe({
+        next: (response) => {
+          this.toastService.success('User invitation sent successfully!');
+          this.closeInviteUserModal();
         },
         error: (err) => {
-          console.error('Failed to create user:', err);
-          this.error = 'Failed to create user';
+          console.error('Failed to send invitation:', err);
+          if (err.error?.code === 'USER_EXISTS') {
+            this.toastService.error('A user with this email already exists in the system');
+          } else {
+            this.toastService.error('Failed to send invitation. Please try again.');
+          }
         }
       });
     }

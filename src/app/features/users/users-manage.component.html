@@ -8,8 +8,8 @@
       <button class="btn-secondary" *ngIf="canInviteUsers()" (click)="openInviteModal()">
         <span>📧</span> Invite User
       </button>
-      <button class="btn-primary" (click)="openAddUserModal()">
-        <span>➕</span> Add User
+      <button class="btn-primary" (click)="openInviteUserModal()">
+        <span>➕</span> Invite User
       </button>
     </div>
   </div>
@@ -357,12 +357,12 @@
     </div>
   </div>
 
-  <!-- Add User Modal -->
-  <div class="modal-overlay" *ngIf="showAddUserModal" (click)="closeAddUserModal()">
+  <!-- Invite User Modal -->
+  <div class="modal-overlay" *ngIf="showInviteUserModal" (click)="closeInviteUserModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>Add New User</h2>
-        <button class="close-btn" (click)="closeAddUserModal()">✕</button>
+        <h2>Invite New User</h2>
+        <button class="close-btn" (click)="closeInviteUserModal()">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -401,8 +401,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeAddUserModal()">Cancel</button>
-        <button class="btn-primary" [disabled]="!newUser.firstName || !newUser.lastName || !newUser.email" (click)="saveNewUser()">Add User</button>
+        <button class="btn-secondary" (click)="closeInviteUserModal()">Cancel</button>
+        <button class="btn-primary" [disabled]="!newUser.firstName || !newUser.lastName || !newUser.email" (click)="inviteNewUser()">Send Invitation</button>
       </div>
     </div>
   </div>

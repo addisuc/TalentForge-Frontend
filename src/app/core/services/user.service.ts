@@ -91,7 +91,7 @@ export class UserService {
   }
 
   suspendUser(userId: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${userId}/suspend`, {});
+    return this.http.delete<void>(`${this.apiUrl}/${userId}`);
   }
 
   activateUser(userId: string): Observable<void> {
@@ -99,10 +99,15 @@ export class UserService {
   }
 
   resetUserPassword(userId: string): Observable<void> {
+    // This endpoint needs to be added to backend
     return this.http.post<void>(`${this.apiUrl}/${userId}/reset-password`, {});
   }
 
   deleteUser(userId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${userId}`);
+  }
+
+  inviteUser(invitationRequest: any): Observable<any> {
+    return this.http.post<any>('/api/auth/admin/invitations', invitationRequest);
   }
 }
