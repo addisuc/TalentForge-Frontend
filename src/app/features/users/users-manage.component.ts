@@ -75,21 +75,20 @@ export class UsersManageComponent implements OnInit {
   
   loadUsers() {
     console.log('loadUsers called');
-    console.log('isPlatformAdminContext:', this.isPlatformAdminContext);
+    console.log('isPlatformAdmin:', this.isPlatformAdmin);
     this.loading = true;
     this.error = '';
     
-    const userService$ = this.isPlatformAdminContext 
-      ? this.userService.getPlatformAdmins(0, 100)
-      : this.userService.getAllUsers(0, 100);
+    console.log('Making API call to getAllUsers...');
     
-    console.log('Making API call...');
-    
-    userService$.subscribe({
+    this.userService.getAllUsers(0, 100).subscribe({
       next: (response) => {
-        let users = response.content || response;
+        console.log('API Response:', response);
+        let users = Array.isArray(response) ? response : (response.content || []);
+        console.log('Users array:', users);
         
-        if (!this.isPlatformAdminContext) {
+        // Platform admins see all users, others see only tenant users
+        if (!this.isPlatformAdmin) {
           const tenantRoles = ['TENANT_ADMIN', 'RECRUITER', 'RECRUITING_MANAGER', 'CANDIDATE'];
           users = users.filter((user: any) => tenantRoles.includes(user.role));
         }
@@ -105,6 +104,7 @@ export class UsersManageComponent implements OnInit {
           placements: 0,
           lastActive: user.updatedAt
         }));
+        console.log('Mapped users:', this.users);
         this.loading = false;
       },
       error: (err) => {
@@ -119,6 +119,7 @@ export class UsersManageComponent implements OnInit {
   
   getAvatarForRole(role: string): string {
     const avatars: any = {
+      'SUPER_ADMIN': '👑',
       'PLATFORM_SUPER_ADMIN': '👑',
       'PLATFORM_ADMIN': '🛡️',
       'BILLING_MANAGER': '💳',
@@ -142,12 +143,14 @@ export class UsersManageComponent implements OnInit {
 
   getRoleLabel(role: string): string {
     const labels: any = {
+      'SUPER_ADMIN': 'Super Admin',
       'PLATFORM_SUPER_ADMIN': 'Super Admin',
       'PLATFORM_ADMIN': 'Platform Admin',
       'BILLING_MANAGER': 'Billing Manager',
       'TENANT_ADMIN': 'Admin',
       'RECRUITING_MANAGER': 'Manager',
-      'RECRUITER': 'Recruiter'
+      'RECRUITER': 'Recruiter',
+      'CANDIDATE': 'Candidate'
     };
     return labels[role] || role;
   }

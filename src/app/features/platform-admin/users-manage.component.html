@@ -134,20 +134,20 @@
 </div>
 
 <!-- Reset Password Modal -->
-<div class="modal" *ngIf="showResetPasswordModal" (click)="closeResetPasswordModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="showResetPasswordModal" (click)="closeResetPasswordModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Reset Password</h3>
-      <button class="close" (click)="closeResetPasswordModal()">&times;</button>
+      <h2>Reset Password</h2>
+      <button class="close-btn" (click)="closeResetPasswordModal()">✕</button>
     </div>
     
     <div class="modal-body">
       <p>Send password reset email to {{selectedUser?.firstName}} {{selectedUser?.lastName}}?</p>
     </div>
     
-    <div class="modal-actions">
-      <button type="button" class="btn btn-secondary" (click)="closeResetPasswordModal()">Cancel</button>
-      <button type="button" class="btn btn-primary" (click)="confirmResetPassword()">Send Reset Email</button>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="closeResetPasswordModal()">Cancel</button>
+      <button type="button" class="btn-primary" (click)="confirmResetPassword()">Send Reset Email</button>
     </div>
   </div>
 </div>

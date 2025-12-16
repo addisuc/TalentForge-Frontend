@@ -37,7 +37,7 @@ export interface UserPage {
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = '/api/users'; // Use proxy
+  private apiUrl = '/api/users';
 
   constructor(private http: HttpClient) {}
 
@@ -75,39 +75,35 @@ export class UserService {
     return this.http.get<UserPage>(this.apiUrl, { params });
   }
 
-  deactivateUser(userId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${userId}`);
-  }
-
-  getPlatformAdmins(page: number = 0, size: number = 20): Observable<UserPage> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
-    return this.http.get<UserPage>(`${this.apiUrl}/platform-admins`, { params });
-  }
-
-  createUser(userData: any): Observable<User> {
-    return this.http.post<User>(this.apiUrl, userData);
+  inviteUser(invitation: any): Observable<any> {
+    return this.http.post<any>('/api/auth/admin/invitations', invitation);
   }
 
   suspendUser(userId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${userId}`);
+    return this.http.post<void>(`${this.apiUrl}/${userId}/suspend`, {});
   }
 
   activateUser(userId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${userId}/activate`, {});
   }
 
-  resetUserPassword(userId: string): Observable<void> {
-    // This endpoint needs to be added to backend
-    return this.http.post<void>(`${this.apiUrl}/${userId}/reset-password`, {});
-  }
-
   deleteUser(userId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${userId}`);
   }
 
-  inviteUser(invitationRequest: any): Observable<any> {
-    return this.http.post<any>('/api/auth/admin/invitations', invitationRequest);
+  resetUserPassword(userId: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${userId}/reset-password`, {});
+  }
+
+  deactivateUser(userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${userId}`);
+  }
+
+  getPlatformAdmins(page: number = 0, size: number = 20): Observable<UserPage> {
+    return this.getUsersByRole('PLATFORM_ADMIN', page, size);
+  }
+
+  createUser(userData: any): Observable<User> {
+    return this.http.post<User>(this.apiUrl, userData);
   }
 }

@@ -71,13 +71,17 @@ export class UsersManageComponent implements OnInit {
 
   loadUsers(): void {
     this.loading = true;
+    console.log('Loading all users...');
     this.userService.getAllUsers(this.currentPage, this.itemsPerPage).subscribe({
       next: (response) => {
+        console.log('All users API response:', response);
         this.users = response.content || response;
         this.totalElements = response.totalElements || this.users.length;
+        console.log('Users loaded:', this.users.length);
         this.loading = false;
       },
-      error: () => {
+      error: (error) => {
+        console.error('Error loading all users:', error);
         this.loading = false;
       }
     });
