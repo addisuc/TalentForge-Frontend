@@ -16,6 +16,7 @@ export class NavigationService {
     [UserRole.PLATFORM_SUPER_ADMIN]: [
       { label: 'Dashboard', route: '/platform-admin', icon: '📊' },
       { label: 'Tenants', route: '/platform-admin/tenants', icon: '🏢' },
+      { label: 'Users', route: '/platform-admin/users', icon: '👥' },
       { label: 'Billing', route: '/platform-admin/billing', icon: '💳' },
       { label: 'Analytics', route: '/platform-admin/analytics', icon: '📈' },
       { label: 'System', route: '/platform-admin/system', icon: '⚙️' }
@@ -23,6 +24,7 @@ export class NavigationService {
     [UserRole.PLATFORM_ADMIN]: [
       { label: 'Dashboard', route: '/platform-admin', icon: '📊' },
       { label: 'Tenants', route: '/platform-admin/tenants', icon: '🏢' },
+      { label: 'Users', route: '/platform-admin/users', icon: '👥' },
       { label: 'Billing', route: '/platform-admin/billing', icon: '💳' },
       { label: 'Analytics', route: '/platform-admin/analytics', icon: '📈' },
       { label: 'System', route: '/platform-admin/system', icon: '⚙️' }

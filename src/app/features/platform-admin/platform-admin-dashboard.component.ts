@@ -212,10 +212,10 @@ export class PlatformAdminDashboardComponent implements OnInit {
   }
 
   quickActions = [
+    { icon: '👥', label: 'User Management', action: 'users' },
     { icon: '🏢', label: 'Manage Tenants', action: 'tenants' },
     { icon: '💳', label: 'Billing Overview', action: 'billing' },
     { icon: '⚙️', label: 'System Health', action: 'system' },
-    { icon: '👥', label: 'User Management', action: 'users' },
     { icon: '🔔', label: 'Send Announcement', action: 'announcement' }
   ];
 

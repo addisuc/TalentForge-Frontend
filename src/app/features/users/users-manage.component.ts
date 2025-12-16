@@ -74,12 +74,16 @@ export class UsersManageComponent implements OnInit {
   }
   
   loadUsers() {
+    console.log('loadUsers called');
+    console.log('isPlatformAdminContext:', this.isPlatformAdminContext);
     this.loading = true;
     this.error = '';
     
     const userService$ = this.isPlatformAdminContext 
       ? this.userService.getPlatformAdmins(0, 100)
       : this.userService.getAllUsers(0, 100);
+    
+    console.log('Making API call...');
     
     userService$.subscribe({
       next: (response) => {
@@ -105,7 +109,8 @@ export class UsersManageComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load users:', err);
-        this.error = 'Failed to load users';
+        console.error('Error details:', err);
+        this.toastService.error('Failed to load users');
         this.loading = false;
         this.users = [];
       }

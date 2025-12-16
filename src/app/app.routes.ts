@@ -111,7 +111,7 @@ export const routes: Routes = [
   {
     path: 'platform-admin/users',
     canActivate: [AuthGuard, roleGuard([UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_SUPER_ADMIN, UserRole.BILLING_MANAGER])],
-    loadComponent: () => import('./features/users/users-manage.component').then(m => m.UsersManageComponent)
+    loadComponent: () => import('./features/platform-admin/users-manage.component').then(m => m.UsersManageComponent)
   },
   {
     path: 'admin',

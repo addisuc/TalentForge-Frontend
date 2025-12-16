@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { UserService } from '../../core/services/user.service';
 import { TenantService } from '../../core/services/tenant.service';
+import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal.component';
 
 @Component({
   selector: 'app-users-manage',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, ConfirmationModalComponent],
   templateUrl: './users-manage.component.html',
   styleUrls: ['./users-manage.component.scss']
 })
@@ -18,7 +19,12 @@ export class UsersManageComponent implements OnInit {
   loading = false;
   showUserModal = false;
   showResetPasswordModal = false;
+  showConfirmationModal = false;
   selectedUser: any = null;
+  confirmationTitle = '';
+  confirmationMessage = '';
+  confirmationSubMessage = '';
+  confirmationAction: (() => void) | null = null;
   userForm!: FormGroup;
   Math = Math;
   
@@ -57,7 +63,7 @@ export class UsersManageComponent implements OnInit {
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      role: ['RECRUITER', Validators.required],
+      role: ['PLATFORM_ADMIN', Validators.required],
       tenantId: ['', Validators.required],
       status: ['ACTIVE', Validators.required]
     });
@@ -97,7 +103,7 @@ export class UsersManageComponent implements OnInit {
         status: user.status
       });
     } else {
-      this.userForm.reset({ role: 'RECRUITER', status: 'ACTIVE' });
+      this.userForm.reset({ role: 'PLATFORM_ADMIN', status: 'ACTIVE' });
     }
     this.showUserModal = true;
   }
@@ -141,11 +147,15 @@ export class UsersManageComponent implements OnInit {
   }
 
   suspendUser(user: any): void {
-    if (confirm(`Suspend ${user.firstName} ${user.lastName}?`)) {
+    this.confirmationTitle = 'Suspend User';
+    this.confirmationMessage = `Are you sure you want to suspend <strong>${user.firstName} ${user.lastName}</strong>?`;
+    this.confirmationSubMessage = 'They will not be able to access the platform.';
+    this.confirmationAction = () => {
       this.userService.suspendUser(user.id).subscribe({
         next: () => this.loadUsers()
       });
-    }
+    };
+    this.showConfirmationModal = true;
   }
 
   activateUser(user: any): void {
@@ -176,11 +186,15 @@ export class UsersManageComponent implements OnInit {
   }
 
   deleteUser(user: any): void {
-    if (confirm(`Delete ${user.firstName} ${user.lastName}? This action cannot be undone.`)) {
+    this.confirmationTitle = 'Delete User';
+    this.confirmationMessage = `Are you sure you want to delete <strong>${user.firstName} ${user.lastName}</strong>?`;
+    this.confirmationSubMessage = 'This action cannot be undone and will permanently remove all their data.';
+    this.confirmationAction = () => {
       this.userService.deleteUser(user.id).subscribe({
         next: () => this.loadUsers()
       });
-    }
+    };
+    this.showConfirmationModal = true;
   }
 
   getTenantName(tenantId: string): string {
@@ -224,5 +238,21 @@ export class UsersManageComponent implements OnInit {
   onItemsPerPageChange(): void {
     this.currentPage = 0;
     this.loadUsers();
+  }
+
+  onConfirmationConfirmed(): void {
+    if (this.confirmationAction) {
+      this.confirmationAction();
+    }
+    this.closeConfirmationModal();
+  }
+
+  onConfirmationCancelled(): void {
+    this.closeConfirmationModal();
+  }
+
+  closeConfirmationModal(): void {
+    this.showConfirmationModal = false;
+    this.confirmationAction = null;
   }
 }
