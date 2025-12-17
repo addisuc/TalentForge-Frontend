@@ -22,6 +22,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   globalSearchTerm = '';
   showNotifications = false;
+  showHelp = false;
   notifications: any[] = [];
   notificationCount = 0;
   hasNotifications = false;
@@ -175,6 +176,74 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       default:
         this.router.navigate(['/profile']);
     }
+  }
+
+  toggleHelp() {
+    this.showHelp = !this.showHelp;
+    if (this.showHelp) {
+      this.showNotifications = false;
+    }
+  }
+
+  closeHelp() {
+    this.showHelp = false;
+  }
+
+  getUserManualDescription(): string {
+    if (!this.currentUser) return 'User guide and documentation';
+    
+    switch(this.currentUser.role) {
+      case 'CANDIDATE':
+        return 'Job search, applications, and profile management';
+      case 'RECRUITER':
+        return 'Job management, candidate tracking, and workflows';
+      case 'CLIENT':
+        return 'Job requests, candidate review, and hiring process';
+      case 'PLATFORM_ADMIN':
+      case 'PLATFORM_SUPER_ADMIN':
+        return 'Platform administration and system management';
+      default:
+        return 'User guide and documentation';
+    }
+  }
+
+  openUserManual() {
+    if (!this.currentUser) return;
+    
+    let manualFile = '';
+    switch(this.currentUser.role) {
+      case 'CANDIDATE':
+        manualFile = 'candidate-user-manual.md';
+        break;
+      case 'RECRUITER':
+        manualFile = 'recruiter-user-manual.md';
+        break;
+      case 'CLIENT':
+        manualFile = 'client-user-manual.md';
+        break;
+      case 'PLATFORM_ADMIN':
+      case 'PLATFORM_SUPER_ADMIN':
+        manualFile = 'platform-admin-user-manual.md';
+        break;
+      default:
+        manualFile = 'candidate-user-manual.md';
+    }
+    
+    // Open manual in new tab
+    window.open(`/assets/docs/${manualFile}`, '_blank');
+    this.closeHelp();
+  }
+
+  openSupport() {
+    // Open support contact or help desk
+    window.open('mailto:support@talentforge.app?subject=Support Request', '_blank');
+    this.closeHelp();
+  }
+
+  openFeedback() {
+    // Open feedback form or email
+    window.open('mailto:feedback@talentforge.app?subject=Feedback', '_blank');
+    this.closeHelp();
   }
 
   logout() {

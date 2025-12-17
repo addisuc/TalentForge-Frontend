@@ -52,10 +52,42 @@
         <button *ngIf="globalSearchTerm" class="clear-search" (click)="clearSearch()">×</button>
       </div>
       <div class="top-actions">
+        <button class="icon-btn help-btn" (click)="toggleHelp()" title="Help & User Manual">
+          ❓
+        </button>
         <button class="icon-btn notification-bell" (click)="toggleNotifications()" [class.has-notifications]="hasNotifications">
           🔔
           <span class="notification-badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
         </button>
+        <div class="help-dropdown" *ngIf="showHelp">
+          <div class="help-header">
+            <h4>Help & Resources</h4>
+            <button class="close-btn" (click)="closeHelp()">×</button>
+          </div>
+          <div class="help-content">
+            <div class="help-item" (click)="openUserManual()">
+              <span class="help-icon">📚</span>
+              <div>
+                <p class="help-title">User Manual</p>
+                <p class="help-desc">{{ getUserManualDescription() }}</p>
+              </div>
+            </div>
+            <div class="help-item" (click)="openSupport()">
+              <span class="help-icon">📞</span>
+              <div>
+                <p class="help-title">Contact Support</p>
+                <p class="help-desc">Get help from our support team</p>
+              </div>
+            </div>
+            <div class="help-item" (click)="openFeedback()">
+              <span class="help-icon">📝</span>
+              <div>
+                <p class="help-title">Send Feedback</p>
+                <p class="help-desc">Share your thoughts and suggestions</p>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="notification-dropdown" *ngIf="showNotifications">
           <div class="notification-header">
             <h4>Notifications</h4>
