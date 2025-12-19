@@ -131,12 +131,12 @@ As a platform administrator, you can:
 
 ### View All Users
 
-1. Go to **"Users"**
+1. Go to **"Platform Admin"** → **"Users"**
 2. View platform-wide user list
 3. Filter by:
-   - Role
+   - Role (Platform Admin, Billing Manager, etc.)
    - Tenant
-   - Status
+   - Status (Active, Inactive)
    - Registration date
 
 ### User Details
@@ -144,18 +144,31 @@ As a platform administrator, you can:
 View user information:
 - Personal details
 - Tenant affiliation
-- Role and permissions (TENANT_ADMIN, RECRUITER, CLIENT, CANDIDATE)
+- Role and permissions (PLATFORM_ADMIN, PLATFORM_SUPER_ADMIN, BILLING_MANAGER)
 - Activity history
 - Login history
-- Portal access (Main Platform or Client Portal)
 - Subscription status
 
-### User Role Overview
+### Platform User Roles
 
-**TENANT_ADMIN**: Organization administrator, manages team and clients  
-**RECRUITER**: Recruitment operations, creates client accounts  
-**CLIENT**: Client portal access for job requests and candidate review  
-**CANDIDATE**: Job seekers using main platform
+**PLATFORM_SUPER_ADMIN**: Full platform access, system configuration  
+**PLATFORM_ADMIN**: Platform management, tenant oversight  
+**BILLING_MANAGER**: Subscription and payment management
+
+### Invite New Platform Users
+
+1. Click **"Invite User"** button
+2. Enter user details:
+   - **First Name**
+   - **Last Name** 
+   - **Email Address**
+   - **Role**: Select from Platform Admin, Super Admin, or Billing Manager
+3. Click **"Send Invitation"**
+4. User receives invitation email from `noreply@talentforge.app`
+5. User clicks invitation link to:
+   - Set their password
+   - Complete account setup
+   - Access platform admin dashboard
 
 ### Manage User Account
 
@@ -169,13 +182,48 @@ View user information:
 1. Open user profile
 2. Click **"Reset Password"**
 3. Send reset link to user
-4. Or set temporary password
+4. User receives password reset email
 
 **Change Role:**
 1. Open user profile
 2. Click **"Change Role"**
-3. Select new role
+3. Select new role (Platform Admin, Super Admin, Billing Manager)
 4. Confirm change
+
+**Edit User:**
+1. Open user profile
+2. Click **"Edit User"**
+3. Update:
+   - First Name
+   - Last Name
+   - Email Address
+   - Role
+   - Status
+4. Click **"Save Changes"**
+
+**Delete User:**
+1. Open user profile
+2. Click **"Delete User"**
+3. Confirm permanent deletion
+4. User account and data removed
+
+### User Invitation System
+
+**How Invitations Work:**
+1. Platform admins send invitations via email
+2. Invitations route to appropriate backend services:
+   - Platform users → Auth Service
+   - Client users → Client Service
+   - Tenant users → User Service
+3. Recipients receive professional invitation emails
+4. Users complete registration through secure invitation links
+5. No direct user creation - all users go through invitation workflow
+
+**Invitation Status:**
+- **Pending**: Invitation sent, awaiting user response
+- **Accepted**: User completed registration
+- **Expired**: Invitation link expired (7 days)
+- **Cancelled**: Invitation manually cancelled
 
 ### Bulk User Operations
 
@@ -184,7 +232,7 @@ View user information:
    - Export data
    - Send notification
    - Update status
-   - Assign to tenant
+   - Bulk invite
 3. Confirm bulk action
 
 ---
