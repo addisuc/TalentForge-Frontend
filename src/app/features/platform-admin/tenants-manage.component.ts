@@ -120,19 +120,8 @@ export class TenantsManageComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error creating tenant:', err);
-        let userFriendlyMsg = 'Failed to create tenant. Please try again.';
-        
-        if (err.status === 400) {
-          userFriendlyMsg = 'Invalid tenant information. Please check your inputs.';
-        } else if (err.status === 409) {
-          userFriendlyMsg = 'A tenant with this name or subdomain already exists.';
-        } else if (err.status === 500) {
-          userFriendlyMsg = 'Server error. Please contact support if this persists.';
-        } else if (err.error?.message && !err.error.message.includes('SQL') && !err.error.message.includes('column')) {
-          userFriendlyMsg = err.error.message;
-        }
-        
-        this.toastService.error(userFriendlyMsg);
+        const message = err.error?.message || 'Failed to create tenant. Please try again.';
+        this.toastService.error(message);
         this.loading = false;
       }
     });
@@ -215,19 +204,8 @@ export class TenantsManageComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error updating tenant:', err);
-        let userFriendlyMsg = 'Failed to update tenant. Please try again.';
-        
-        if (err.status === 400) {
-          userFriendlyMsg = 'Invalid tenant information. Please check your inputs.';
-        } else if (err.status === 404) {
-          userFriendlyMsg = 'Tenant not found.';
-        } else if (err.status === 500) {
-          userFriendlyMsg = 'Server error. Please contact support if this persists.';
-        } else if (err.error?.message && !err.error.message.includes('SQL') && !err.error.message.includes('column')) {
-          userFriendlyMsg = err.error.message;
-        }
-        
-        this.toastService.error(userFriendlyMsg);
+        const message = err.error?.message || 'Failed to update tenant. Please try again.';
+        this.toastService.error(message);
         this.loading = false;
       }
     });
