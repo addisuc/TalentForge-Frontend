@@ -1,7 +1,7 @@
 # TalentForge - Platform Admin User Manual
 
 **Version:** 1.0  
-**Last Updated:** January 2025
+**Last Updated:** December 2024
 
 ---
 
@@ -78,7 +78,7 @@ As a platform administrator, you can:
 2. Enter organization details:
    - **Company Name**
    - **Domain**: Subdomain or custom
-   - **Admin Email**: Primary contact
+   - **Admin Email**: Primary contact (becomes Tenant Admin)
    - **Subscription Plan**: Select tier
    - **Trial Period**: Enable/disable
 3. Configure settings:
@@ -87,7 +87,10 @@ As a platform administrator, you can:
    - Storage quota
    - API limits
 4. Click **"Create"**
-5. Activation email sent to admin
+5. Activation email sent to Tenant Admin
+6. Tenant Admin sets up account and can then:
+   - Invite recruiters to main platform
+   - Create client accounts for Client Portal access
 
 ### Edit Tenant
 
@@ -141,10 +144,18 @@ As a platform administrator, you can:
 View user information:
 - Personal details
 - Tenant affiliation
-- Role and permissions
+- Role and permissions (TENANT_ADMIN, RECRUITER, CLIENT, CANDIDATE)
 - Activity history
 - Login history
+- Portal access (Main Platform or Client Portal)
 - Subscription status
+
+### User Role Overview
+
+**TENANT_ADMIN**: Organization administrator, manages team and clients  
+**RECRUITER**: Recruitment operations, creates client accounts  
+**CLIENT**: Client portal access for job requests and candidate review  
+**CANDIDATE**: Job seekers using main platform
 
 ### Manage User Account
 
@@ -508,11 +519,11 @@ View user information:
 
 **Platform Admin Support**
 
-**Email**: admin-support@talentforge.com  
+**Email**: admin-support@talentforge.app  
 **Phone**: 1-800-TALENT-0  
 **Hours**: 24/7  
-**Emergency**: emergency@talentforge.com  
-**Documentation**: https://docs.talentforge.com
+**Emergency**: emergency@talentforge.app  
+**Documentation**: https://docs.talentforge.app
 
 ---
 

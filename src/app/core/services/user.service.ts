@@ -76,7 +76,15 @@ export class UserService {
   }
 
   inviteUser(invitation: any): Observable<any> {
-    return this.http.post<any>('/api/auth/admin/invitations', invitation);
+    // Route to appropriate invitation endpoint based on role
+    if (invitation.role === 'CLIENT') {
+      return this.http.post<any>('/api/clients/invite', invitation);
+    } else if (invitation.role === 'PLATFORM_ADMIN' || invitation.role === 'PLATFORM_SUPER_ADMIN' || invitation.role === 'BILLING_MANAGER') {
+      return this.http.post<any>('/api/auth/admin/invitations', invitation);
+    } else {
+      // Tenant users (TENANT_ADMIN, RECRUITER, etc.)
+      return this.http.post<any>(`${this.apiUrl}/invite`, invitation);
+    }
   }
 
   suspendUser(userId: string): Observable<void> {

@@ -5,9 +5,6 @@
       <p>{{ isPlatformAdminContext ? 'Manage platform-level users and permissions' : 'Manage your recruiting team and permissions' }}</p>
     </div>
     <div class="header-actions">
-      <button class="btn-secondary" *ngIf="canInviteUsers()" (click)="openInviteModal()">
-        <span>📧</span> Invite User
-      </button>
       <button class="btn-primary" (click)="openInviteUserModal()">
         <span>➕</span> Invite User
       </button>

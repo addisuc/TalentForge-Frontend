@@ -136,8 +136,8 @@ export class UsersManageComponent implements OnInit {
         }
       });
     } else {
-      // Create user
-      this.userService.createUser(userData).subscribe({
+      // Invite user
+      this.userService.inviteUser(userData).subscribe({
         next: () => {
           this.loadUsers();
           this.closeUserModal();

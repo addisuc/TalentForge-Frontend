@@ -225,6 +225,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/legal/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
   },
   {
+    path: 'help/manual',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./shared/components/user-manual/user-manual.component').then(m => m.UserManualComponent)
+  },
+  {
     path: '**',
     redirectTo: '/home'
   }

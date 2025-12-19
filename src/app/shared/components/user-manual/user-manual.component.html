@@ -1,0 +1,31 @@
+<div class="user-manual-page">
+  <div class="manual-header">
+    <div class="header-content">
+      <h1>📚 {{ roleName }} User Guide</h1>
+      <div class="header-actions">
+        <button class="action-btn" (click)="printManual()" title="Print Manual">🖨️ Print</button>
+        <button class="action-btn" (click)="goBack()">← Back</button>
+      </div>
+    </div>
+    <div class="search-box">
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (keyup.enter)="searchManual()"
+        placeholder="Search manual..."
+        class="search-input">
+      <button class="search-btn" (click)="searchManual()">🔍 Search</button>
+    </div>
+  </div>
+
+  <div class="manual-body">
+    <div *ngIf="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading manual...</p>
+    </div>
+
+    <div *ngIf="!loading" class="manual-wrapper">
+      <div class="content-section" [innerHTML]="manualContent"></div>
+    </div>
+  </div>
+</div>

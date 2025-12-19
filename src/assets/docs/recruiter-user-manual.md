@@ -1,7 +1,7 @@
 # TalentForge - Recruiter User Manual
 
 **Version:** 1.0  
-**Last Updated:** January 2025
+**Last Updated:** December 2024
 
 ---
 
@@ -463,11 +463,11 @@ As a recruiter, you can:
 
 ## Support
 
-**Email**: recruiter-support@talentforge.com  
+**Email**: recruiter-support@talentforge.app  
 **Phone**: 1-800-TALENT-2  
 **Hours**: Mon-Fri, 8 AM - 8 PM EST  
 **Live Chat**: Available in-app  
-**Training**: Schedule at training@talentforge.com
+**Training**: Schedule at training@talentforge.app
 
 ---
 

@@ -1,7 +1,7 @@
 # TalentForge - Candidate User Manual
 
 **Version:** 1.0  
-**Last Updated:** January 2025
+**Last Updated:** December 2024
 
 ---
 
@@ -264,13 +264,13 @@ TalentForge connects job seekers with opportunities. You can:
 1. Check spam folder
 2. Verify email in settings
 3. Check notification preferences
-4. Add noreply@talentforge.com to contacts
+4. Add noreply@talentforge.app to contacts
 
 ---
 
 ## Support
 
-**Email**: support@talentforge.com  
+**Email**: support@talentforge.app  
 **Phone**: 1-800-TALENT-1  
 **Hours**: Mon-Fri, 9 AM - 6 PM EST  
 **Live Chat**: Available in-app

@@ -210,27 +210,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   openUserManual() {
     if (!this.currentUser) return;
     
-    let manualFile = '';
-    switch(this.currentUser.role) {
-      case 'CANDIDATE':
-        manualFile = 'candidate-user-manual.md';
-        break;
-      case 'RECRUITER':
-        manualFile = 'recruiter-user-manual.md';
-        break;
-      case 'CLIENT':
-        manualFile = 'client-user-manual.md';
-        break;
-      case 'PLATFORM_ADMIN':
-      case 'PLATFORM_SUPER_ADMIN':
-        manualFile = 'platform-admin-user-manual.md';
-        break;
-      default:
-        manualFile = 'candidate-user-manual.md';
-    }
-    
-    // Open manual in new tab
-    window.open(`/assets/docs/${manualFile}`, '_blank');
+    // Navigate to styled manual viewer
+    this.router.navigate(['/help/manual'], { queryParams: { role: this.currentUser.role } });
     this.closeHelp();
   }
 
