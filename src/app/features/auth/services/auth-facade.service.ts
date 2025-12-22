@@ -57,14 +57,14 @@ export class AuthFacadeService {
   }
 
   validateInvitation(token: string): Observable<any> {
-    return this.http.get(`/api/auth/invitations/${token}`);
+    return this.http.get(`/api/users/invitations/${token}/validate`);
   }
 
   acceptInvitation(data: any): Observable<any> {
-    return this.http.post(`/api/auth/invitations/${data.token}/accept`, data);
+    return this.http.post(`/api/users/invitations/${data.token}/accept`, data);
   }
 
   sendInvitation(data: any): Observable<any> {
-    return this.http.post('/api/auth/invitations', data);
+    return this.http.post('/api/users/invite', data);
   }
 }
