@@ -8,6 +8,7 @@ import { NavigationService } from './core/services/navigation.service';
 import { JobService } from './core/services/job.service';
 import { ApplicationService } from './core/services/application.service';
 import { ClientService } from './core/services/client.service';
+import { UserService } from './core/services/user.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -627,7 +628,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private jobService: JobService,
     private applicationService: ApplicationService,
-    private clientService: ClientService
+    private clientService: ClientService,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
@@ -653,17 +655,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadDashboardData() {
     forkJoin({
       jobs: this.jobService.getAllJobs(0, 100),
-      applications: this.applicationService.getAllApplications(0, 100)
+      applications: this.applicationService.getAllApplications(0, 100),
+      users: this.userService.getAllUsers(0, 100)
     }).subscribe({
-      next: ({ jobs, applications }) => {
-        this.calculateStats(jobs.content, applications.content);
+      next: ({ jobs, applications, users }) => {
+        this.calculateStats(jobs.content, applications.content, users.content);
         this.loadRecentData(jobs.content, applications.content);
       },
       error: (err) => console.error('Failed to load dashboard data:', err)
     });
   }
 
-  calculateStats(jobs: any[], applications: any[]) {
+  calculateStats(jobs: any[], applications: any[], users: any[]) {
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();

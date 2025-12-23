@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { UserService } from '../../core/services/user.service';
+import { JobService } from '../../core/services/job.service';
+import { ApplicationService } from '../../core/services/application.service';
 import { forkJoin } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -34,7 +35,7 @@ import { HttpClient } from '@angular/common/http';
               <h3>Team Members</h3>
               <a routerLink="/users">Manage</a>
             </div>
-            <div class="list">
+            <div class="list" *ngIf="teamMembers.length > 0">
               <div class="list-item" *ngFor="let member of teamMembers">
                 <div class="avatar">{{ member.initials }}</div>
                 <div class="info">
@@ -43,6 +44,9 @@ import { HttpClient } from '@angular/common/http';
                 </div>
                 <div class="badge active">Active</div>
               </div>
+            </div>
+            <div *ngIf="teamMembers.length === 0" class="empty-state">
+              <p>No team members found</p>
             </div>
           </div>
 
@@ -153,17 +157,14 @@ export class AdminDashboardComponent implements OnInit {
   
   loading = true;
 
-  teamMembers = [
-    { name: 'Alice Johnson', role: 'Recruiter', initials: 'AJ' },
-    { name: 'Bob Smith', role: 'Recruiter', initials: 'BS' },
-    { name: 'Carol White', role: 'Recruiter', initials: 'CW' }
-  ];
+  teamMembers: any[] = [];
 
   recentApplications: any[] = [];
   
   constructor(
     private userService: UserService,
-    private http: HttpClient
+    private jobService: JobService,
+    private applicationService: ApplicationService
   ) {}
   
   ngOnInit() {
@@ -175,30 +176,41 @@ export class AdminDashboardComponent implements OnInit {
     
     forkJoin({
       users: this.userService.getAllUsers(0, 1000),
-      jobs: this.http.get<any>('/api/jobs?page=0&size=1000'),
-      candidates: this.http.get<any>('/api/candidates?page=0&size=1000'),
-      applications: this.http.get<any>('/api/applications?page=0&size=1000')
+      jobs: this.jobService.getAllJobs(0, 1000),
+      applications: this.applicationService.getAllApplications(0, 1000)
     }).subscribe({
       next: (data) => {
-        this.stats[0].value = data.users.totalElements.toString();
-        this.stats[1].value = data.jobs.totalElements?.toString() || '0';
-        this.stats[2].value = data.candidates.totalElements?.toString() || '0';
+        // Team Members count (active users only)
+        const activeUsers = data.users.content.filter((user: any) => user.status === 'ACTIVE');
+        this.stats[0].value = activeUsers.length.toString();
         
-        // Count placements (HIRED status)
-        const placements = data.applications.content?.filter((app: any) => 
-          app.status === 'HIRED' || app.status === 'PLACED'
-        ).length || 0;
+        // Active Jobs count
+        const activeJobs = data.jobs.content.filter((job: any) => job.status === 'ACTIVE');
+        this.stats[1].value = activeJobs.length.toString();
+        
+        // Total Candidates count (users with CANDIDATE role)
+        const candidates = data.users.content.filter((user: any) => user.role === 'CANDIDATE');
+        this.stats[2].value = candidates.length.toString();
+        
+        // Placements count (HIRED status)
+        const placements = data.applications.content.filter((app: any) => 
+          app.status === 'HIRED' || app.status === 'PLACED' || app.status === 'OFFER_ACCEPTED'
+        ).length;
         this.stats[3].value = placements.toString();
         
-        // Load recent team members
-        this.teamMembers = data.users.content.slice(0, 3).map((user: any) => ({
+        // Load team members (non-candidate users)
+        const teamUsers = activeUsers.filter((user: any) => user.role !== 'CANDIDATE');
+        console.log('Active users:', activeUsers);
+        console.log('Team users (filtered):', teamUsers);
+        this.teamMembers = teamUsers.slice(0, 5).map((user: any) => ({
           name: `${user.firstName} ${user.lastName}`,
           role: this.getRoleLabel(user.role),
           initials: `${user.firstName[0]}${user.lastName[0]}`
         }));
+        console.log('Final team members:', this.teamMembers);
         
         // Load recent applications
-        this.recentApplications = (data.applications.content || []).slice(0, 5).map((app: any) => ({
+        this.recentApplications = data.applications.content.slice(0, 5).map((app: any) => ({
           candidateName: app.candidateName || 'Candidate',
           jobTitle: app.jobTitle || 'Position',
           status: app.status,
