@@ -174,53 +174,39 @@ export class AdminDashboardComponent implements OnInit {
   loadDashboardStats() {
     this.loading = true;
     
-    forkJoin({
-      users: this.userService.getAllUsers(0, 1000),
-      jobs: this.jobService.getAllJobs(0, 1000),
-      applications: this.applicationService.getAllApplications(0, 1000)
-    }).subscribe({
+    this.userService.getAllUsers(0, 1000).subscribe({
       next: (data) => {
+        console.log('Users API response:', data);
+        
         // Team Members count (active users only)
-        const activeUsers = data.users.content.filter((user: any) => user.status === 'ACTIVE');
+        const activeUsers = data.content.filter((user: any) => user.status === 'ACTIVE');
         this.stats[0].value = activeUsers.length.toString();
         
-        // Active Jobs count
-        const activeJobs = data.jobs.content.filter((job: any) => job.status === 'ACTIVE');
-        this.stats[1].value = activeJobs.length.toString();
-        
-        // Total Candidates count (users with CANDIDATE role)
-        const candidates = data.users.content.filter((user: any) => user.role === 'CANDIDATE');
-        this.stats[2].value = candidates.length.toString();
-        
-        // Placements count (HIRED status)
-        const placements = data.applications.content.filter((app: any) => 
-          app.status === 'HIRED' || app.status === 'PLACED' || app.status === 'OFFER_ACCEPTED'
-        ).length;
-        this.stats[3].value = placements.toString();
+        // Set other stats to 0 for now
+        this.stats[1].value = '0';
+        this.stats[2].value = '0';
+        this.stats[3].value = '0';
         
         // Load team members (non-candidate users)
         const teamUsers = activeUsers.filter((user: any) => user.role !== 'CANDIDATE');
         console.log('Active users:', activeUsers);
         console.log('Team users (filtered):', teamUsers);
-        this.teamMembers = teamUsers.slice(0, 5).map((user: any) => ({
-          name: `${user.firstName} ${user.lastName}`,
-          role: this.getRoleLabel(user.role),
-          initials: `${user.firstName[0]}${user.lastName[0]}`
-        }));
+        this.teamMembers = teamUsers.slice(0, 5).map((user: any) => {
+          const firstName = user.firstName || '';
+          const lastName = user.lastName || '';
+          return {
+            name: `${firstName} ${lastName}`,
+            role: this.getRoleLabel(user.role),
+            initials: `${firstName[0] || ''}${lastName[0] || ''}`
+          };
+        });
         console.log('Final team members:', this.teamMembers);
         
-        // Load recent applications
-        this.recentApplications = data.applications.content.slice(0, 5).map((app: any) => ({
-          candidateName: app.candidateName || 'Candidate',
-          jobTitle: app.jobTitle || 'Position',
-          status: app.status,
-          appliedAt: this.formatDate(app.appliedAt || app.createdAt)
-        }));
-        
+        this.recentApplications = [];
         this.loading = false;
       },
       error: (err) => {
-        console.error('Failed to load dashboard stats:', err);
+        console.error('Failed to load users:', err);
         this.loading = false;
       }
     });
