@@ -117,6 +117,7 @@ export class TenantsManageComponent implements OnInit {
         this.totalElements++;
         this.loading = false;
         this.closeAddModal();
+        this.toastService.success('Tenant created successfully!');
       },
       error: (err) => {
         console.error('Error creating tenant:', err);
@@ -160,8 +161,13 @@ export class TenantsManageComponent implements OnInit {
     if (this.tenantToDelete) {
       this.tenantService.deleteTenant(this.tenantToDelete.id).subscribe({
         next: () => {
+          this.toastService.success('Tenant deleted successfully!');
           this.loadTenants();
           this.closeDeleteModal();
+        },
+        error: (err) => {
+          const message = err.error?.error || 'Failed to delete tenant. Please try again.';
+          this.toastService.error(message);
         }
       });
     }

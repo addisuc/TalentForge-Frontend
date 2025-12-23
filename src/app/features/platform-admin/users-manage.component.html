@@ -78,7 +78,7 @@
 <div class="modal-overlay" *ngIf="showUserModal" (click)="closeUserModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{selectedUser ? 'Edit User' : 'Add User'}}</h2>
+      <h2>{{selectedUser ? 'Edit User' : 'Invite User'}}</h2>
       <button class="close-btn" (click)="closeUserModal()">✕</button>
     </div>
     
@@ -108,7 +108,7 @@
         
         <div class="form-group">
           <label>Tenant</label>
-          <select formControlName="tenantId" class="form-control" required>
+          <select formControlName="tenantId" class="form-control" [disabled]="!selectedUser" required>
             <option value="">Select Tenant</option>
             <option *ngFor="let tenant of tenants" [value]="tenant.id">{{tenant.name}}</option>
           </select>
@@ -126,7 +126,7 @@
       <div class="modal-footer">
         <button type="button" class="btn-secondary" (click)="closeUserModal()">Cancel</button>
         <button type="submit" class="btn-primary" [disabled]="userForm.invalid || loading">
-          {{selectedUser ? 'Update' : 'Create'}} User
+          {{selectedUser ? 'Update' : 'Send Invitation'}}
         </button>
       </div>
     </form>

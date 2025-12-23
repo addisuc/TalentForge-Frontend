@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 import { UserService } from '../../core/services/user.service';
 import { TenantService } from '../../core/services/tenant.service';
 import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal.component';
+import { ToastService } from '../../shared/components/toast/toast.service';
 
 @Component({
   selector: 'app-users-manage',
@@ -49,7 +50,8 @@ export class UsersManageComponent implements OnInit {
   constructor(
     private userService: UserService,
     private tenantService: TenantService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -107,7 +109,13 @@ export class UsersManageComponent implements OnInit {
         status: user.status
       });
     } else {
-      this.userForm.reset({ role: 'PLATFORM_ADMIN', status: 'ACTIVE' });
+      // Find Default tenant for new platform admin invitations
+      const defaultTenant = this.tenants.find(t => t.name === 'Default');
+      this.userForm.reset({ 
+        role: 'PLATFORM_ADMIN', 
+        status: 'ACTIVE',
+        tenantId: defaultTenant?.id || ''
+      });
     }
     this.showUserModal = true;
   }
@@ -139,11 +147,14 @@ export class UsersManageComponent implements OnInit {
       // Invite user
       this.userService.inviteUser(userData).subscribe({
         next: () => {
+          this.toastService.success('Invitation sent successfully!');
           this.loadUsers();
           this.closeUserModal();
           this.loading = false;
         },
-        error: () => {
+        error: (err) => {
+          const message = err.error?.error || 'Failed to send invitation. Please try again.';
+          this.toastService.error(message);
           this.loading = false;
         }
       });
