@@ -10,6 +10,7 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService, private router: Router) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler) {
+    console.log('Auth interceptor called for:', req.url);
     // Skip auth for public endpoints
     const publicEndpoints = [
       '/api/auth/login',
@@ -20,10 +21,13 @@ export class AuthInterceptor implements HttpInterceptor {
       '/api/auth/resend-verification',
       '/api/auth/invitations',
       '/api/clients/login',
-      '/api/clients/register'
+      '/api/clients/register',
+      '/api/clients/verify-invitation',
+      '/api/clients/register-invited'
     ];
 
-    const isPublicEndpoint = publicEndpoints.some(endpoint => req.url.includes(endpoint));
+    const isPublicEndpoint = publicEndpoints.some(endpoint => req.url === endpoint || req.url.startsWith(endpoint + '?'));
+    console.log('Is public endpoint?', isPublicEndpoint, 'for URL:', req.url);
     
     if (isPublicEndpoint) {
       return next.handle(req);
@@ -40,10 +44,30 @@ export class AuthInterceptor implements HttpInterceptor {
 
     // Fall back to regular auth token
     const token = this.authService.getToken();
+    const localToken = localStorage.getItem('token');
+    console.log('Token from authService:', token);
+    console.log('Token from localStorage:', localToken);
     if (token) {
-      const authReq = req.clone({
+      let authReq = req.clone({
         headers: req.headers.set('Authorization', `Bearer ${token}`)
       });
+      console.log('Added Authorization header:', authReq.headers.get('Authorization'));
+      
+      // Add tenant ID header for API calls that need it
+      if (req.url.includes('/api/') && !isPublicEndpoint) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const tenantId = payload.tenantId;
+          if (tenantId) {
+            authReq = authReq.clone({
+              headers: authReq.headers.set('X-Tenant-ID', tenantId)
+            });
+          }
+        } catch (e) {
+          console.warn('Failed to extract tenant ID from token:', e);
+        }
+      }
+      
       return next.handle(authReq);
     }
     

@@ -102,7 +102,22 @@ export class ClientService {
   }
 
   getClients(): Observable<Client[]> {
-    return this.http.get<Client[]>(`${this.baseUrl}`);
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'X-Tenant-ID': this.extractTenantId(token)
+    });
+    return this.http.get<Client[]>(`/api/clients`, { headers });
+  }
+
+  private extractTenantId(token: string | null): string {
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.tenantId;
+    } catch {
+      return '';
+    }
   }
 
   getClientById(id: string): Observable<Client> {
