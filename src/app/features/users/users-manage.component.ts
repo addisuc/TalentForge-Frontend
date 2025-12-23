@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -24,7 +24,7 @@ export class UsersManageComponent implements OnInit {
   isTenantAdmin = false;
   isPlatformAdmin = false;
   isPlatformAdminContext = false;
-  showActionMenu: number | null = null;
+  showActionMenu: string | null = null;
   showDeactivateModal = false;
   showEditRoleModal = false;
   showProfileModal = false;
@@ -401,13 +401,25 @@ export class UsersManageComponent implements OnInit {
   }
 
   // Action Menu
-  toggleActionMenu(userId: number, event: Event) {
+  toggleActionMenu(userId: string, event: Event) {
     event.stopPropagation();
+    console.log('Toggle menu for user:', userId, 'Current showActionMenu:', this.showActionMenu);
     this.showActionMenu = this.showActionMenu === userId ? null : userId;
+    console.log('New showActionMenu:', this.showActionMenu);
   }
 
   closeActionMenu() {
     this.showActionMenu = null;
+  }
+
+  // Add click listener to close menu when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    // Don't close if clicking on action menu button or menu items
+    const target = event.target as HTMLElement;
+    if (!target.closest('.action-menu') && !target.closest('.action-menu-btn')) {
+      this.closeActionMenu();
+    }
   }
 
   // User Actions

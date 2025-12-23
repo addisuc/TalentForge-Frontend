@@ -72,38 +72,11 @@
           <td class="stat-cell">{{ user.placements }}</td>
           <td class="last-active-cell">{{ user.lastActive | date:'MMM d, h:mm a' }}</td>
           <td class="actions-cell">
-            <button class="action-menu-btn" (click)="toggleActionMenu(user.id, $event)">⋮</button>
-            
-            <!-- Action Menu Dropdown -->
-            <div class="action-menu" *ngIf="showActionMenu === user.id" (clickOutside)="closeActionMenu()">
-              <button class="menu-item" (click)="viewProfile(user)">
-                <span class="icon">👤</span> View Profile
-              </button>
-              <button class="menu-item" *ngIf="canSendMessage()" (click)="sendMessage(user)">
-                <span class="icon">✉️</span> Send Message
-              </button>
-              <button class="menu-item" *ngIf="canViewPerformance(user)" (click)="viewPerformance(user)">
-                <span class="icon">📊</span> View Performance
-              </button>
-              <div class="divider" *ngIf="isTenantAdmin"></div>
-              <button class="menu-item" *ngIf="canEditRole(user)" (click)="openEditRoleModal(user)">
-                <span class="icon">🎯</span> Change Role
-              </button>
-              <button class="menu-item" *ngIf="canResetPassword(user)" (click)="resetPassword(user)">
-                <span class="icon">🔑</span> Reset Password
-              </button>
-              <button class="menu-item" *ngIf="user.status === 'Inactive' && isTenantAdmin" (click)="reactivateUser(user)">
-                <span class="icon">✅</span> Reactivate
-              </button>
-              <button class="menu-item" *ngIf="canEditRole(user)" (click)="openEditUserModal(user)">
-                <span class="icon">✏️</span> Edit User
-              </button>
-              <button class="menu-item danger" *ngIf="canDeactivateUser(user) && user.status === 'Active'" (click)="openDeactivateModal(user)">
-                <span class="icon">🚫</span> Deactivate
-              </button>
-              <button class="menu-item danger" *ngIf="canDeleteUser(user)" (click)="openDeleteModal(user)">
-                <span class="icon">🗑️</span> Delete User
-              </button>
+            <div class="action-buttons">
+              <button class="action-btn" (click)="viewProfile(user)" title="View Profile">👤</button>
+              <button class="action-btn" (click)="sendMessage(user)" title="Send Message">✉️</button>
+              <button class="action-btn" (click)="openEditUserModal(user)" title="Edit User">✏️</button>
+              <button class="action-btn danger" (click)="openDeactivateModal(user)" title="Deactivate">🚫</button>
             </div>
           </td>
         </tr>

@@ -192,73 +192,41 @@
 }
 
 .actions-cell {
-  position: relative;
   text-align: center;
 
-  .action-menu-btn {
-    background: none;
-    border: none;
-    color: #64748b;
-    font-size: 1.25rem;
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .action-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #374151;
+    font-size: 1rem;
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 4px;
     line-height: 1;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover {
-      background: #f1f5f9;
-      color: #0f172a;
-    }
-  }
-
-  .action-menu {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    margin-top: 0.5rem;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    min-width: 200px;
-    z-index: 100;
-    overflow: hidden;
-
-    .menu-item {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      border: none;
-      background: none;
-      text-align: left;
-      cursor: pointer;
-      font-size: 0.875rem;
-      color: #0f172a;
-      transition: background 0.2s;
-
-      .icon {
-        font-size: 1rem;
-      }
-
-      &:hover {
-        background: #f8fafc;
-      }
-
-      &.danger {
-        color: #dc2626;
-
-        &:hover {
-          background: #fef2f2;
-        }
-      }
-    }
-
-    .divider {
-      height: 1px;
       background: #e2e8f0;
-      margin: 0.25rem 0;
+      color: #0f172a;
+    }
+
+    &.danger {
+      color: #dc2626;
+      
+      &:hover {
+        background: #fef2f2;
+        border-color: #fecaca;
+      }
     }
   }
 }
