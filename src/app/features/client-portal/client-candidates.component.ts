@@ -105,11 +105,20 @@ export class ClientCandidatesComponent implements OnInit {
 
   ngOnInit() {
     console.log('ClientCandidatesComponent ngOnInit called');
-    // TODO: Get companyId from logged-in client user
-    // For testing, hardcode a company ID - replace with actual logic
-    this.companyId = 'd5ffee58-f341-41ce-b2a8-4458f175ab33';
+    this.getCompanyIdFromAuth();
     console.log('Company ID:', this.companyId);
     this.loadSubmissions();
+  }
+  
+  private getCompanyIdFromAuth(): void {
+    const clientUser = localStorage.getItem('clientUser');
+    if (clientUser) {
+      const user = JSON.parse(clientUser);
+      this.companyId = user.companyId || user.id || '';
+    }
+    if (!this.companyId) {
+      console.error('No company ID found in auth');
+    }
   }
 
   loadSubmissions() {

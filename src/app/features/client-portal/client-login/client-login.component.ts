@@ -20,8 +20,25 @@ export class ClientLoginComponent implements OnInit {
   showHelp = false;
   errorMessage = '';
 
-  // Demo tenant ID - in production, this would come from subdomain or selection
-  private readonly tenantId = 'e7a0c920-e4c3-4e34-90b3-15ae51f86eb9';
+  // Get tenant ID from subdomain or URL parameter
+  private getTenantId(): string {
+    // In production, extract from subdomain: subdomain.talentforge.com
+    const hostname = window.location.hostname;
+    const subdomain = hostname.split('.')[0];
+    
+    // For development, check URL parameter or use default
+    const urlParams = new URLSearchParams(window.location.search);
+    const tenantParam = urlParams.get('tenant');
+    
+    if (tenantParam) return tenantParam;
+    if (subdomain && subdomain !== 'localhost' && subdomain !== 'www') {
+      // Map subdomain to tenant ID via API call or lookup
+      return subdomain; // This would be resolved to actual tenant ID
+    }
+    
+    // Fallback for development
+    return 'e7a0c920-e4c3-4e34-90b3-15ae51f86eb9';
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -43,10 +60,11 @@ export class ClientLoginComponent implements OnInit {
       this.errorMessage = '';
       
       const loginRequest = this.loginForm.value;
+      const tenantId = this.getTenantId();
       
-      console.log('Attempting login with:', loginRequest, 'tenantId:', this.tenantId);
+      console.log('Attempting login with:', loginRequest, 'tenantId:', tenantId);
       
-      this.clientService.login(loginRequest, this.tenantId).subscribe({
+      this.clientService.login(loginRequest, tenantId).subscribe({
         next: (response: any) => {
           console.log('Login response:', response);
           
@@ -57,7 +75,7 @@ export class ClientLoginComponent implements OnInit {
           
           // Store token and user info
           localStorage.setItem('clientToken', response.token);
-          localStorage.setItem('tenantId', this.tenantId);
+          localStorage.setItem('tenantId', tenantId);
           localStorage.setItem('clientUserId', clientUserId);
           localStorage.setItem('clientUser', JSON.stringify({
             id: clientUserId,

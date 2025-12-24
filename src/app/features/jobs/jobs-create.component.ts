@@ -160,6 +160,8 @@ export class JobsCreateComponent implements OnInit {
       companyId: this.job.clientId
     };
     
+    console.log('Selected clientId value:', this.job.clientId);
+    console.log('Available clients:', this.clients);
     console.log('Job request being sent:', jobRequest);
 
     this.jobService.createJob(jobRequest).subscribe({

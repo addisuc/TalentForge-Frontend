@@ -20,15 +20,28 @@ export class ClientDashboardComponent implements OnInit {
 
   myJobs: any[] = [];
   recentCandidates: any[] = [];
-  companyId = 'd5ffee58-f341-41ce-b2a8-4458f175ab33'; // TODO: Get from auth
+  companyId: string = '';
 
   constructor(private applicationService: ApplicationService) {}
 
   ngOnInit() {
+    this.getCompanyIdFromAuth();
     this.loadCandidates();
+  }
+  
+  private getCompanyIdFromAuth(): void {
+    const clientUser = localStorage.getItem('clientUser');
+    if (clientUser) {
+      const user = JSON.parse(clientUser);
+      this.companyId = user.companyId || user.id || '';
+    }
+    if (!this.companyId) {
+      console.error('No company ID found in auth');
+    }
   }
 
   loadCandidates() {
+    if (!this.companyId) return;
     this.applicationService.getClientSubmissions(this.companyId, 0, 100).subscribe({
       next: (data) => {
         const candidates = data.content;

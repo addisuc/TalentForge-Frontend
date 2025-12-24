@@ -140,7 +140,7 @@ export class ClientDashboardComponent implements OnInit {
 
   candidateSubmissions: any[] = [];
   approvedCandidates: any[] = [];
-  companyId = 'd5ffee58-f341-41ce-b2a8-4458f175ab33'; // TODO: Get from auth
+  companyId: string = '';
   
   // Action modals
   showApproveModal = false;
@@ -164,6 +164,7 @@ export class ClientDashboardComponent implements OnInit {
   ) {}
 
   loadApprovedCandidates(): void {
+    if (!this.companyId) return;
     console.log('loadApprovedCandidates called with companyId:', this.companyId);
     this.applicationService.getClientApprovedCandidates(this.companyId, 0, 100).subscribe({
       next: (data) => {
@@ -177,6 +178,7 @@ export class ClientDashboardComponent implements OnInit {
   }
   
   loadCandidateSubmissions(): void {
+    if (!this.companyId) return;
     console.log('loadCandidateSubmissions called with companyId:', this.companyId);
     this.applicationService.getClientSubmissions(this.companyId, 0, 100).subscribe({
       next: (data) => {
@@ -221,6 +223,7 @@ export class ClientDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('ClientDashboardComponent ngOnInit called');
+    this.getCompanyIdFromAuth();
     this.loadUserProfile();
     this.loadDashboard();
     this.loadJobRequests();
@@ -228,6 +231,17 @@ export class ClientDashboardComponent implements OnInit {
     this.loadApprovedCandidates();
     this.loadInterviews();
     this.loadFeedbackHistory();
+  }
+  
+  private getCompanyIdFromAuth(): void {
+    const clientUser = localStorage.getItem('clientUser');
+    if (clientUser) {
+      const user = JSON.parse(clientUser);
+      this.companyId = user.companyId || user.id || '';
+    }
+    if (!this.companyId) {
+      console.error('No company ID found in auth');
+    }
   }
 
   loadUserProfile(): void {
