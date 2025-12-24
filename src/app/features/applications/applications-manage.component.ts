@@ -103,7 +103,20 @@ export class ApplicationsManageComponent implements OnInit {
   }
 
   loadClients() {
-    this.http.get<any[]>('/api/clients').subscribe({
+    const token = localStorage.getItem('token');
+    const tenantId = this.extractTenantId(token);
+    
+    if (!tenantId) {
+      console.error('No tenant ID found in token');
+      return;
+    }
+    
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'X-Tenant-ID': tenantId
+    };
+    
+    this.http.get<any[]>('/api/clients', { headers }).subscribe({
       next: (data) => {
         this.clients = data;
       },
@@ -111,6 +124,20 @@ export class ApplicationsManageComponent implements OnInit {
         console.error('Failed to load clients:', err);
       }
     });
+  }
+
+  private extractTenantId(token: string | null): string {
+    if (!token) {
+      console.error('No token provided');
+      return '';
+    }
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.tenantId || '';
+    } catch (error) {
+      console.error('Error extracting tenant ID from token:', error);
+      return '';
+    }
   }
 
   loadApplications() {

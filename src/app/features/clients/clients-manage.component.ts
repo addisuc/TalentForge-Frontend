@@ -78,8 +78,13 @@ export class ClientsManageComponent implements OnInit {
   }
 
   loadClients() {
+    console.log('Loading clients...');
+    const token = localStorage.getItem('token');
+    console.log('Token from localStorage:', token);
+    
     this.clientService.getClients().subscribe({
       next: (data) => {
+        console.log('Clients loaded successfully:', data);
         this.clients = data;
       },
       error: (err: any) => {
