@@ -21,7 +21,7 @@ export class ClientLoginComponent implements OnInit {
   errorMessage = '';
 
   // Demo tenant ID - in production, this would come from subdomain or selection
-  private readonly tenantId = '12d9dfe7-978a-40e5-b191-082e458c1860';
+  private readonly tenantId = 'e7a0c920-e4c3-4e34-90b3-15ae51f86eb9';
 
   constructor(
     private fb: FormBuilder,
@@ -51,12 +51,12 @@ export class ClientLoginComponent implements OnInit {
           console.log('Login response:', response);
           
           // Decode JWT to get user info
-          const tokenPayload = JSON.parse(atob(response.accessToken.split('.')[1]));
+          const tokenPayload = JSON.parse(atob(response.token.split('.')[1]));
           const clientUserId = tokenPayload.sub;
           const email = tokenPayload.email;
           
           // Store token and user info
-          localStorage.setItem('clientToken', response.accessToken);
+          localStorage.setItem('clientToken', response.token);
           localStorage.setItem('tenantId', this.tenantId);
           localStorage.setItem('clientUserId', clientUserId);
           localStorage.setItem('clientUser', JSON.stringify({
@@ -67,10 +67,10 @@ export class ClientLoginComponent implements OnInit {
           }));
           
           // Store client company name separately
-          localStorage.setItem('clientCompanyName', response.clientCompanyName || 'Client Company');
+          localStorage.setItem('clientCompanyName', response.companyName || 'Client Company');
           
           // Store tenant name separately for easy access
-          localStorage.setItem('tenantName', response.tenantName || 'Client Portal');
+          localStorage.setItem('tenantName', response.contactPerson || 'Client Portal');
           
           this.isLoading = false;
           

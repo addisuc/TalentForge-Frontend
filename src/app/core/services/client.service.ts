@@ -69,8 +69,10 @@ export class ClientService {
   constructor(private http: HttpClient) {}
 
   login(request: ClientLoginRequest, tenantId: string): Observable<ClientLoginResponse> {
-    // Use auth service for login, same as regular users
-    return this.http.post<ClientLoginResponse>(`/api/auth/login`, request);
+    const headers = new HttpHeaders({
+      'X-Tenant-ID': tenantId
+    });
+    return this.http.post<ClientLoginResponse>(`${this.clientServiceUrl}/login`, request, { headers });
   }
 
   getDashboard(tenantId: string, clientUserId: string): Observable<ClientDashboard> {
