@@ -123,7 +123,12 @@ export class ClientService {
   }
 
   getClientById(id: string): Observable<Client> {
-    return this.http.get<Client>(`${this.baseUrl}/${id}`);
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'X-Tenant-ID': this.extractTenantId(token)
+    });
+    return this.http.get<Client>(`/api/clients/${id}`, { headers });
   }
 
   createClient(client: Partial<Client>): Observable<Client> {
@@ -135,7 +140,12 @@ export class ClientService {
   }
 
   getNotes(clientId: string): Observable<ClientNote[]> {
-    return this.http.get<ClientNote[]>(`${this.baseUrl}/${clientId}/notes`);
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'X-Tenant-ID': this.extractTenantId(token)
+    });
+    return this.http.get<ClientNote[]>(`/api/clients/${clientId}/notes`, { headers });
   }
 
   addNote(clientId: string, content: string): Observable<ClientNote> {
@@ -143,7 +153,12 @@ export class ClientService {
   }
 
   getActivities(clientId: string): Observable<ClientActivity[]> {
-    return this.http.get<ClientActivity[]>(`${this.baseUrl}/${clientId}/activities`);
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'X-Tenant-ID': this.extractTenantId(token)
+    });
+    return this.http.get<ClientActivity[]>(`/api/clients/${clientId}/activities`, { headers });
   }
 
   inviteClient(invitation: {email: string, companyName: string, contactPerson: string, clientId?: string}): Observable<any> {

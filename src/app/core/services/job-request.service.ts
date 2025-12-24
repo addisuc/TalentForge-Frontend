@@ -8,13 +8,13 @@ import { JobRequest } from '../models/client.model';
   providedIn: 'root'
 })
 export class JobRequestService {
-  private readonly baseUrl = `${environment.apiUrl}/job-requests`;
+  private readonly baseUrl = `/api/job-requests`;
 
   constructor(private http: HttpClient) {}
 
   // Client creates job request
   createJobRequest(request: Partial<JobRequest>): Observable<JobRequest> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('clientToken');
     const headers = {
       'Authorization': `Bearer ${token}`
     };
@@ -23,7 +23,7 @@ export class JobRequestService {
 
   // Client gets their job requests
   getClientJobRequests(clientId: string): Observable<JobRequest[]> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('clientToken');
     const headers = {
       'Authorization': `Bearer ${token}`
     };

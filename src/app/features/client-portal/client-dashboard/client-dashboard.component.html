@@ -29,7 +29,7 @@
       <a class="nav-item" [class.active]="activeSection === 'submissions'" (click)="setActiveSection('submissions')">
         <span class="icon">👤</span>
         <span>Candidate Submissions</span>
-        <span class="badge" *ngIf="dashboard.totalPending > 0">{{ dashboard.totalPending }}</span>
+        <span class="badge" *ngIf="getPendingReviewsCount() > 0">{{ getPendingReviewsCount() }}</span>
       </a>
       <a class="nav-item" [class.active]="activeSection === 'approved'" (click)="setActiveSection('approved')">
         <span class="icon">✅</span>
