@@ -16,7 +16,7 @@
           <circle cx="50" cy="53" r="2" fill="#ff6b35"/>
           <text x="62" y="75" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#logoGradient)">F</text>
         </svg>
-        <span style="font-weight: 700; font-size: 1.25rem;">TalentForge</span>
+        <span style="font-weight: 700; font-size: 1.5rem;">TalentForge</span>
       </div>
       <div class="tenant-name">{{ getTenantName() }}</div>
     </div>
@@ -383,9 +383,15 @@
             <h1>Job Requests</h1>
             <p class="page-subtitle">Manage your hiring requests and open positions</p>
           </div>
-          <button class="btn-primary" (click)="openJobRequestForm()">
-            ➕ Request New Position
-          </button>
+          <div class="header-actions">
+            <div class="view-toggle">
+              <button class="toggle-btn" [class.active]="jobRequestsView === 'cards'" (click)="jobRequestsView = 'cards'" title="Card View">📋</button>
+              <button class="toggle-btn" [class.active]="jobRequestsView === 'table'" (click)="jobRequestsView = 'table'" title="Table View">📊</button>
+            </div>
+            <button class="btn-primary" (click)="openJobRequestForm()">
+              ➕ Request New Position
+            </button>
+          </div>
         </div>
         
         <!-- Job Request Details Modal -->
@@ -428,34 +434,110 @@
           </div>
         </div>
 
-        <div *ngIf="!showJobRequestForm && !showJobRequestDetails" class="job-requests-list">
+        <div *ngIf="!showJobRequestForm && !showJobRequestDetails" class="job-requests-container">
           <div *ngIf="jobRequests.length === 0" class="empty-state">
             <span class="empty-icon">💼</span>
             <h3>No Job Requests</h3>
             <p>You haven't submitted any job requests yet.</p>
           </div>
-          <div class="card job-request-card" *ngFor="let job of jobRequests">
-            <div class="job-request-header">
-              <div>
-                <h3>{{ job.title }}</h3>
-                <p class="job-meta">{{ job.department }} • {{ job.location }}</p>
-                <p class="request-id" *ngIf="job.requestId" style="margin-top: 4px;"><small>Request ID: <code>{{ job.requestId }}</code></small></p>
-              </div>
-              <span class="status-badge" [class]="job.status.toLowerCase()">{{ job.status }}</span>
-            </div>
-            <div class="job-request-details">
-              <div class="detail-item">
-                <span class="label">Requested:</span>
-                <span class="value">{{ job.createdAt | date:'MMM d, yyyy' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="label">Status:</span>
-                <span class="value">{{ job.status }}</span>
-              </div>
-            </div>
-            <div class="job-request-actions">
-              <button class="btn-secondary" (click)="viewJobDetails(job)">View Details</button>
 
+          <!-- Cards View -->
+          <div *ngIf="jobRequests.length > 0 && jobRequestsView === 'cards'" class="job-requests-list">
+            <div class="card job-request-card" *ngFor="let job of paginatedJobRequests">
+              <div class="job-request-header">
+                <div>
+                  <h3>{{ job.title }}</h3>
+                  <p class="job-meta">{{ job.department }} • {{ job.location }}</p>
+                  <p class="request-id" *ngIf="job.requestId" style="margin-top: 4px;"><small>Request ID: <code>{{ job.requestId }}</code></small></p>
+                </div>
+                <span class="status-badge" [class]="job.status.toLowerCase()">{{ job.status }}</span>
+              </div>
+              <div class="job-request-details">
+                <div class="detail-item">
+                  <span class="label">Requested:</span>
+                  <span class="value">{{ job.createdAt | date:'MMM d, yyyy' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Status:</span>
+                  <span class="value">{{ job.status }}</span>
+                </div>
+              </div>
+              <div class="job-request-actions">
+                <button class="btn-secondary" (click)="viewJobDetails(job)">View Details</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table View -->
+          <div *ngIf="jobRequests.length > 0 && jobRequestsView === 'table'" class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th (click)="sortJobRequests('title')" class="sortable">
+                    Job Title
+                    <span class="sort-icon" *ngIf="jobRequestsSortField === 'title'">
+                      {{ jobRequestsSortDirection === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                  <th (click)="sortJobRequests('department')" class="sortable">
+                    Department
+                    <span class="sort-icon" *ngIf="jobRequestsSortField === 'department'">
+                      {{ jobRequestsSortDirection === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                  <th (click)="sortJobRequests('createdAt')" class="sortable">
+                    Date Created
+                    <span class="sort-icon" *ngIf="jobRequestsSortField === 'createdAt'">
+                      {{ jobRequestsSortDirection === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                  <th (click)="sortJobRequests('status')" class="sortable">
+                    Status
+                    <span class="sort-icon" *ngIf="jobRequestsSortField === 'status'">
+                      {{ jobRequestsSortDirection === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let job of paginatedJobRequests">
+                  <td>
+                    <strong>{{ job.title }}</strong>
+                    <div class="table-meta">{{ job.location }}</div>
+                  </td>
+                  <td>{{ job.department }}</td>
+                  <td>{{ job.createdAt | date:'MMM d, yyyy' }}</td>
+                  <td>
+                    <span class="status-badge" [class]="job.status.toLowerCase()">{{ job.status }}</span>
+                  </td>
+                  <td>
+                    <button class="btn-secondary small" (click)="viewJobDetails(job)">View</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div *ngIf="jobRequests.length > 0" class="pagination">
+            <div class="pagination-left">
+              <span class="page-size-label">Show:</span>
+              <select class="page-size-select" [(ngModel)]="jobRequestsPageSize" (change)="onPageSizeChange()">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span class="page-size-label">per page</span>
+            </div>
+            <div class="pagination-center" *ngIf="totalJobRequestsPages > 1">
+              <button class="page-btn" [disabled]="jobRequestsCurrentPage === 1" (click)="changeJobRequestsPage(jobRequestsCurrentPage - 1)">←</button>
+              <span class="page-info">{{ jobRequestsCurrentPage }} of {{ totalJobRequestsPages }}</span>
+              <button class="page-btn" [disabled]="jobRequestsCurrentPage === totalJobRequestsPages" (click)="changeJobRequestsPage(jobRequestsCurrentPage + 1)">→</button>
+            </div>
+            <div class="pagination-right">
+              <span class="results-info">{{ getResultsInfo() }}</span>
             </div>
           </div>
         </div>

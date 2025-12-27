@@ -32,6 +32,22 @@ export class ClientDashboardComponent implements OnInit {
   displayedColumns: string[] = ['candidate', 'job', 'appliedDate', 'status', 'actions'];
   activeSection: any = 'overview';
 
+  jobRequestsView = 'cards';
+  jobRequestsCurrentPage = 1;
+  jobRequestsPageSize = 10;
+  jobRequestsSortField = 'createdAt';
+  jobRequestsSortDirection: 'asc' | 'desc' = 'desc';
+
+  get paginatedJobRequests() {
+    const sorted = this.getSortedJobRequests();
+    const start = (this.jobRequestsCurrentPage - 1) * this.jobRequestsPageSize;
+    return sorted.slice(start, start + this.jobRequestsPageSize);
+  }
+
+  get totalJobRequestsPages() {
+    return Math.ceil(this.jobRequests.length / this.jobRequestsPageSize);
+  }
+
 
 
   scheduledInterviews: any[] = [];
@@ -1005,5 +1021,45 @@ export class ClientDashboardComponent implements OnInit {
         this.scheduledInterviews = [];
       }
     });
+  }
+
+  getSortedJobRequests() {
+    return [...this.jobRequests].sort((a, b) => {
+      let aValue = (a as any)[this.jobRequestsSortField];
+      let bValue = (b as any)[this.jobRequestsSortField];
+      
+      if (this.jobRequestsSortField === 'createdAt') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      }
+      
+      if (aValue < bValue) return this.jobRequestsSortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return this.jobRequestsSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  sortJobRequests(field: string) {
+    if (this.jobRequestsSortField === field) {
+      this.jobRequestsSortDirection = this.jobRequestsSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.jobRequestsSortField = field;
+      this.jobRequestsSortDirection = 'asc';
+    }
+    this.jobRequestsCurrentPage = 1;
+  }
+
+  changeJobRequestsPage(page: number) {
+    this.jobRequestsCurrentPage = page;
+  }
+
+  onPageSizeChange() {
+    this.jobRequestsCurrentPage = 1;
+  }
+
+  getResultsInfo() {
+    const start = (this.jobRequestsCurrentPage - 1) * this.jobRequestsPageSize + 1;
+    const end = Math.min(this.jobRequestsCurrentPage * this.jobRequestsPageSize, this.jobRequests.length);
+    return `${start}-${end} of ${this.jobRequests.length} results`;
   }
 }
